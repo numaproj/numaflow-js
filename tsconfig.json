@@ -5,7 +5,11 @@
     "moduleResolution": "node16",
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": ["es2024", "dom", "dom.iterable"],
+    "lib": [
+      "es2024",
+      "dom",
+      "dom.iterable"
+    ],
     "noEmitOnError": true,
     "esModuleInterop": true,
     "allowJs": true,
@@ -16,6 +20,13 @@
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["src/map/proto/**/*", "src/sink/proto/**/*", "src/source/proto/**/*", "src/sourcetransformer/proto/**/*"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "src/map/proto/**/*",
+    "src/sink/proto/**/*",
+    "src/source/proto/**/*",
+    "src/sourcetransformer/proto/**/*"
+  ]
 }
