@@ -1,0 +1,38 @@
+{
+  "name": "numaflow",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist",
+    "proto"
+  ],
+  "scripts": {
+    "codegen-sink": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --importFileExtension='.ts' --outDir=./src/sink/proto/ proto/sink.proto",
+    "codegen-source": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --importFileExtension='.ts' --outDir=./src/source/proto/ proto/source.proto",
+    "codegen-sourcetransformer": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --importFileExtension='.ts' --outDir=./src/sourcetransformer/proto/ proto/sourcetransformer.proto",
+    "codegen-map": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --importFileExtension='.ts' --outDir=./src/map/proto/ proto/map.proto",
+    "codegen": "npm run codegen-sink && npm run codegen-source && npm run codegen-sourcetransformer && npm run codegen-map",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest --run",
+    "test:ci": "vitest --run --reporter verbose",
+    "build": "rm -rf dist && npm run format && tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@grpc/grpc-js": "1.13.3",
+    "@grpc/proto-loader": "0.7.15"
+  },
+  "devDependencies": {
+    "@types/node": "22.14.1",
+    "@vitest/coverage-v8": "3.1.2",
+    "prettier": "3.5.3",
+    "typescript": "5.8.3",
+    "vitest": "3.1.2"
+  }
+}
