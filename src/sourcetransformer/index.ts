@@ -1,29 +1,20 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import * as grpc from "@grpc/grpc-js";
-import * as protoLoader from "@grpc/proto-loader";
-import type { ProtoGrpcType } from "./proto/sourcetransformer.ts";
-import type { SourceTransformHandlers } from "./proto/sourcetransformer/v1/SourceTransform.ts";
-import type { Empty } from "./proto/google/protobuf/Empty.ts";
-import type { ReadyResponse } from "./proto/sourcetransformer/v1/ReadyResponse.ts";
-import type { SourceTransformRequest } from "./proto/sourcetransformer/v1/SourceTransformRequest.ts";
-import type { SourceTransformResponse } from "./proto/sourcetransformer/v1/SourceTransformResponse.ts";
-import {
-  DEFAULT_SERVER_INFO,
-  prepareServer,
-  ServerInfo,
-  ServerOpts,
-} from "../common/server.js";
-import { parseServerOptions } from "../common/server.js";
-import {
-  ContainerTypes,
-  MinimumNumaflowVersions,
-  MSG_DROP_TAG,
-} from "../common/constants.js";
+import path from 'path';
+import { fileURLToPath } from 'url';
+import * as grpc from '@grpc/grpc-js';
+import * as protoLoader from '@grpc/proto-loader';
+import type { ProtoGrpcType } from './proto/sourcetransformer.ts';
+import type { SourceTransformHandlers } from './proto/sourcetransformer/v1/SourceTransform.ts';
+import type { Empty } from './proto/google/protobuf/Empty.ts';
+import type { ReadyResponse } from './proto/sourcetransformer/v1/ReadyResponse.ts';
+import type { SourceTransformRequest } from './proto/sourcetransformer/v1/SourceTransformRequest.ts';
+import type { SourceTransformResponse } from './proto/sourcetransformer/v1/SourceTransformResponse.ts';
+import { DEFAULT_SERVER_INFO, prepareServer, ServerInfo, ServerOpts } from '../common/server.js';
+import { parseServerOptions } from '../common/server.js';
+import { ContainerTypes, MinimumNumaflowVersions, MSG_DROP_TAG } from '../common/constants.js';
 
 const Paths = {
-  SOCKET_PATH: "/var/run/numaflow/sourcetransform.sock",
-  SERVER_INFO_FILE_PATH: "/var/run/numaflow/sourcetransformer-server-info",
+  SOCKET_PATH: '/var/run/numaflow/sourcetransform.sock',
+  SERVER_INFO_FILE_PATH: '/var/run/numaflow/sourcetransformer-server-info',
 };
 
 const __filename = fileURLToPath(import.meta.url);
@@ -58,17 +49,11 @@ class SourceTransformService {
   ) {}
 
   start(this: SourceTransformService) {
-    const packageDef = protoLoader.loadSync(
-      path.join(__dirname, "../../proto/sourcetransformer.proto"),
-      {},
-    );
-    const proto = grpc.loadPackageDefinition(
-      packageDef,
-    ) as unknown as ProtoGrpcType;
+    const packageDef = protoLoader.loadSync(path.join(__dirname, '../../proto/sourcetransformer.proto'), {});
+    const proto = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
     const serverInfo: ServerInfo = {
       ...DEFAULT_SERVER_INFO,
-      minimum_numaflow_version:
-        MinimumNumaflowVersions[ContainerTypes.Sourcetransformer],
+      minimum_numaflow_version: MinimumNumaflowVersions[ContainerTypes.Sourcetransformer],
     };
     prepareServer(serverInfo, Paths.SERVER_INFO_FILE_PATH, Paths.SOCKET_PATH);
 
@@ -78,24 +63,17 @@ class SourceTransformService {
     };
 
     const server = new grpc.Server({
-      "grpc.max_send_message_length": this.opts.grpcMaxMessageSizeBytes,
-      "grpc.max_receive_message_length": this.opts.grpcMaxMessageSizeBytes,
+      'grpc.max_send_message_length': this.opts.grpcMaxMessageSizeBytes,
+      'grpc.max_receive_message_length': this.opts.grpcMaxMessageSizeBytes,
     });
-    server.addService(
-      proto.sourcetransformer.v1.SourceTransform.service,
-      transformServer,
-    );
-    server.bindAsync(
-      `unix://${Paths.SOCKET_PATH}`,
-      grpc.ServerCredentials.createInsecure(),
-      (err) => {
-        if (err) {
-          console.error("Failed to bind server:", err.message);
-          return;
-        }
-        console.log("Server bound successfully. Starting server...");
-      },
-    );
+    server.addService(proto.sourcetransformer.v1.SourceTransform.service, transformServer);
+    server.bindAsync(`unix://${Paths.SOCKET_PATH}`, grpc.ServerCredentials.createInsecure(), (err) => {
+      if (err) {
+        console.error('Failed to bind server:', err.message);
+        return;
+      }
+      console.log('Server bound successfully. Starting server...');
+    });
   }
 
   isReady(
@@ -109,21 +87,18 @@ class SourceTransformService {
 
   private sourceTransformFn(
     this: SourceTransformService,
-    call: grpc.ServerDuplexStream<
-      SourceTransformRequest,
-      SourceTransformResponse
-    >,
+    call: grpc.ServerDuplexStream<SourceTransformRequest, SourceTransformResponse>,
   ) {
-    console.log("SourceTransformFn called");
+    console.log('SourceTransformFn called');
     let handshakeDone = false;
-    call.on("data", async (request: SourceTransformRequest) => {
+    call.on('data', async (request: SourceTransformRequest) => {
       if (!handshakeDone) {
         if (!request.handshake?.sot) {
-          console.error("Expected handshake message");
+          console.error('Expected handshake message');
         }
         handshakeDone = true;
         call.write({ handshake: { sot: true } });
-        console.log("Handshake completed");
+        console.log('Handshake completed');
         return;
       }
       if (request.request) {
@@ -131,9 +106,7 @@ class SourceTransformService {
         const datum = this.createDatumFromRequest(request);
         const transformedValues = await this.transformer.transform(keys, datum);
         if (transformedValues.length === 0) {
-          console.error(
-            `Transform response cannot be empty. message_id=${request.request.id}`,
-          );
+          console.error(`Transform response cannot be empty. message_id=${request.request.id}`);
         }
         const response: SourceTransformResponse = {
           id: request.request.id,
@@ -142,30 +115,25 @@ class SourceTransformService {
         for (const msg of transformedValues) {
           response.results?.push({
             ...msg,
-            eventTime: msg.eventTime
-              ? { seconds: Math.floor(msg.eventTime.getTime() / 1000) }
-              : undefined,
+            eventTime: msg.eventTime ? { seconds: Math.floor(msg.eventTime.getTime() / 1000) } : undefined,
           });
         }
         call.write(response);
         return;
       }
-      console.log(
-        `Invalid Source request: ${JSON.stringify(request, null, 2)}`,
-      );
+      console.log(`Invalid Source request: ${JSON.stringify(request, null, 2)}`);
       throw { message: `invalid request: ${request}` };
     });
 
-    call.on("end", () => {
-      console.log("Stream ended");
+    call.on('end', () => {
+      console.log('Stream ended');
       call.end(); // End the stream
     });
   }
 
   private createDatumFromRequest(request: SourceTransformRequest): Datum {
-    const buf = request.request?.value ?? "";
-    const payload =
-      typeof buf === "string" ? Buffer.from(buf) : Buffer.from(buf);
+    const buf = request.request?.value ?? '';
+    const payload = typeof buf === 'string' ? Buffer.from(buf) : Buffer.from(buf);
 
     const et = request.request?.eventTime ?? new Date();
     let eventTimeResponse: Date;
@@ -174,9 +142,9 @@ class SourceTransformService {
     } else {
       // FIXME: handle nanoseconds field in Timestamp
       let seconds: number;
-      if (typeof et.seconds === "string") {
+      if (typeof et.seconds === 'string') {
         seconds = parseInt(et.seconds, 10);
-      } else if (typeof et.seconds === "object" && "toNumber" in et.seconds) {
+      } else if (typeof et.seconds === 'object' && 'toNumber' in et.seconds) {
         seconds = et.seconds.toNumber();
       } else {
         seconds = et.seconds as number;
@@ -191,9 +159,9 @@ class SourceTransformService {
     } else {
       // FIXME: handle nanoseconds field in Timestamp
       let seconds: number;
-      if (typeof wt.seconds === "string") {
+      if (typeof wt.seconds === 'string') {
         seconds = parseInt(wt.seconds, 10);
-      } else if (typeof wt.seconds === "object" && "toNumber" in wt.seconds) {
+      } else if (typeof wt.seconds === 'object' && 'toNumber' in wt.seconds) {
         seconds = wt.seconds.toNumber();
       } else {
         seconds = wt.seconds as number;
@@ -217,10 +185,7 @@ class SourceTransformService {
   }
 }
 
-export function createServer(
-  transformer: SourceTransformer,
-  options?: ServerOpts,
-): SourceTransformService {
+export function createServer(transformer: SourceTransformer, options?: ServerOpts): SourceTransformService {
   const opts = parseServerOptions(options);
   return new SourceTransformService(transformer, opts);
 }

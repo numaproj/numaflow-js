@@ -1,23 +1,23 @@
 // Original file: proto/sink.proto
 
-import type * as grpc from "@grpc/grpc-js";
-import type { MethodDefinition } from "@grpc/proto-loader";
+import type * as grpc from '@grpc/grpc-js';
+import type { MethodDefinition } from '@grpc/proto-loader';
 import type {
   Empty as _google_protobuf_Empty,
   Empty__Output as _google_protobuf_Empty__Output,
-} from "../../google/protobuf/Empty.ts";
+} from '../../google/protobuf/Empty.ts';
 import type {
   ReadyResponse as _sink_v1_ReadyResponse,
   ReadyResponse__Output as _sink_v1_ReadyResponse__Output,
-} from "../../sink/v1/ReadyResponse.ts";
+} from '../../sink/v1/ReadyResponse.ts';
 import type {
   SinkRequest as _sink_v1_SinkRequest,
   SinkRequest__Output as _sink_v1_SinkRequest__Output,
-} from "../../sink/v1/SinkRequest.ts";
+} from '../../sink/v1/SinkRequest.ts';
 import type {
   SinkResponse as _sink_v1_SinkResponse,
   SinkResponse__Output as _sink_v1_SinkResponse__Output,
-} from "../../sink/v1/SinkResponse.ts";
+} from '../../sink/v1/SinkResponse.ts';
 
 export interface SinkClient extends grpc.Client {
   IsReady(
@@ -64,41 +64,19 @@ export interface SinkClient extends grpc.Client {
   SinkFn(
     metadata: grpc.Metadata,
     options?: grpc.CallOptions,
-  ): grpc.ClientDuplexStream<
-    _sink_v1_SinkRequest,
-    _sink_v1_SinkResponse__Output
-  >;
-  SinkFn(
-    options?: grpc.CallOptions,
-  ): grpc.ClientDuplexStream<
-    _sink_v1_SinkRequest,
-    _sink_v1_SinkResponse__Output
-  >;
+  ): grpc.ClientDuplexStream<_sink_v1_SinkRequest, _sink_v1_SinkResponse__Output>;
+  SinkFn(options?: grpc.CallOptions): grpc.ClientDuplexStream<_sink_v1_SinkRequest, _sink_v1_SinkResponse__Output>;
   sinkFn(
     metadata: grpc.Metadata,
     options?: grpc.CallOptions,
-  ): grpc.ClientDuplexStream<
-    _sink_v1_SinkRequest,
-    _sink_v1_SinkResponse__Output
-  >;
-  sinkFn(
-    options?: grpc.CallOptions,
-  ): grpc.ClientDuplexStream<
-    _sink_v1_SinkRequest,
-    _sink_v1_SinkResponse__Output
-  >;
+  ): grpc.ClientDuplexStream<_sink_v1_SinkRequest, _sink_v1_SinkResponse__Output>;
+  sinkFn(options?: grpc.CallOptions): grpc.ClientDuplexStream<_sink_v1_SinkRequest, _sink_v1_SinkResponse__Output>;
 }
 
 export interface SinkHandlers extends grpc.UntypedServiceImplementation {
-  IsReady: grpc.handleUnaryCall<
-    _google_protobuf_Empty__Output,
-    _sink_v1_ReadyResponse
-  >;
+  IsReady: grpc.handleUnaryCall<_google_protobuf_Empty__Output, _sink_v1_ReadyResponse>;
 
-  SinkFn: grpc.handleBidiStreamingCall<
-    _sink_v1_SinkRequest__Output,
-    _sink_v1_SinkResponse
-  >;
+  SinkFn: grpc.handleBidiStreamingCall<_sink_v1_SinkRequest__Output, _sink_v1_SinkResponse>;
 }
 
 export interface SinkDefinition extends grpc.ServiceDefinition {

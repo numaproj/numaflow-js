@@ -3,15 +3,15 @@
 import type {
   Handshake as _map_v1_Handshake,
   Handshake__Output as _map_v1_Handshake__Output,
-} from "../../map/v1/Handshake.ts";
+} from '../../map/v1/Handshake.ts';
 import type {
   TransmissionStatus as _map_v1_TransmissionStatus,
   TransmissionStatus__Output as _map_v1_TransmissionStatus__Output,
-} from "../../map/v1/TransmissionStatus.ts";
+} from '../../map/v1/TransmissionStatus.ts';
 import type {
   Timestamp as _google_protobuf_Timestamp,
   Timestamp__Output as _google_protobuf_Timestamp__Output,
-} from "../../google/protobuf/Timestamp.ts";
+} from '../../google/protobuf/Timestamp.ts';
 
 export interface _map_v1_MapRequest_Request {
   keys?: string[];
@@ -34,8 +34,8 @@ export interface MapRequest {
   id?: string;
   handshake?: _map_v1_Handshake | null;
   status?: _map_v1_TransmissionStatus | null;
-  _handshake?: "handshake";
-  _status?: "status";
+  _handshake?: 'handshake';
+  _status?: 'status';
 }
 
 export interface MapRequest__Output {
@@ -43,6 +43,6 @@ export interface MapRequest__Output {
   id: string;
   handshake?: _map_v1_Handshake__Output | null;
   status?: _map_v1_TransmissionStatus__Output | null;
-  _handshake?: "handshake";
-  _status?: "status";
+  _handshake?: 'handshake';
+  _status?: 'status';
 }

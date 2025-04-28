@@ -17,10 +17,5 @@
     "declarationMap": true
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "src/map/proto/**/*",
-    "src/sink/proto/**/*",
-    "src/source/proto/**/*",
-    "src/sourcetransformer/proto/**/*"
-  ]
+  "exclude": ["src/map/proto/**/*", "src/sink/proto/**/*", "src/source/proto/**/*", "src/sourcetransformer/proto/**/*"]
 }

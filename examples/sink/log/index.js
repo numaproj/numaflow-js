@@ -1,11 +1,11 @@
-import { sink } from "numaflow";
+import { sink } from 'numaflow';
 
 const logSink = {
   async sink(datumStream) {
     let responses = [];
 
     for (const datum of datumStream) {
-      console.log("User defined Sink: ", datum.id);
+      console.log('User defined Sink: ', datum.id);
       const response = {
         id: datum.id,
         success: true,

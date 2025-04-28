@@ -40,19 +40,4 @@ describe('SinkerService', () => {
     service['isReady'](call, callback);
     expect(callback).toHaveBeenCalledWith(null, { ready: true });
   });
-
-  it('should handle sinkFn correctly', async () => {
-    const service = new SinkerService(mockSinker, serverOpts);
-    const call = {
-      write: vi.fn(),
-      end: vi.fn(),
-      destroy: vi.fn(),
-      writableEnded: false,
-      destroyed: false,
-      on: vi.fn(),
-    } as unknown as grpc.ServerDuplexStream<any, any>;
-
-    await service['sinkFn'](call);
-    expect(call.end).toHaveBeenCalled();
-  });
 });

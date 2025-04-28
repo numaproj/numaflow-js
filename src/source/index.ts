@@ -1,22 +1,18 @@
-import { fileURLToPath } from "url";
-import path from "path";
-import * as grpc from "@grpc/grpc-js";
-import * as protoLoader from "@grpc/proto-loader";
-import type { ProtoGrpcType } from "./proto/source.ts";
-import type { SourceHandlers } from "./proto/source/v1/Source.ts";
-import type { Empty } from "./proto/google/protobuf/Empty.ts";
-import type { ReadyResponse } from "./proto/source/v1/ReadyResponse.ts";
-import type { ReadRequest } from "./proto/source/v1/ReadRequest.ts";
-import type { ReadResponse } from "./proto/source/v1/ReadResponse.ts";
-import type { AckRequest } from "./proto/source/v1/AckRequest.ts";
-import type { AckResponse } from "./proto/source/v1/AckResponse.ts";
-import type { PendingResponse } from "./proto/source/v1/PendingResponse.ts";
-import type { PartitionsResponse } from "./proto/source/v1/PartitionsResponse.ts";
-import {
-  Sourcer,
-  ReadRequest as NumaSourceReadRequest,
-  Offset as NumaSourceOffset,
-} from "./types.js";
+import { fileURLToPath } from 'url';
+import path from 'path';
+import * as grpc from '@grpc/grpc-js';
+import * as protoLoader from '@grpc/proto-loader';
+import type { ProtoGrpcType } from './proto/source.ts';
+import type { SourceHandlers } from './proto/source/v1/Source.ts';
+import type { Empty } from './proto/google/protobuf/Empty.ts';
+import type { ReadyResponse } from './proto/source/v1/ReadyResponse.ts';
+import type { ReadRequest } from './proto/source/v1/ReadRequest.ts';
+import type { ReadResponse } from './proto/source/v1/ReadResponse.ts';
+import type { AckRequest } from './proto/source/v1/AckRequest.ts';
+import type { AckResponse } from './proto/source/v1/AckResponse.ts';
+import type { PendingResponse } from './proto/source/v1/PendingResponse.ts';
+import type { PartitionsResponse } from './proto/source/v1/PartitionsResponse.ts';
+import { Sourcer, ReadRequest as NumaSourceReadRequest, Offset as NumaSourceOffset } from './types.js';
 import {
   DEFAULT_MAX_MESSAGE_SIZE,
   DEFAULT_SERVER_INFO,
@@ -24,17 +20,14 @@ import {
   prepareServer,
   ServerInfo,
   ServerOpts,
-} from "../common/server.js";
-import {
-  ContainerTypes,
-  MinimumNumaflowVersions,
-} from "../common/constants.js";
+} from '../common/server.js';
+import { ContainerTypes, MinimumNumaflowVersions } from '../common/constants.js';
 
-export { createOffsetWithDefaultPartitionId } from "./types.js";
+export { createOffsetWithDefaultPartitionId } from './types.js';
 
 const Paths = {
-  SOCKET_PATH: "/var/run/numaflow/source.sock",
-  SERVER_INFO_FILE_PATH: "/var/run/numaflow/sourcer-server-info",
+  SOCKET_PATH: '/var/run/numaflow/source.sock',
+  SERVER_INFO_FILE_PATH: '/var/run/numaflow/sourcer-server-info',
 };
 
 // Resolve the current directory
@@ -48,13 +41,8 @@ class SourcerService {
   ) {}
 
   start(this: SourcerService) {
-    const packageDef = protoLoader.loadSync(
-      path.join(__dirname, "../../proto/source.proto"),
-      {},
-    );
-    const proto = grpc.loadPackageDefinition(
-      packageDef,
-    ) as unknown as ProtoGrpcType;
+    const packageDef = protoLoader.loadSync(path.join(__dirname, '../../proto/source.proto'), {});
+    const proto = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
 
     const sourceServer: SourceHandlers = {
       IsReady: this.isReady.bind(this),
@@ -70,42 +58,35 @@ class SourcerService {
     };
     prepareServer(serverInfo, Paths.SERVER_INFO_FILE_PATH, Paths.SOCKET_PATH);
     const server = new grpc.Server({
-      "grpc.max_send_message_length": this.opts.grpcMaxMessageSizeBytes,
-      "grpc.max_receive_message_length": this.opts.grpcMaxMessageSizeBytes,
+      'grpc.max_send_message_length': this.opts.grpcMaxMessageSizeBytes,
+      'grpc.max_receive_message_length': this.opts.grpcMaxMessageSizeBytes,
     });
     server.addService(proto.source.v1.Source.service, sourceServer);
-    server.bindAsync(
-      `unix://${Paths.SOCKET_PATH}`,
-      grpc.ServerCredentials.createInsecure(),
-      (err) => {
-        if (err) {
-          console.error("Failed to bind server:", err.message);
-          return;
-        }
-        console.log("Server bound successfully. Starting server...");
-      },
-    );
+    server.bindAsync(`unix://${Paths.SOCKET_PATH}`, grpc.ServerCredentials.createInsecure(), (err) => {
+      if (err) {
+        console.error('Failed to bind server:', err.message);
+        return;
+      }
+      console.log('Server bound successfully. Starting server...');
+    });
   }
 
-  isReady(
-    call: grpc.ServerUnaryCall<Empty, ReadyResponse>,
-    callback: grpc.sendUnaryData<ReadyResponse>,
-  ) {
+  isReady(call: grpc.ServerUnaryCall<Empty, ReadyResponse>, callback: grpc.sendUnaryData<ReadyResponse>) {
     console.log(`Received isReady request`);
     return callback(null, { ready: true });
   }
 
   readFn(call: grpc.ServerDuplexStream<ReadRequest, ReadResponse>) {
-    console.log("Read Fn called");
+    console.log('Read Fn called');
     let handshakeDone = false;
-    call.on("data", async (request: ReadRequest) => {
+    call.on('data', async (request: ReadRequest) => {
       if (!handshakeDone) {
         if (!request.handshake?.sot) {
-          console.error("Expected handshake message");
+          console.error('Expected handshake message');
         }
         handshakeDone = true;
         call.write({ handshake: { sot: true } });
-        console.log("Handshake completed");
+        console.log('Handshake completed');
         return;
       }
       if (request.request) {
@@ -142,40 +123,34 @@ class SourcerService {
         console.log(`Sent EOT`);
         return;
       }
-      console.log(
-        `Invalid Source request: ${JSON.stringify(request, null, 2)}`,
-      );
+      console.log(`Invalid Source request: ${JSON.stringify(request, null, 2)}`);
       throw { message: `invalid request: ${request}` };
     });
 
-    call.on("end", () => {
-      console.log("Stream ended");
+    call.on('end', () => {
+      console.log('Stream ended');
       call.end(); // End the stream
     });
   }
 
   ackFn(call: grpc.ServerDuplexStream<AckRequest, AckResponse>) {
-    console.log("AckFn called");
+    console.log('AckFn called');
     let handshakeDone = false;
-    call.on("data", async (request: AckRequest) => {
+    call.on('data', async (request: AckRequest) => {
       if (!handshakeDone) {
         if (!request.handshake?.sot) {
-          console.error("Expected handshake message");
+          console.error('Expected handshake message');
         }
         handshakeDone = true;
         call.write({ handshake: { sot: true } });
-        console.log("AckFn Handshake completed");
+        console.log('AckFn Handshake completed');
         return;
       }
       if (request.request) {
-        const offsets: NumaSourceOffset[] = (request.request.offsets ?? []).map(
-          (offset) => ({
-            value: Buffer.isBuffer(offset.offset)
-              ? offset.offset
-              : Buffer.from(offset.offset as string),
-            partitionId: offset.partitionId ?? 0,
-          }),
-        );
+        const offsets: NumaSourceOffset[] = (request.request.offsets ?? []).map((offset) => ({
+          value: Buffer.isBuffer(offset.offset) ? offset.offset : Buffer.from(offset.offset as string),
+          partitionId: offset.partitionId ?? 0,
+        }));
         console.log(`Received ack request for ${offsets.length} messages`);
         await this.sourcer.ack(offsets);
         call.write({
@@ -189,16 +164,13 @@ class SourcerService {
       throw { message: `invalid request: ${request}` };
     });
 
-    call.on("end", () => {
-      console.log("Stream ended");
+    call.on('end', () => {
+      console.log('Stream ended');
       call.end(); // End the stream
     });
   }
 
-  async pendingFn(
-    call: grpc.ServerUnaryCall<{}, PendingResponse>,
-    callback: grpc.sendUnaryData<PendingResponse>,
-  ) {
+  async pendingFn(call: grpc.ServerUnaryCall<{}, PendingResponse>, callback: grpc.sendUnaryData<PendingResponse>) {
     const pending = await this.sourcer.pending();
     return callback(null, { result: { count: pending } });
   }
@@ -212,10 +184,7 @@ class SourcerService {
   }
 }
 
-export function createServer(
-  source: Sourcer,
-  options?: ServerOpts,
-): SourcerService {
+export function createServer(source: Sourcer, options?: ServerOpts): SourcerService {
   const opts = parseServerOptions(options);
   return new SourcerService(source, opts);
 }

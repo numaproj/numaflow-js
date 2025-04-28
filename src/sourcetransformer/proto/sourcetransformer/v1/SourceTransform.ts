@@ -1,23 +1,23 @@
 // Original file: proto/sourcetransformer.proto
 
-import type * as grpc from "@grpc/grpc-js";
-import type { MethodDefinition } from "@grpc/proto-loader";
+import type * as grpc from '@grpc/grpc-js';
+import type { MethodDefinition } from '@grpc/proto-loader';
 import type {
   Empty as _google_protobuf_Empty,
   Empty__Output as _google_protobuf_Empty__Output,
-} from "../../google/protobuf/Empty.ts";
+} from '../../google/protobuf/Empty.ts';
 import type {
   ReadyResponse as _sourcetransformer_v1_ReadyResponse,
   ReadyResponse__Output as _sourcetransformer_v1_ReadyResponse__Output,
-} from "../../sourcetransformer/v1/ReadyResponse.ts";
+} from '../../sourcetransformer/v1/ReadyResponse.ts';
 import type {
   SourceTransformRequest as _sourcetransformer_v1_SourceTransformRequest,
   SourceTransformRequest__Output as _sourcetransformer_v1_SourceTransformRequest__Output,
-} from "../../sourcetransformer/v1/SourceTransformRequest.ts";
+} from '../../sourcetransformer/v1/SourceTransformRequest.ts';
 import type {
   SourceTransformResponse as _sourcetransformer_v1_SourceTransformResponse,
   SourceTransformResponse__Output as _sourcetransformer_v1_SourceTransformResponse__Output,
-} from "../../sourcetransformer/v1/SourceTransformResponse.ts";
+} from '../../sourcetransformer/v1/SourceTransformResponse.ts';
 
 export interface SourceTransformClient extends grpc.Client {
   IsReady(
@@ -89,12 +89,8 @@ export interface SourceTransformClient extends grpc.Client {
   >;
 }
 
-export interface SourceTransformHandlers
-  extends grpc.UntypedServiceImplementation {
-  IsReady: grpc.handleUnaryCall<
-    _google_protobuf_Empty__Output,
-    _sourcetransformer_v1_ReadyResponse
-  >;
+export interface SourceTransformHandlers extends grpc.UntypedServiceImplementation {
+  IsReady: grpc.handleUnaryCall<_google_protobuf_Empty__Output, _sourcetransformer_v1_ReadyResponse>;
 
   SourceTransformFn: grpc.handleBidiStreamingCall<
     _sourcetransformer_v1_SourceTransformRequest__Output,

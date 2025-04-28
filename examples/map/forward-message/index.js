@@ -1,4 +1,4 @@
-import { map } from "numaflow";
+import { map } from 'numaflow';
 
 const udfMapper = {
   drop: false,
@@ -7,8 +7,8 @@ const udfMapper = {
     const data = JSON.stringify(datum);
     console.log(`Running user-map function: keys=${keys} datum=${data}`);
     const msg = {
-      value: Buffer.from("value-from-map"),
-      keys: ["test-key1", "test-key2"],
+      value: Buffer.from('value-from-map'),
+      keys: ['test-key1', 'test-key2'],
     };
     const result = this.drop ? msg : map.messageToDrop();
     this.drop = !this.drop;
