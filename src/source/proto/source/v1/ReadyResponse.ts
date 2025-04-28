@@ -1,9 +1,22 @@
 // Original file: proto/source.proto
 
+
+/**
+ * ReadyResponse is the health check result for user defined source.
+ */
 export interface ReadyResponse {
-  ready?: boolean;
+  /**
+   * Required field holding the health check result.
+   */
+  'ready'?: (boolean);
 }
 
+/**
+ * ReadyResponse is the health check result for user defined source.
+ */
 export interface ReadyResponse__Output {
-  ready: boolean;
+  /**
+   * Required field holding the health check result.
+   */
+  'ready': (boolean);
 }
