@@ -1,15 +1,9 @@
-import type * as grpc from "@grpc/grpc-js";
-import type { MessageTypeDefinition } from "@grpc/proto-loader";
+import type * as grpc from '@grpc/grpc-js';
+import type { MessageTypeDefinition } from '@grpc/proto-loader';
 
-import type {
-  MapClient as _map_v1_MapClient,
-  MapDefinition as _map_v1_MapDefinition,
-} from "./map/v1/Map.ts";
+import type { MapClient as _map_v1_MapClient, MapDefinition as _map_v1_MapDefinition } from './map/v1/Map.ts';
 
-type SubtypeConstructor<
-  Constructor extends new (...args: any) => any,
-  Subtype,
-> = {
+type SubtypeConstructor<Constructor extends new (...args: any) => any, Subtype> = {
   new (...args: ConstructorParameters<Constructor>): Subtype;
 };
 

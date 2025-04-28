@@ -1,4 +1,4 @@
-import { sink } from "numaflow";
+import { sink } from 'numaflow';
 
 const fbSink = {
   async sink(datumStream) {
@@ -6,7 +6,7 @@ const fbSink = {
     for (const datum of datumStream) {
       const response = {
         id: datum.id,
-        status: "FALLBACK",
+        status: 'FALLBACK',
       };
       responses.push(response);
     }

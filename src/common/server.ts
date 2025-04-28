@@ -1,6 +1,6 @@
-import path from "path";
-import * as fs from "fs";
-import { Protocol, Protocols } from "./constants.js";
+import path from 'path';
+import * as fs from 'fs';
+import { Protocol, Protocols } from './constants.js';
 
 /**
  * Configuration options for the server communication between the Numa process
@@ -25,17 +25,13 @@ type ServerInfo = {
 
 export const DEFAULT_SERVER_INFO: ServerInfo = {
   protocol: Protocols.UDS,
-  language: "go",
-  version: "v0.9.0",
+  language: 'go',
+  version: 'v0.9.0',
 };
-export const SERVER_INFO_FILE_END = "U+005C__END__";
+export const SERVER_INFO_FILE_END = 'U+005C__END__';
 export const DEFAULT_MAX_MESSAGE_SIZE = 1024 * 1024 * 64; // 64MiB
 
-function prepareServer(
-  serverInfo: ServerInfo,
-  serverInfoFilePath: string,
-  socketAddress: string,
-): void {
+function prepareServer(serverInfo: ServerInfo, serverInfoFilePath: string, socketAddress: string): void {
   try {
     // write server info to file
     const serverInfoContent = JSON.stringify(serverInfo);
@@ -45,31 +41,21 @@ function prepareServer(
       fs.mkdirSync(infoDir, { recursive: true });
       console.log(`Created directory: ${infoDir}`);
     }
-    fs.writeFileSync(
-      serverInfoFilePath,
-      serverInfoContent + SERVER_INFO_FILE_END,
-    );
-    console.log(
-      `Server info file written successfully to ${serverInfoFilePath}`,
-    );
+    fs.writeFileSync(serverInfoFilePath, serverInfoContent + SERVER_INFO_FILE_END);
+    console.log(`Server info file written successfully to ${serverInfoFilePath}`);
     //
     if (fs.existsSync(socketAddress)) {
-      console.log(
-        `Socket file ${socketAddress} already exists. Deleting it...`,
-      );
+      console.log(`Socket file ${socketAddress} already exists. Deleting it...`);
       fs.unlinkSync(socketAddress);
     }
   } catch (err: any) {
-    console.error("FATAL: Failed to write server info file:", err.message);
+    console.error('FATAL: Failed to write server info file:', err.message);
     process.exit(1);
   }
 }
 
 function parseServerOptions(opts: ServerOpts = {}): ServerOpts {
-  const grpcMessageSizeBytes = Math.max(
-    opts.grpcMaxMessageSizeBytes ?? DEFAULT_MAX_MESSAGE_SIZE,
-    512,
-  );
+  const grpcMessageSizeBytes = Math.max(opts.grpcMaxMessageSizeBytes ?? DEFAULT_MAX_MESSAGE_SIZE, 512);
   return { grpcMaxMessageSizeBytes: grpcMessageSizeBytes };
 }
 export { prepareServer, parseServerOptions, ServerInfo, ServerOpts };

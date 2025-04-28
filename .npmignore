@@ -1,0 +1,8 @@
+# Exclude everything except dist/
+src/
+examples/
+node_modules/
+tsconfig.json
+.gitignore
+.vscode/
+*.log

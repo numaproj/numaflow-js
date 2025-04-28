@@ -1,31 +1,19 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import * as grpc from "@grpc/grpc-js";
-import * as protoLoader from "@grpc/proto-loader";
-import type { ProtoGrpcType } from "./proto/map.ts";
-import type { MapHandlers } from "./proto/map/v1/Map.ts";
-import type { Empty } from "./proto/google/protobuf/Empty.ts";
-import type { ReadyResponse } from "./proto/map/v1/ReadyResponse.ts";
-import type { MapRequest } from "./proto/map/v1/MapRequest.ts";
-import type { MapResponse } from "./proto/map/v1/MapResponse.ts";
-import {
-  DEFAULT_SERVER_INFO,
-  parseServerOptions,
-  prepareServer,
-  ServerInfo,
-  ServerOpts,
-} from "../common/server.js";
-import {
-  ContainerTypes,
-  MAP_MODE_KEY,
-  MapModes,
-  MinimumNumaflowVersions,
-  MSG_DROP_TAG,
-} from "../common/constants.js";
+import path from 'path';
+import { fileURLToPath } from 'url';
+import * as grpc from '@grpc/grpc-js';
+import * as protoLoader from '@grpc/proto-loader';
+import type { ProtoGrpcType } from './proto/map.ts';
+import type { MapHandlers } from './proto/map/v1/Map.ts';
+import type { Empty } from './proto/google/protobuf/Empty.ts';
+import type { ReadyResponse } from './proto/map/v1/ReadyResponse.ts';
+import type { MapRequest } from './proto/map/v1/MapRequest.ts';
+import type { MapResponse } from './proto/map/v1/MapResponse.ts';
+import { DEFAULT_SERVER_INFO, parseServerOptions, prepareServer, ServerInfo, ServerOpts } from '../common/server.js';
+import { ContainerTypes, MAP_MODE_KEY, MapModes, MinimumNumaflowVersions, MSG_DROP_TAG } from '../common/constants.js';
 
 const Paths = {
-  SOCKET_PATH: "/var/run/numaflow/map.sock",
-  SERVER_INFO_FILE_PATH: "/var/run/numaflow/mapper-server-info",
+  SOCKET_PATH: '/var/run/numaflow/map.sock',
+  SERVER_INFO_FILE_PATH: '/var/run/numaflow/mapper-server-info',
 };
 
 interface Datum {
@@ -54,9 +42,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 function createDatumFromRequest(request: MapRequest): Datum {
-  let buf = request.request?.value ?? "";
+  let buf = request.request?.value ?? '';
   let payload: Buffer;
-  if (typeof buf === "string") {
+  if (typeof buf === 'string') {
     payload = Buffer.from(buf);
   } else {
     payload = Buffer.from(buf);
@@ -69,9 +57,9 @@ function createDatumFromRequest(request: MapRequest): Datum {
   } else {
     // FIXME: handle nanoseconds field in Timestamp
     let seconds: number;
-    if (typeof et.seconds === "string") {
+    if (typeof et.seconds === 'string') {
       seconds = parseInt(et.seconds, 10);
-    } else if (typeof et.seconds === "object" && "toNumber" in et.seconds) {
+    } else if (typeof et.seconds === 'object' && 'toNumber' in et.seconds) {
       seconds = et.seconds.toNumber();
     } else {
       seconds = et.seconds as number;
@@ -86,9 +74,9 @@ function createDatumFromRequest(request: MapRequest): Datum {
   } else {
     // FIXME: handle nanoseconds field in Timestamp
     let seconds: number;
-    if (typeof wt.seconds === "string") {
+    if (typeof wt.seconds === 'string') {
       seconds = parseInt(wt.seconds, 10);
-    } else if (typeof wt.seconds === "object" && "toNumber" in wt.seconds) {
+    } else if (typeof wt.seconds === 'object' && 'toNumber' in wt.seconds) {
       seconds = wt.seconds.toNumber();
     } else {
       seconds = wt.seconds as number;
@@ -130,30 +118,21 @@ class MapService {
       MapFn: this.mapFn.bind(this),
     };
 
-    const packageDef = protoLoader.loadSync(
-      path.join(__dirname, "../../proto/map.proto"),
-      {},
-    );
-    const proto = grpc.loadPackageDefinition(
-      packageDef,
-    ) as unknown as ProtoGrpcType;
+    const packageDef = protoLoader.loadSync(path.join(__dirname, '../../proto/map.proto'), {});
+    const proto = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
 
     const server = new grpc.Server({
-      "grpc.max_send_message_length": this.opts.grpcMaxMessageSizeBytes,
-      "grpc.max_receive_message_length": this.opts.grpcMaxMessageSizeBytes,
+      'grpc.max_send_message_length': this.opts.grpcMaxMessageSizeBytes,
+      'grpc.max_receive_message_length': this.opts.grpcMaxMessageSizeBytes,
     });
     server.addService(proto.map.v1.Map.service, mapServer);
-    server.bindAsync(
-      `unix://${Paths.SOCKET_PATH}`,
-      grpc.ServerCredentials.createInsecure(),
-      (err) => {
-        if (err) {
-          console.error("Failed to bind server:", err.message);
-          return;
-        }
-        console.log("Server bound successfully. Starting server...");
-      },
-    );
+    server.bindAsync(`unix://${Paths.SOCKET_PATH}`, grpc.ServerCredentials.createInsecure(), (err) => {
+      if (err) {
+        console.error('Failed to bind server:', err.message);
+        return;
+      }
+      console.log('Server bound successfully. Starting server...');
+    });
   }
 
   isReady(
@@ -165,20 +144,17 @@ class MapService {
     return callback(null, { ready: true });
   }
 
-  private mapFn(
-    this: MapService,
-    call: grpc.ServerDuplexStream<MapRequest, MapResponse>,
-  ) {
-    console.log("Map Fn called");
+  private mapFn(this: MapService, call: grpc.ServerDuplexStream<MapRequest, MapResponse>) {
+    console.log('Map Fn called');
     let handshakeDone = false;
-    call.on("data", async (request: MapRequest) => {
+    call.on('data', async (request: MapRequest) => {
       if (!handshakeDone) {
         if (!request.handshake?.sot) {
-          console.error("Expected handshake message");
+          console.error('Expected handshake message');
         }
         handshakeDone = true;
         call.write({ handshake: { sot: true } });
-        console.log("Handshake completed");
+        console.log('Handshake completed');
         return;
       }
       if (request.request) {
@@ -187,9 +163,7 @@ class MapService {
         const mappedValues = await this.mapper.map(keys, datum);
         if (mappedValues.length === 0) {
           // FIXME: Handle this
-          console.error(
-            `Map response can not be empty. message_id=${request.id}`,
-          );
+          console.error(`Map response can not be empty. message_id=${request.id}`);
         }
         const response: MapResponse = {
           id: request.id,
@@ -203,14 +177,12 @@ class MapService {
         call.write(response);
         return;
       }
-      console.log(
-        `Invalid Source request: ${JSON.stringify(request, null, 2)}`,
-      );
+      console.log(`Invalid Source request: ${JSON.stringify(request, null, 2)}`);
       throw { message: `invalid request: ${request}` };
     });
 
-    call.on("end", () => {
-      console.log("Stream ended");
+    call.on('end', () => {
+      console.log('Stream ended');
       call.end(); // End the stream
     });
   }

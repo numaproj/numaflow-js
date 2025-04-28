@@ -1,4 +1,4 @@
-import { Buffer } from "buffer";
+import { Buffer } from 'buffer';
 
 export type ReadRequest = {
   count: number;
@@ -25,11 +25,9 @@ export interface Sourcer {
   partitions(): Promise<number[]>;
 }
 
-export function createOffsetWithDefaultPartitionId(
-  value: Buffer | string,
-): Offset {
+export function createOffsetWithDefaultPartitionId(value: Buffer | string): Offset {
   return {
     value: Buffer.isBuffer(value) ? value : Buffer.from(value),
-    partitionId: +(process.env["NUMAFLOW_REPLICA"] ?? 0),
+    partitionId: +(process.env['NUMAFLOW_REPLICA'] ?? 0),
   };
 }

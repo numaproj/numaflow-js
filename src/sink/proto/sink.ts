@@ -1,18 +1,9 @@
-import type * as grpc from "@grpc/grpc-js";
-import type {
-  EnumTypeDefinition,
-  MessageTypeDefinition,
-} from "@grpc/proto-loader";
+import type * as grpc from '@grpc/grpc-js';
+import type { EnumTypeDefinition, MessageTypeDefinition } from '@grpc/proto-loader';
 
-import type {
-  SinkClient as _sink_v1_SinkClient,
-  SinkDefinition as _sink_v1_SinkDefinition,
-} from "./sink/v1/Sink.ts";
+import type { SinkClient as _sink_v1_SinkClient, SinkDefinition as _sink_v1_SinkDefinition } from './sink/v1/Sink.ts';
 
-type SubtypeConstructor<
-  Constructor extends new (...args: any) => any,
-  Subtype,
-> = {
+type SubtypeConstructor<Constructor extends new (...args: any) => any, Subtype> = {
   new (...args: ConstructorParameters<Constructor>): Subtype;
 };
 

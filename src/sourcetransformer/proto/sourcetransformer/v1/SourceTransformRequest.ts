@@ -3,11 +3,11 @@
 import type {
   Handshake as _sourcetransformer_v1_Handshake,
   Handshake__Output as _sourcetransformer_v1_Handshake__Output,
-} from "../../sourcetransformer/v1/Handshake.ts";
+} from '../../sourcetransformer/v1/Handshake.ts';
 import type {
   Timestamp as _google_protobuf_Timestamp,
   Timestamp__Output as _google_protobuf_Timestamp__Output,
-} from "../../google/protobuf/Timestamp.ts";
+} from '../../google/protobuf/Timestamp.ts';
 
 export interface _sourcetransformer_v1_SourceTransformRequest_Request {
   keys?: string[];
@@ -30,11 +30,11 @@ export interface _sourcetransformer_v1_SourceTransformRequest_Request__Output {
 export interface SourceTransformRequest {
   request?: _sourcetransformer_v1_SourceTransformRequest_Request | null;
   handshake?: _sourcetransformer_v1_Handshake | null;
-  _handshake?: "handshake";
+  _handshake?: 'handshake';
 }
 
 export interface SourceTransformRequest__Output {
   request: _sourcetransformer_v1_SourceTransformRequest_Request__Output | null;
   handshake?: _sourcetransformer_v1_Handshake__Output | null;
-  _handshake?: "handshake";
+  _handshake?: 'handshake';
 }

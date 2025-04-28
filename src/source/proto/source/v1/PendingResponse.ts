@@ -1,6 +1,6 @@
 // Original file: proto/source.proto
 
-import type { Long } from "@grpc/proto-loader";
+import type { Long } from '@grpc/proto-loader';
 
 export interface _source_v1_PendingResponse_Result {
   count?: number | string | Long;

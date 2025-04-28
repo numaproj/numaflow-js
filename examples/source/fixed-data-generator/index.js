@@ -1,8 +1,7 @@
-const numa = require("numaflow");
+const numa = require('numaflow');
 const source = numa.source;
 
-const sleep = (duration_ms) =>
-  new Promise((resolve) => setTimeout(resolve, duration_ms));
+const sleep = (duration_ms) => new Promise((resolve) => setTimeout(resolve, duration_ms));
 
 const fixedDataGenerator = {
   offsetMap: new Map(), // Map to track offsets
@@ -14,7 +13,7 @@ const fixedDataGenerator = {
     this.offsetMap.set(offset.partitionId, offset); // Track the offset
     return [
       {
-        value: Buffer.from("test data"),
+        value: Buffer.from('test data'),
         offset: offset,
         eventTime: new Date(Date.now()),
       },
