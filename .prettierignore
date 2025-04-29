@@ -1,0 +1,8 @@
+# Ignore all Markdown files
+*.md
+
+# Ignore all json files
+*.json
+
+# Ignore the proto folders
+proto/

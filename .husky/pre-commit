@@ -1,0 +1,5 @@
+# Run Prettier to format files
+npm run format
+
+# Run tests
+npm test
