@@ -17,7 +17,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest --run --reporter verbose",
-    "build": "rm -rf dist && npm run format && tsc"
+    "build": "rm -rf dist && npm run format && tsc",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +31,7 @@
   "devDependencies": {
     "@types/node": "22.14.1",
     "@vitest/coverage-v8": "3.1.2",
+    "husky": "9.1.7",
     "prettier": "3.5.3",
     "typescript": "5.8.3",
     "vitest": "3.1.2"
