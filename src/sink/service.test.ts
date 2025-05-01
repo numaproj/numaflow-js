@@ -1,43 +1,348 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SinkerService, timestampToDate } from './service.js';
-import { Sinker } from './types.js';
-import { ServerOpts } from '../common/server.js';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as grpc from '@grpc/grpc-js';
+import * as fs from 'fs';
+import * as path from 'path';
+import { ProtoGrpcType } from './proto/sink.js';
+import * as protoLoader from '@grpc/proto-loader';
+import { SinkClient, SinkHandlers } from './proto/sink/v1/Sink.js';
+import { SinkerService } from './service.js';
+import { error } from 'console';
+import { SinkResponse } from './proto/sink/v1/SinkResponse.js';
+import { Status } from './proto/sink/v1/Status.js';
 
-describe('SinkerService', () => {
-    let mockSinker: Sinker;
-    let serverOpts: ServerOpts;
-
-    beforeEach(() => {
-        mockSinker = {
-            sink: vi.fn().mockResolvedValue([]),
-        };
-        serverOpts = {
+const TMP_SOCKET_PATH = path.join(__dirname, 'test-sink.sock');
+class TestSinkServer {
+    private server: grpc.Server;
+    private service: SinkerService;
+    private protoType: ProtoGrpcType;
+    constructor(mockSinker: any) {
+        const packageDef = protoLoader.loadSync(path.join(__dirname, '../../proto/sink.proto'), {});
+        this.protoType = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
+        const serverOpts = {
             grpcMaxMessageSizeBytes: 1024 * 1024,
         };
+        this.server = new grpc.Server();
+        this.service = new SinkerService(mockSinker, serverOpts);
+        const sinkServer: SinkHandlers = {
+            IsReady: (this.service as any).isReady.bind(this.service),
+            SinkFn: (this.service as any).sinkFn.bind(this.service),
+        };
+        this.server.addService(this.protoType.sink.v1.Sink.service, sinkServer);
+    }
+
+    start(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.server.bindAsync(`unix://${TMP_SOCKET_PATH}`, grpc.ServerCredentials.createInsecure(), (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    stop(): Promise<void> {
+        return new Promise((resolve, reject) =>
+            this.server.tryShutdown((error?: Error) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            }),
+        );
+    }
+
+    getClient() {
+        return new this.protoType.sink.v1.Sink(`unix://${TMP_SOCKET_PATH}`, grpc.credentials.createInsecure());
+    }
+}
+
+describe('SinkerService Integration Tests', () => {
+    let server: TestSinkServer;
+    let client: SinkClient;
+
+    afterEach(async () => {
+        if (client) {
+            client.close();
+        }
+        await server.stop();
+        if (fs.existsSync(TMP_SOCKET_PATH)) {
+            fs.unlinkSync(TMP_SOCKET_PATH);
+        }
     });
 
-    it('should initialize with correct properties', () => {
-        const service = new SinkerService(mockSinker, serverOpts);
-        expect(service).toBeDefined();
+    it('should start the server and handle isReady requests', async () => {
+        const mockSinker = {
+            sink: vi.fn().mockResolvedValue([{ id: '1', success: true }]),
+        };
+
+        server = new TestSinkServer(mockSinker);
+        await server.start();
+        client = server.getClient();
+        const isReadyResponse = await new Promise((resolve, reject) => {
+            client.IsReady({}, (err: grpc.ServiceError | null, response: any) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+
+        expect(isReadyResponse).toEqual({ ready: true });
     });
 
-    it('should convert timestamp to Date correctly', () => {
-        const timestamp = { seconds: 1620000000, nanos: 500000000 };
-        const date = timestampToDate(timestamp);
-        expect(date).toEqual(new Date(1620000000 * 1000 + 500));
+    it('should handle handshake in sinkFn', async () => {
+        const mockSinker = {
+            sink: vi.fn().mockResolvedValue([{ id: '1', success: true }]),
+        };
+
+        server = new TestSinkServer(mockSinker);
+        await server.start();
+        client = server.getClient();
+        const stream = client.SinkFn();
+
+        // Create a promise to track handshake response
+        const handshakePromise = new Promise<SinkResponse>((resolve) => {
+            stream.on('data', (response: SinkResponse) => {
+                if (response.handshake?.sot) {
+                    resolve(response);
+                }
+            });
+        });
+
+        // Send handshake request
+        stream.write({ handshake: { sot: true } });
+
+        // Wait for handshake response
+        const response = await handshakePromise;
+        expect(response.handshake?.sot).toBe(true);
+
+        stream.end();
     });
 
-    it('should return null for invalid timestamp', () => {
-        const date = timestampToDate(null);
-        expect(date).toBeNull();
+    it('should process data and send response with EOT', async () => {
+        // Mock the sinker to return specific responses
+        const mockSinker = {
+            sink: vi.fn().mockResolvedValueOnce([
+                { id: '1', success: true },
+                { id: '2', fallback: true },
+                { id: '3', serve: true, serveResponse: Buffer.from('serve-response') },
+            ]),
+        };
+        server = new TestSinkServer(mockSinker);
+        await server.start();
+        client = server.getClient();
+
+        const stream = client.SinkFn();
+        const responses: SinkResponse[] = [];
+
+        // Collect responses
+        stream.on('data', (response: SinkResponse) => {
+            responses.push(response);
+        });
+
+        // Create a promise that resolves when we get all expected responses
+        const responsesPromise = new Promise<void>((resolve) => {
+            stream.on('data', (response: SinkResponse) => {
+                if (response.status?.eot) {
+                    resolve();
+                }
+            });
+        });
+
+        // Send handshake
+        stream.write({ handshake: { sot: true } });
+
+        // Wait a bit to ensure handshake is processed
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        stream.write({
+            request: {
+                id: '1',
+                keys: ['key1'],
+                value: Buffer.from('test-value-1'),
+                headers: { header1: 'value1' },
+            },
+        });
+
+        stream.write({
+            request: {
+                id: '2',
+                keys: ['key2'],
+                value: Buffer.from('test-value-2'),
+                headers: { header2: 'value2' },
+            },
+        });
+
+        stream.write({
+            request: {
+                id: '3',
+                keys: ['key3'],
+                value: Buffer.from('test-value-3'),
+                headers: { header3: 'value3' },
+            },
+        });
+
+        // Send EOT
+        stream.write({ status: { eot: true } });
+
+        // Wait for all responses including EOT
+        await responsesPromise;
+
+        // Verify sinker was called
+        expect(mockSinker.sink).toHaveBeenCalledTimes(1);
+
+        // Verify responses
+        const resultsResponse = responses.find((r) => r.results);
+        expect(resultsResponse).toBeDefined();
+        expect(resultsResponse?.results?.length).toBe(3);
+        expect(resultsResponse?.results?.[0]?.id).toBe('1');
+        expect(resultsResponse?.results?.[0]?.status).toBe(0); // Status.SUCCESS
+        expect(resultsResponse?.results?.[1]?.id).toBe('2');
+        expect(resultsResponse?.results?.[1]?.status).toBe(2); // Status.FALLBACK
+        expect(resultsResponse?.results?.[2]?.id).toBe('3');
+        expect(resultsResponse?.results?.[2]?.status).toBe(3); // Status.SERVE
+        expect(resultsResponse?.results?.[2]?.serveResponse).toEqual(Buffer.from('serve-response'));
+
+        // Verify EOT response
+        const eotResponse = responses.find((r) => r.status?.eot);
+        expect(eotResponse).toBeDefined();
+        expect(eotResponse?.status?.eot).toBe(true);
+
+        stream.end();
     });
 
-    it('should handle isReady correctly', () => {
-        const service = new SinkerService(mockSinker, serverOpts);
-        const call = {} as grpc.ServerUnaryCall<any, any>;
-        const callback = vi.fn();
-        service['isReady'](call, callback);
-        expect(callback).toHaveBeenCalledWith(null, { ready: true });
+    it('should handle error responses in sinkFn', async () => {
+        // Mock the sinker to return an error response
+        const mockSinker = {
+            sink: vi.fn().mockResolvedValueOnce([{ id: '1', success: false, err: 'Test err message' }]),
+        };
+        server = new TestSinkServer(mockSinker);
+        await server.start();
+        client = server.getClient();
+
+        const stream = client.SinkFn();
+        const responses: SinkResponse[] = [];
+
+        // Collect responses
+        stream.on('data', (response: SinkResponse) => {
+            responses.push(response);
+        });
+
+        // Create a promise that resolves when we get all expected responses
+        const responsesPromise = new Promise<void>((resolve) => {
+            stream.on('data', (response: SinkResponse) => {
+                if (response.status?.eot) {
+                    resolve();
+                }
+            });
+        });
+
+        // Send handshake
+        stream.write({ handshake: { sot: true } });
+
+        // Wait a bit to ensure handshake is processed
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Send data
+        stream.write({
+            request: {
+                id: '1',
+                value: Buffer.from('test-value'),
+            },
+        });
+
+        // Send EOT
+        stream.write({ status: { eot: true } });
+
+        // Wait for all responses including EOT
+        await responsesPromise;
+
+        // Verify error response
+        const resultsResponse = responses.find((r) => r.results);
+        expect(resultsResponse).toBeDefined();
+        expect(resultsResponse?.results?.length).toBe(1);
+        expect(resultsResponse?.results?.[0]?.id).toBe('1');
+        expect(resultsResponse?.results?.[0]?.status).toBe(1); // Status.FAILURE
+        expect(resultsResponse?.results?.[0]?.errMsg).toBe('Test err message');
+
+        stream.end();
+    });
+
+    it('should handle multiple batches in sinkFn', async () => {
+        // Mock the sinker for two batches
+        const mockSinker = {
+            sink: vi.fn().mockResolvedValue([{ id: 'any', success: true }]),
+        };
+        server = new TestSinkServer(mockSinker);
+        await server.start();
+        client = server.getClient();
+
+        const stream = client.SinkFn();
+        const responses: SinkResponse[] = [];
+        let eotCount = 0;
+
+        // Create a promise that resolves when we get all expected EOT responses
+        const responsesPromise = new Promise<void>((resolve) => {
+            stream.on('data', (response: SinkResponse) => {
+                responses.push(response);
+                if (response.status?.eot) {
+                    eotCount++;
+                    if (eotCount === 2) {
+                        resolve();
+                    }
+                }
+            });
+        });
+
+        // Send handshake
+        stream.write({ handshake: { sot: true } });
+
+        // Wait a bit to ensure handshake is processed
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Send first batch
+        stream.write({
+            request: {
+                id: 'batch1-1',
+                value: Buffer.from('batch1-value'),
+            },
+        });
+
+        // Send first EOT
+        stream.write({ status: { eot: true } });
+
+        // Wait a bit to ensure first batch is processed
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // Send second batch
+        stream.write({
+            request: {
+                id: 'batch2-1',
+                value: Buffer.from('batch2-value'),
+            },
+        });
+
+        // Send second EOT
+        stream.write({ status: { eot: true } });
+
+        // Wait for all responses including both EOTs
+        await responsesPromise;
+
+        // Verify sinker was called twice
+        expect(mockSinker.sink).toHaveBeenCalledTimes(2);
+
+        // Verify we got responses for both batches
+        const resultResponses = responses.filter((r) => r.results);
+        expect(resultResponses.length).toBe(2);
+
+        // Verify EOT responses
+        const eotResponses = responses.filter((r) => r.status?.eot);
+        expect(eotResponses.length).toBe(2);
+
+        stream.end();
     });
 });

@@ -80,30 +80,39 @@ export class SinkerService {
     }
 
     private async sinkFn(call: grpc.ServerDuplexStream<SinkRequest, SinkResponse>): Promise<void> {
-        try {
-            const handshakeSuccessful = await this.performHandshake(call);
-            if (!handshakeSuccessful) {
-                throw new Error('Handshake failed');
-            }
-            let batch: Datum[] = [];
-            for await (const rawReq of call) {
-                let request = rawReq as SinkRequest;
-                if (request.status?.eot) {
+        let handshakeDone = false;
+        let batch: Datum[] = [];
+        call.on('data', async (rawReq: SinkRequest) => {
+            try {
+                if (!handshakeDone) {
+                    if (!rawReq.handshake?.sot) {
+                        console.error('Expected handshake message');
+                        throw new Error('Handshake failed');
+                    }
+                    handshakeDone = true;
+                    call.write({ handshake: { sot: true } });
+                    console.log('Handshake completed');
+                    return;
+                }
+                if (rawReq.status?.eot) {
                     await this.processDataAndSendEOT(call, batch);
                     batch = [];
+                } else if (rawReq.request) {
+                    const datum: Datum = this.createDatumFromRequest(rawReq);
+                    batch.push(datum);
                 } else {
-                    if (request.request) {
-                        const datum: Datum = this.createDatumFromRequest(request);
-                        batch.push(datum);
-                    }
+                    console.error(`Invalid Sink request: ${JSON.stringify(rawReq, null, 2)}`);
+                    throw new Error('Invalid request');
                 }
+            } catch (err) {
+                console.error('Error in SinkFn data handler:', err);
+                call.destroy();
             }
-        } catch (err) {
-            console.error('Error in sinkFn:', err);
-            call.destroy();
-        } finally {
+        });
+        call.on('end', async () => {
+            console.log('Stream ended');
             call.end();
-        }
+        });
     }
 
     private createDatumFromRequest(request: SinkRequest): Datum {
