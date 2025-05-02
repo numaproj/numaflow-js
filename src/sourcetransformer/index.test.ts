@@ -17,11 +17,10 @@ const TMP_SOCKET_PATH = path.join(__dirname, 'test-sourcetransformer.sock');
 class TestSourceTransformServer {
     private server: grpc.Server;
     private service: ReturnType<typeof createServer>;
-    private protoType: ProtoGrpcType;
 
     constructor(mockTransformer: SourceTransformer) {
         const packageDef = protoLoader.loadSync(path.join(__dirname, '../../proto/sourcetransformer.proto'), {});
-        this.protoType = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
+        const proto = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
 
         const serverOpts = {
             grpcMaxMessageSizeBytes: 1024 * 1024,
@@ -33,8 +32,8 @@ class TestSourceTransformServer {
         // Override the socket path for testing
         Object.defineProperty(this.service, 'socketPath', { value: TMP_SOCKET_PATH });
 
-        // Add the service handlers directly
-        this.server.addService(this.protoType.sourcetransformer.v1.SourceTransform.service, {
+        // Add the service handlers
+        this.server.addService(proto.sourcetransformer.v1.SourceTransform.service, {
             IsReady: (this.service as any).isReady.bind(this.service),
             SourceTransformFn: (this.service as any).sourceTransformFn.bind(this.service),
         });
@@ -65,7 +64,9 @@ class TestSourceTransformServer {
     }
 
     getClient(): SourceTransformClient {
-        return new this.protoType.sourcetransformer.v1.SourceTransform(
+        const packageDef = protoLoader.loadSync(path.join(__dirname, '../../proto/sourcetransformer.proto'), {});
+        const proto = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
+        return new proto.sourcetransformer.v1.SourceTransform(
             `unix://${TMP_SOCKET_PATH}`,
             grpc.credentials.createInsecure(),
         );

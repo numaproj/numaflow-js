@@ -10,6 +10,7 @@ import type { MapRequest } from './proto/map/v1/MapRequest.ts';
 import type { MapResponse } from './proto/map/v1/MapResponse.ts';
 import { DEFAULT_SERVER_INFO, parseServerOptions, prepareServer, ServerInfo, ServerOpts } from '../common/server.js';
 import { ContainerTypes, MAP_MODE_KEY, MapModes, MinimumNumaflowVersions, MSG_DROP_TAG } from '../common/constants.js';
+import { Timestamp } from './proto/google/protobuf/Timestamp.js';
 
 const Paths = {
     SOCKET_PATH: '/var/run/numaflow/map.sock',
@@ -29,6 +30,14 @@ type Message = {
     tags?: string[];
 };
 
+export function timestampToDate(timestamp: Timestamp | null | undefined): Date {
+    if (!timestamp) {
+        return new Date();
+    }
+    const seconds = timestamp.seconds ?? 0;
+    const nanos = timestamp.nanos ?? 0;
+    return new Date(Number(seconds) * 1000 + Math.floor(Number(nanos) / 1e6));
+}
 export function messageToDrop(): Message {
     return { tags: [MSG_DROP_TAG] };
 }
@@ -50,47 +59,13 @@ function createDatumFromRequest(request: MapRequest): Datum {
         payload = Buffer.from(buf);
     }
 
-    let et = request.request?.eventTime ?? new Date();
-    let eventTimeResponse: Date;
-    if (et instanceof Date) {
-        eventTimeResponse = et;
-    } else {
-        // FIXME: handle nanoseconds field in Timestamp
-        let seconds: number;
-        if (typeof et.seconds === 'string') {
-            seconds = parseInt(et.seconds, 10);
-        } else if (typeof et.seconds === 'object' && 'toNumber' in et.seconds) {
-            seconds = et.seconds.toNumber();
-        } else {
-            seconds = et.seconds as number;
-        }
-        eventTimeResponse = new Date(seconds * 1000);
-    }
-
-    let wt = request.request?.watermark ?? new Date();
-    let watermarkResponse: Date;
-    if (wt instanceof Date) {
-        watermarkResponse = wt;
-    } else {
-        // FIXME: handle nanoseconds field in Timestamp
-        let seconds: number;
-        if (typeof wt.seconds === 'string') {
-            seconds = parseInt(wt.seconds, 10);
-        } else if (typeof wt.seconds === 'object' && 'toNumber' in wt.seconds) {
-            seconds = wt.seconds.toNumber();
-        } else {
-            seconds = wt.seconds as number;
-        }
-        watermarkResponse = new Date(seconds * 1000);
-    }
-
+    const eventTimeResponse = timestampToDate(request.request?.eventTime);
+    const watermarkResponse = timestampToDate(request.request?.watermark);
     const headersObj = request.request?.headers ?? {};
     const headersMap = new Map<String, String>();
-
     for (const [key, value] of Object.entries(headersObj)) {
         headersMap.set(key, value);
     }
-
     return {
         value: payload,
         eventTime: eventTimeResponse,

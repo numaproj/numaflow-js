@@ -16,10 +16,9 @@ const TMP_SOCKET_PATH = path.join(__dirname, 'test-sink.sock');
 class TestSinkServer {
     private server: grpc.Server;
     private service: SinkerService;
-    private protoType: ProtoGrpcType;
     constructor(mockSinker: any) {
         const packageDef = protoLoader.loadSync(path.join(__dirname, '../../proto/sink.proto'), {});
-        this.protoType = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
+        const proto = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
         const serverOpts = {
             grpcMaxMessageSizeBytes: 1024 * 1024,
         };
@@ -31,7 +30,7 @@ class TestSinkServer {
             IsReady: (this.service as any).isReady.bind(this.service),
             SinkFn: (this.service as any).sinkFn.bind(this.service),
         };
-        this.server.addService(this.protoType.sink.v1.Sink.service, sinkServer);
+        this.server.addService(proto.sink.v1.Sink.service, sinkServer);
     }
 
     start(): Promise<void> {
@@ -59,7 +58,9 @@ class TestSinkServer {
     }
 
     getClient() {
-        return new this.protoType.sink.v1.Sink(`unix://${TMP_SOCKET_PATH}`, grpc.credentials.createInsecure());
+        const packageDef = protoLoader.loadSync(path.join(__dirname, '../../proto/sink.proto'), {});
+        const proto = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
+        return new proto.sink.v1.Sink(`unix://${TMP_SOCKET_PATH}`, grpc.credentials.createInsecure());
     }
 }
 
