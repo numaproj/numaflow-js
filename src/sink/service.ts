@@ -83,34 +83,29 @@ export class SinkerService {
         let handshakeDone = false;
         let batch: Datum[] = [];
         call.on('data', async (rawReq: SinkRequest) => {
-            try {
-                if (!handshakeDone) {
-                    if (!rawReq.handshake?.sot) {
-                        console.error('Expected handshake message');
-                        throw new Error('Handshake failed');
-                    }
-                    handshakeDone = true;
-                    call.write({ handshake: { sot: true } });
-                    console.log('Handshake completed');
-                    return;
+            if (!handshakeDone) {
+                if (!rawReq.handshake?.sot) {
+                    console.error('Expected handshake message');
+                    throw new Error('Handshake failed');
                 }
-                if (rawReq.status?.eot) {
-                    await this.processDataAndSendEOT(call, batch);
-                    batch = [];
-                } else if (rawReq.request) {
-                    const datum: Datum = this.createDatumFromRequest(rawReq);
-                    batch.push(datum);
-                } else {
-                    console.error(`Invalid Sink request: ${JSON.stringify(rawReq, null, 2)}`);
-                    throw new Error('Invalid request');
-                }
-            } catch (err) {
-                console.error('Error in SinkFn data handler:', err);
-                call.destroy();
+                handshakeDone = true;
+                call.write({ handshake: { sot: true } });
+                console.log('Handshake completed');
+                return;
+            }
+            if (rawReq.status?.eot) {
+                await this.processDataAndSendEOT(call, batch);
+                batch = [];
+            } else if (rawReq.request) {
+                const datum: Datum = this.createDatumFromRequest(rawReq);
+                batch.push(datum);
+            } else {
+                console.error(`Invalid Sink request: ${JSON.stringify(rawReq, null, 2)}`);
+                throw new Error('Invalid request');
             }
         });
         call.on('end', async () => {
-            console.log('Stream ended');
+            console.log('Stream ended for sink');
             call.end();
         });
     }

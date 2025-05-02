@@ -21,6 +21,7 @@ const Paths = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// TODO: move this to common
 export function timestampToDate(timestamp: Timestamp | null | undefined): Date {
     if (!timestamp) {
         return new Date();
@@ -112,30 +113,24 @@ class SourceTransformService {
                 return;
             }
             if (request.request) {
-                try {
-                    const keys = request.request.keys ?? [];
-                    const datum = this.createDatumFromRequest(request);
-                    const transformedValues = await this.transformer.transform(keys, datum);
-                    if (transformedValues.length === 0) {
-                        console.error(`Transform response cannot be empty. message_id=${request.request.id}`);
-                    }
-                    const response: SourceTransformResponse = {
-                        id: request.request.id,
-                        results: [],
-                    };
-                    for (const msg of transformedValues) {
-                        response.results?.push({
-                            ...msg,
-                            eventTime: msg.eventTime
-                                ? { seconds: Math.floor(msg.eventTime.getTime() / 1000) }
-                                : undefined,
-                        });
-                    }
-                    call.write(response);
-                    return;
-                } catch (e) {
-                    console.log('catch error: ', e);
+                const keys = request.request.keys ?? [];
+                const datum = this.createDatumFromRequest(request);
+                const transformedValues = await this.transformer.transform(keys, datum);
+                if (transformedValues.length === 0) {
+                    console.error(`Transform response cannot be empty. message_id=${request.request.id}`);
                 }
+                const response: SourceTransformResponse = {
+                    id: request.request.id,
+                    results: [],
+                };
+                for (const msg of transformedValues) {
+                    response.results?.push({
+                        ...msg,
+                        eventTime: msg.eventTime ? { seconds: Math.floor(msg.eventTime.getTime() / 1000) } : undefined,
+                    });
+                }
+                call.write(response);
+                return;
             }
             console.log(`Invalid Source request: ${JSON.stringify(request, null, 2)}`);
             throw { message: `invalid request: ${request}` };
