@@ -6,7 +6,6 @@ import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
 import type { ProtoGrpcType } from './proto/map.ts';
 import type { MapClient, MapHandlers } from './proto/map/v1/Map.ts';
-import type { MapRequest } from './proto/map/v1/MapRequest.ts';
 import type { MapResponse } from './proto/map/v1/MapResponse.ts';
 import { createServer } from './index.js';
 
@@ -15,7 +14,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const TMP_SOCKET_PATH = '/tmp/numaflow-map-test.sock';
-const TMP_SERVER_INFO_PATH = '/tmp/numaflow-map-server-info-test';
 
 class TestMapServer {
     private server: grpc.Server;
