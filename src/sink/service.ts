@@ -11,10 +11,10 @@ import * as protoLoader from '@grpc/proto-loader';
 import type { ProtoGrpcType } from './proto/sink.ts';
 import * as path from 'path';
 import { Status } from './proto/sink/v1/Status.js';
-import type { Timestamp } from './proto/google/protobuf/Timestamp.ts';
 import { CONTAINER_TYPE, ContainerTypes, MinimumNumaflowVersions } from '../common/constants.js';
 import { DEFAULT_SERVER_INFO, ServerInfo, ServerOpts } from '../common/server.js';
 import { prepareServer } from '../common/server.js';
+import { Timestamp } from './proto/google/protobuf/Timestamp.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,9 +26,9 @@ const Paths = {
     FALLBACK_SERVER_INFO_FILE_PATH: '/var/run/fallback-server-info',
 };
 
-export function timestampToDate(timestamp: Timestamp | null | undefined): Date | null {
+export function timestampToDate(timestamp: Timestamp | null | undefined): Date {
     if (!timestamp) {
-        return null;
+        return new Date();
     }
     const seconds = timestamp.seconds ?? 0;
     const nanos = timestamp.nanos ?? 0;
@@ -201,50 +201,6 @@ export class SinkerService {
                     resolve();
                 }
             });
-        });
-    }
-
-    // Performs the handshake with the client.
-    private async performHandshake(call: grpc.ServerDuplexStream<SinkRequest, SinkResponse>): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            const cleanup = () => {
-                call.removeListener('data', onData);
-                call.removeListener('error', onError);
-            };
-
-            const onData = (rawRequest: SinkRequest) => {
-                cleanup();
-                const request = rawRequest as SinkRequest;
-
-                // Validate the handshake
-                if (!request.handshake || !request.handshake.sot) {
-                    reject(new Error('Expected handshake message'));
-                    return;
-                }
-
-                // Send the handshake response
-                const handshakeResponse: SinkResponse = {
-                    handshake: {
-                        sot: true,
-                    },
-                };
-                call.write(handshakeResponse, (err: any) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(true);
-                    }
-                });
-            };
-
-            const onError = (err: Error) => {
-                cleanup(); // Clean up listeners on error
-                console.error('Error during handshake:', err);
-                reject(err);
-            };
-
-            call.once('data', onData);
-            call.once('error', onError);
         });
     }
 }

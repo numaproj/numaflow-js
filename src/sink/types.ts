@@ -11,8 +11,8 @@ export interface Datum {
     id: string;
     keys: string[];
     value: Buffer;
-    eventTime: Date | null;
-    watermark: Date | null;
+    eventTime: Date;
+    watermark: Date;
     headers: Record<string, string>;
 }
 
