@@ -11,6 +11,7 @@ import type { SourceTransformResponse } from './proto/sourcetransformer/v1/Sourc
 import { DEFAULT_SERVER_INFO, prepareServer, ServerInfo, ServerOpts } from '../common/server.js';
 import { parseServerOptions } from '../common/server.js';
 import { ContainerTypes, MinimumNumaflowVersions, MSG_DROP_TAG } from '../common/constants.js';
+import { Timestamp } from './proto/google/protobuf/Timestamp.js';
 
 const Paths = {
     SOCKET_PATH: '/var/run/numaflow/sourcetransform.sock',
@@ -19,6 +20,15 @@ const Paths = {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+export function timestampToDate(timestamp: Timestamp | null | undefined): Date {
+    if (!timestamp) {
+        return new Date();
+    }
+    const seconds = timestamp.seconds ?? 0;
+    const nanos = timestamp.nanos ?? 0;
+    return new Date(Number(seconds) * 1000 + Math.floor(Number(nanos) / 1e6));
+}
 
 export function messageToDrop(eventTime: Date): Message {
     return { eventTime, tags: [MSG_DROP_TAG] };
@@ -102,31 +112,37 @@ class SourceTransformService {
                 return;
             }
             if (request.request) {
-                const keys = request.request.keys ?? [];
-                const datum = this.createDatumFromRequest(request);
-                const transformedValues = await this.transformer.transform(keys, datum);
-                if (transformedValues.length === 0) {
-                    console.error(`Transform response cannot be empty. message_id=${request.request.id}`);
+                try {
+                    const keys = request.request.keys ?? [];
+                    const datum = this.createDatumFromRequest(request);
+                    const transformedValues = await this.transformer.transform(keys, datum);
+                    if (transformedValues.length === 0) {
+                        console.error(`Transform response cannot be empty. message_id=${request.request.id}`);
+                    }
+                    const response: SourceTransformResponse = {
+                        id: request.request.id,
+                        results: [],
+                    };
+                    for (const msg of transformedValues) {
+                        response.results?.push({
+                            ...msg,
+                            eventTime: msg.eventTime
+                                ? { seconds: Math.floor(msg.eventTime.getTime() / 1000) }
+                                : undefined,
+                        });
+                    }
+                    call.write(response);
+                    return;
+                } catch (e) {
+                    console.log('catch error: ', e);
                 }
-                const response: SourceTransformResponse = {
-                    id: request.request.id,
-                    results: [],
-                };
-                for (const msg of transformedValues) {
-                    response.results?.push({
-                        ...msg,
-                        eventTime: msg.eventTime ? { seconds: Math.floor(msg.eventTime.getTime() / 1000) } : undefined,
-                    });
-                }
-                call.write(response);
-                return;
             }
             console.log(`Invalid Source request: ${JSON.stringify(request, null, 2)}`);
             throw { message: `invalid request: ${request}` };
         });
 
         call.on('end', () => {
-            console.log('Stream ended');
+            console.log('Stream ended in source transformer');
             call.end(); // End the stream
         });
     }
@@ -135,40 +151,8 @@ class SourceTransformService {
         const buf = request.request?.value ?? '';
         const payload = typeof buf === 'string' ? Buffer.from(buf) : Buffer.from(buf);
 
-        const et = request.request?.eventTime ?? new Date();
-        let eventTimeResponse: Date;
-        if (et instanceof Date) {
-            eventTimeResponse = et;
-        } else {
-            // FIXME: handle nanoseconds field in Timestamp
-            let seconds: number;
-            if (typeof et.seconds === 'string') {
-                seconds = parseInt(et.seconds, 10);
-            } else if (typeof et.seconds === 'object' && 'toNumber' in et.seconds) {
-                seconds = et.seconds.toNumber();
-            } else {
-                seconds = et.seconds as number;
-            }
-            eventTimeResponse = new Date(seconds * 1000);
-        }
-
-        const wt = request.request?.watermark ?? new Date();
-        let watermarkResponse: Date;
-        if (wt instanceof Date) {
-            watermarkResponse = wt;
-        } else {
-            // FIXME: handle nanoseconds field in Timestamp
-            let seconds: number;
-            if (typeof wt.seconds === 'string') {
-                seconds = parseInt(wt.seconds, 10);
-            } else if (typeof wt.seconds === 'object' && 'toNumber' in wt.seconds) {
-                seconds = wt.seconds.toNumber();
-            } else {
-                seconds = wt.seconds as number;
-            }
-            watermarkResponse = new Date(seconds * 1000);
-        }
-
+        const eventTimeResponse = timestampToDate(request.request?.eventTime);
+        const watermarkResponse = timestampToDate(request.request?.watermark);
         const headersObj = request.request?.headers ?? {};
         const headersMap = new Map<string, string>();
 

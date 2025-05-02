@@ -5,11 +5,13 @@ import * as path from 'path';
 import { ProtoGrpcType } from './proto/sink.js';
 import * as protoLoader from '@grpc/proto-loader';
 import { SinkClient, SinkHandlers } from './proto/sink/v1/Sink.js';
-import { SinkerService } from './service.js';
-import { error } from 'console';
+import { SinkerService, timestampToDate } from './service.js';
 import { SinkResponse } from './proto/sink/v1/SinkResponse.js';
-import { Status } from './proto/sink/v1/Status.js';
+import type { Timestamp } from './proto/google/protobuf/Timestamp.ts';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const TMP_SOCKET_PATH = path.join(__dirname, 'test-sink.sock');
 class TestSinkServer {
     private server: grpc.Server;
@@ -23,6 +25,8 @@ class TestSinkServer {
         };
         this.server = new grpc.Server();
         this.service = new SinkerService(mockSinker, serverOpts);
+        // Override the socket path for testing
+        Object.defineProperty(this.service, 'socketPath', { value: TMP_SOCKET_PATH });
         const sinkServer: SinkHandlers = {
             IsReady: (this.service as any).isReady.bind(this.service),
             SinkFn: (this.service as any).sinkFn.bind(this.service),
@@ -344,5 +348,89 @@ describe('SinkerService Integration Tests', () => {
         expect(eotResponses.length).toBe(2);
 
         stream.end();
+    });
+});
+
+describe('timestampToDate', () => {
+    it('should return current date when timestamp is null', () => {
+        const before = Date.now();
+        const date = timestampToDate(null);
+        const after = Date.now();
+        expect(date).toBeInstanceOf(Date);
+        expect(date.getTime()).toBeGreaterThanOrEqual(before);
+        expect(date.getTime()).toBeLessThanOrEqual(after);
+    });
+
+    it('should return default date when timestamp is undefined', () => {
+        const before = Date.now();
+        const date = timestampToDate(undefined);
+        const after = Date.now();
+        expect(date).toBeInstanceOf(Date);
+        expect(date.getTime()).toBeGreaterThanOrEqual(before);
+        expect(date.getTime()).toBeLessThanOrEqual(after);
+    });
+
+    it('should convert timestamp with seconds only', () => {
+        const timestamp: Timestamp = { seconds: 1609459200 }; // 2021-01-01T00:00:00Z
+        const date = timestampToDate(timestamp);
+
+        expect(date).toBeInstanceOf(Date);
+        expect(date.getTime()).toBe(1609459200000);
+        expect(date.toISOString()).toBe('2021-01-01T00:00:00.000Z');
+    });
+
+    it('should convert timestamp with nanos only', () => {
+        const timestamp: Timestamp = { nanos: 500000000 }; // 0.5 seconds
+        const date = timestampToDate(timestamp);
+
+        expect(date).toBeInstanceOf(Date);
+        expect(date.getTime()).toBe(500); // 500 milliseconds
+    });
+
+    it('should convert timestamp with both seconds and nanos', () => {
+        const timestamp: Timestamp = {
+            seconds: 1609459200,
+            nanos: 500000000,
+        }; // 2021-01-01T00:00:00.5Z
+
+        const date = timestampToDate(timestamp);
+
+        expect(date).toBeInstanceOf(Date);
+        expect(date.getTime()).toBe(1609459200500);
+        expect(date.toISOString()).toBe('2021-01-01T00:00:00.500Z');
+    });
+
+    it('should handle string seconds', () => {
+        const timestamp: Timestamp = {
+            seconds: '1609459200',
+            nanos: 0,
+        };
+
+        const date = timestampToDate(timestamp);
+
+        expect(date).toBeInstanceOf(Date);
+        expect(date.getTime()).toBe(1609459200000);
+    });
+
+    it('should handle large timestamp values', () => {
+        // A timestamp far in the future
+        const timestamp: Timestamp = {
+            seconds: 32503680000, // Year 3000
+            nanos: 123456789,
+        };
+
+        const date = timestampToDate(timestamp);
+
+        expect(date).toBeInstanceOf(Date);
+        expect(date.getTime()).toBe(32503680000123);
+    });
+
+    it('should default to 0 when seconds or nanos are missing', () => {
+        const timestamp: Timestamp = {}; // Empty timestamp
+        const date = timestampToDate(timestamp);
+
+        expect(date).toBeInstanceOf(Date);
+        expect(date.getTime()).toBe(0);
+        expect(date.toISOString()).toBe('1970-01-01T00:00:00.000Z');
     });
 });
