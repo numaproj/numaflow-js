@@ -39,7 +39,10 @@ class TestSourceTransformServer {
         });
     }
 
-    start(): Promise<void> {
+    async start(): Promise<void> {
+        if (fs.existsSync(TMP_SOCKET_PATH)) {
+            fs.unlinkSync(TMP_SOCKET_PATH);
+        }
         return new Promise((resolve, reject) => {
             this.server.bindAsync(`unix://${TMP_SOCKET_PATH}`, grpc.ServerCredentials.createInsecure(), (err) => {
                 if (err) {
@@ -51,7 +54,7 @@ class TestSourceTransformServer {
         });
     }
 
-    stop(): Promise<void> {
+    async stop(): Promise<void> {
         return new Promise((resolve, reject) =>
             this.server.tryShutdown((error?: Error) => {
                 if (error) {
