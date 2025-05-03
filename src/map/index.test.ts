@@ -41,6 +41,9 @@ class TestMapServer {
     }
 
     async start(): Promise<void> {
+        if (fs.existsSync(TMP_SOCKET_PATH)) {
+            fs.unlinkSync(TMP_SOCKET_PATH);
+        }
         return new Promise<void>((resolve, reject) => {
             this.server.bindAsync(`unix://${this.socketPath}`, grpc.ServerCredentials.createInsecure(), (err) => {
                 if (err) {
@@ -79,7 +82,7 @@ describe('MapService Integration Tests', () => {
         if (client) {
             client.close();
         }
-        await server?.stop();
+        await server.stop();
         if (fs.existsSync(TMP_SOCKET_PATH)) {
             fs.unlinkSync(TMP_SOCKET_PATH);
         }

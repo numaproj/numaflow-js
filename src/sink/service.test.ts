@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import * as grpc from '@grpc/grpc-js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -33,7 +33,7 @@ class TestSinkServer {
         this.server.addService(proto.sink.v1.Sink.service, sinkServer);
     }
 
-    start(): Promise<void> {
+    async start(): Promise<void> {
         return new Promise((resolve, reject) => {
             this.server.bindAsync(`unix://${TMP_SOCKET_PATH}`, grpc.ServerCredentials.createInsecure(), (err) => {
                 if (err) {
@@ -45,7 +45,7 @@ class TestSinkServer {
         });
     }
 
-    stop(): Promise<void> {
+    async stop(): Promise<void> {
         return new Promise((resolve, reject) =>
             this.server.tryShutdown((error?: Error) => {
                 if (error) {
