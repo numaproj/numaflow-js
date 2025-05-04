@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { fileURLToPath } from 'url';
 import path from 'path';
 import * as grpc from '@grpc/grpc-js';
@@ -13,14 +14,7 @@ import type { AckResponse } from './proto/source/v1/AckResponse.ts';
 import type { PendingResponse } from './proto/source/v1/PendingResponse.ts';
 import type { PartitionsResponse } from './proto/source/v1/PartitionsResponse.ts';
 import { Sourcer, ReadRequest as NumaSourceReadRequest, Offset as NumaSourceOffset } from './types.js';
-import {
-    DEFAULT_MAX_MESSAGE_SIZE,
-    DEFAULT_SERVER_INFO,
-    parseServerOptions,
-    prepareServer,
-    ServerInfo,
-    ServerOpts,
-} from '../common/server.js';
+import { DEFAULT_SERVER_INFO, parseServerOptions, prepareServer, ServerInfo, ServerOpts } from '../common/server.js';
 import { ContainerTypes, MinimumNumaflowVersions } from '../common/constants.js';
 
 export { createOffsetWithDefaultPartitionId } from './types.js';
@@ -170,12 +164,14 @@ class SourcerService {
         });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     async pendingFn(call: grpc.ServerUnaryCall<{}, PendingResponse>, callback: grpc.sendUnaryData<PendingResponse>) {
         const pending = await this.sourcer.pending();
         return callback(null, { result: { count: pending } });
     }
 
     async partitionFn(
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         call: grpc.ServerUnaryCall<{}, PartitionsResponse>,
         callback: grpc.sendUnaryData<PartitionsResponse>,
     ) {

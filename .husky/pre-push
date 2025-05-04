@@ -1,0 +1,4 @@
+# Run build to ensure code compiles
+
+echo "Compiling code.."
+npm run build

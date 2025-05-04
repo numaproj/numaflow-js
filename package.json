@@ -16,8 +16,10 @@
     "codegen": "npm run codegen-sink && npm run codegen-source && npm run codegen-sourcetransformer && npm run codegen-map",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "test": "vitest --run --reporter verbose",
-    "build": "rm -rf dist && npm run format && tsc",
+    "build": "rm -rf dist && tsc",
     "prepare": "husky"
   },
   "keywords": [],
@@ -29,8 +31,16 @@
     "@grpc/proto-loader": "0.7.15"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "3.3.1",
+    "@eslint/js": "9.26.0",
     "@types/node": "22.14.1",
+    "@typescript-eslint/eslint-plugin": "8.31.1",
+    "@typescript-eslint/parser": "8.31.1",
     "@vitest/coverage-v8": "3.1.2",
+    "eslint": "9.26.0",
+    "eslint-config-prettier": "10.1.2",
+    "eslint-plugin-prettier": "5.2.6",
+    "globals": "16.0.0",
     "husky": "9.1.7",
     "prettier": "3.5.3",
     "typescript": "5.8.3",

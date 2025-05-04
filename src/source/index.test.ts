@@ -5,12 +5,14 @@ import path from 'path';
 import type { ProtoGrpcType } from './proto/source.ts';
 import type { SourceClient, SourceHandlers } from './proto/source/v1/Source.ts';
 import { createServer } from './index.js';
-import type { Message, Offset, ReadRequest, Sourcer } from './types.ts';
+import type { Message, Sourcer } from './types.ts';
 import fs from 'fs';
 import { promisify } from 'util';
-import { afterEach, beforeEach, expect, it, vi, describe } from 'vitest';
+import { afterEach, expect, it, vi, describe } from 'vitest';
 import { PendingResponse } from './proto/source/v1/PendingResponse.js';
 import { PartitionsResponse } from './proto/source/v1/PartitionsResponse.js';
+import { ReadResponse } from './proto/source/v1/ReadResponse.js';
+import { AckResponse } from './proto/source/v1/AckResponse.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -145,11 +147,11 @@ describe('SourcerService Integration Tests', () => {
 
         // Create a bidirectional stream
         const stream = client.ReadFn();
-        const responses: any[] = [];
+        const responses: ReadResponse[] = [];
 
         // Set up promise to collect responses
         const streamPromise = new Promise<void>((resolve, reject) => {
-            stream.on('data', (response) => {
+            stream.on('data', (response: ReadResponse) => {
                 responses.push(response);
                 if (response?.status?.eot) {
                     resolve();
@@ -187,26 +189,26 @@ describe('SourcerService Integration Tests', () => {
 
         // Verify handshake response
         expect(responses[0]).toHaveProperty('handshake');
-        expect(responses[0].handshake.sot).toBe(true);
+        expect(responses[0]?.handshake?.sot).toBe(true);
 
         // Verify message responses
         expect(responses[1]).toHaveProperty('result');
-        expect(responses[1].result.payload.toString()).toBe('test message 1');
-        expect(responses[1].result.offset.offset.toString()).toBe('offset1');
-        expect(responses[1].result.offset.partitionId).toBe(0);
-        expect(responses[1].result.keys).toEqual(['key1']);
-        expect(responses[1].result.headers).toEqual({ header1: 'value1' });
+        expect(responses[1]?.result?.payload?.toString()).toBe('test message 1');
+        expect(responses[1]?.result?.offset?.offset?.toString()).toBe('offset1');
+        expect(responses[1]?.result?.offset?.partitionId).toBe(0);
+        expect(responses[1]?.result?.keys).toEqual(['key1']);
+        expect(responses[1]?.result?.headers).toEqual({ header1: 'value1' });
 
         expect(responses[2]).toHaveProperty('result');
-        expect(responses[2].result.payload.toString()).toBe('test message 2');
-        expect(responses[2].result.offset.offset.toString()).toBe('offset2');
-        expect(responses[2].result.offset.partitionId).toBe(1);
-        expect(responses[2].result.keys).toEqual(['key2']);
-        expect(responses[2].result.headers).toEqual({ header2: 'value2' });
+        expect(responses[2]?.result?.payload?.toString()).toBe('test message 2');
+        expect(responses[2]?.result?.offset?.offset?.toString()).toBe('offset2');
+        expect(responses[2]?.result?.offset?.partitionId).toBe(1);
+        expect(responses[2]?.result?.keys).toEqual(['key2']);
+        expect(responses[2]?.result?.headers).toEqual({ header2: 'value2' });
 
         // Verify EOT message
         expect(responses[3]).toHaveProperty('status');
-        expect(responses[3].status.eot).toBe(true);
+        expect(responses[3]?.status?.eot).toBe(true);
 
         // Verify sourcer.read was called
         // Ignore parameters check as count is of Long type
@@ -230,11 +232,11 @@ describe('SourcerService Integration Tests', () => {
 
         // Create a bidirectional stream
         const stream = client.AckFn();
-        const responses: any[] = [];
+        const responses: AckResponse[] = [];
 
         // Set up promise to collect responses
         const streamPromise = new Promise<void>((resolve, reject) => {
-            stream.on('data', (response) => {
+            stream.on('data', (response: AckResponse) => {
                 responses.push(response);
                 // handshake and ack response
                 if (responses.length >= 2) {
@@ -275,11 +277,11 @@ describe('SourcerService Integration Tests', () => {
 
         // Verify handshake response
         expect(responses[0]).toHaveProperty('handshake');
-        expect(responses[0].handshake.sot).toBe(true);
+        expect(responses[0]?.handshake?.sot).toBe(true);
 
         // Verify ack response
         expect(responses[1]).toHaveProperty('result');
-        expect(responses[1].result.success).toBeDefined();
+        expect(responses[1]?.result?.success).toBeDefined();
 
         // Verify sourcer.ack was called with correct parameters
         expect(mockSourcer.ack).toHaveBeenCalledWith([
@@ -314,9 +316,9 @@ describe('SourcerService Integration Tests', () => {
             });
         });
 
-        let count = (response as PendingResponse).result?.count;
+        const count = (response as PendingResponse).result?.count;
         // convert count from Long type to string
-        let numCount =
+        const numCount =
             typeof count === 'object' && 'toNumber' in count ? count.toNumber().toString() : count?.toString();
         // Verify response
         expect(numCount).toBe('42');

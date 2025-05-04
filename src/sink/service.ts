@@ -1,6 +1,5 @@
 import { Datum, Sinker } from './types.js';
 import * as grpc from '@grpc/grpc-js';
-import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import type { Empty } from './proto/google/protobuf/Empty.ts';
 import type { ReadyResponse } from './proto/sink/v1/ReadyResponse.ts';
@@ -163,22 +162,14 @@ export class SinkerService {
 
         if (resultsList.length > 0) {
             const batchResponse: SinkResponse = { results: resultsList };
-            try {
-                await this.writeToCall(call, batchResponse);
-            } catch (writeErr) {
-                throw writeErr;
-            }
+            await this.writeToCall(call, batchResponse);
         } else {
             console.log('processDataAndEOT: No results to send for this batch.');
         }
 
         // Send Server EOT message
         const eotResponse: SinkResponse = { status: { eot: true } };
-        try {
-            await this.writeToCall(call, eotResponse);
-        } catch (writeErr) {
-            throw writeErr;
-        }
+        await this.writeToCall(call, eotResponse);
     }
     private writeToCall(call: grpc.ServerDuplexStream<any, any>, message: any): Promise<void> {
         return new Promise((resolve, reject) => {
