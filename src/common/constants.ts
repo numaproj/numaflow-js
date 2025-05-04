@@ -1,5 +1,3 @@
-import { ServerInfo } from './server.js';
-
 // Protocol type and constants
 export type Protocol = 'uds' | 'tcp';
 

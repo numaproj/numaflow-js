@@ -34,7 +34,9 @@ class TestSourceTransformServer {
 
         // Add the service handlers
         this.server.addService(proto.sourcetransformer.v1.SourceTransform.service, {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             IsReady: (this.service as any).isReady.bind(this.service),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             SourceTransformFn: (this.service as any).sourceTransformFn.bind(this.service),
         });
     }
@@ -102,7 +104,7 @@ describe('SourceTransformService Integration Tests', () => {
         client = server.getClient();
 
         const isReadyResponse = await new Promise((resolve, reject) => {
-            client.IsReady({}, (err: grpc.ServiceError | null, response: any) => {
+            client.IsReady({}, (err: grpc.ServiceError | null, response) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -191,7 +193,7 @@ describe('SourceTransformService Integration Tests', () => {
 
         // wait to ensure response is received
         const transformResponse = await new Promise<SourceTransformResponse>((resolve) => {
-            const dataHandler = (data: any) => {
+            const dataHandler = (data: SourceTransformResponse) => {
                 if (data.id === requestId) {
                     stream.removeListener('data', dataHandler);
                     resolve(data);
@@ -222,7 +224,7 @@ describe('SourceTransformService Integration Tests', () => {
 
     it('should handle multiple messages in a stream', async () => {
         const mockTransformer: SourceTransformer = {
-            transform: vi.fn().mockImplementation((keys: string[], datum: Datum): Promise<Message[]> => {
+            transform: vi.fn().mockImplementation((_keys: string[], _datum: Datum): Promise<Message[]> => {
                 return Promise.resolve([
                     {
                         eventTime: new Date(),
@@ -236,10 +238,10 @@ describe('SourceTransformService Integration Tests', () => {
         client = server.getClient();
 
         const stream = client.SourceTransformFn();
-        const responses: any[] = [];
+        const responses: SourceTransformResponse[] = [];
 
         // Collect all responses
-        stream.on('data', (data) => {
+        stream.on('data', (data: SourceTransformResponse) => {
             if (!data.handshake) {
                 responses.push(data);
             }
@@ -279,8 +281,8 @@ describe('SourceTransformService Integration Tests', () => {
 
         expect(responses).toHaveLength(numRequests);
         for (let i = 0; i < numRequests; i++) {
-            expect(responses[i].id).toBe(`test-${i}`);
-            expect(responses[i].results).toHaveLength(1);
+            expect(responses[i]?.id).toBe(`test-${i}`);
+            expect(responses[i]?.results).toHaveLength(1);
         }
 
         // End the stream

@@ -48,8 +48,8 @@ function prepareServer(serverInfo: ServerInfo, serverInfoFilePath: string, socke
             console.log(`Socket file ${socketAddress} already exists. Deleting it...`);
             fs.unlinkSync(socketAddress);
         }
-    } catch (err: any) {
-        console.error('FATAL: Failed to write server info file:', err.message);
+    } catch (err) {
+        console.error('FATAL: Failed to write server info file:', err);
         process.exit(1);
     }
 }

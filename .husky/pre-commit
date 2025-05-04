@@ -1,5 +1,12 @@
-# Run Prettier to format files
-npm run format
+# Run Prettier to check formatting
+
+echo "Checking code formatting..."
+npm run format:check || {
+echo "Code is not formatted. Please run 'npm run format' to format the files."
+exit 1
+}
 
 # Run tests
+
+echo "Running tests..."
 npm test

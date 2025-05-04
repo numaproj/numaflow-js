@@ -9,6 +9,7 @@ import { SinkerService, timestampToDate } from './service.js';
 import { SinkResponse } from './proto/sink/v1/SinkResponse.js';
 import type { Timestamp } from './proto/google/protobuf/Timestamp.ts';
 import { fileURLToPath } from 'url';
+import { Sinker } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +17,7 @@ const TMP_SOCKET_PATH = path.join(__dirname, 'test-sink.sock');
 class TestSinkServer {
     private server: grpc.Server;
     private service: SinkerService;
-    constructor(mockSinker: any) {
+    constructor(mockSinker: Sinker) {
         const packageDef = protoLoader.loadSync(path.join(__dirname, '../../proto/sink.proto'), {});
         const proto = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
         const serverOpts = {
@@ -27,7 +28,9 @@ class TestSinkServer {
         // Override the socket path for testing
         Object.defineProperty(this.service, 'socketPath', { value: TMP_SOCKET_PATH });
         const sinkServer: SinkHandlers = {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             IsReady: (this.service as any).isReady.bind(this.service),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             SinkFn: (this.service as any).sinkFn.bind(this.service),
         };
         this.server.addService(proto.sink.v1.Sink.service, sinkServer);

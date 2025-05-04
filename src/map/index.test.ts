@@ -7,7 +7,7 @@ import * as protoLoader from '@grpc/proto-loader';
 import type { ProtoGrpcType } from './proto/map.ts';
 import type { MapClient, MapHandlers } from './proto/map/v1/Map.ts';
 import type { MapResponse } from './proto/map/v1/MapResponse.ts';
-import { createServer } from './index.js';
+import { createServer, Datum, Mapper, Message } from './index.js';
 
 // Resolve the current directory
 const __filename = fileURLToPath(import.meta.url);
@@ -20,7 +20,7 @@ class TestMapServer {
     private socketPath: string;
     private service: ReturnType<typeof createServer>;
 
-    constructor(mapper: any, socketPath = TMP_SOCKET_PATH) {
+    constructor(mapper: Mapper, socketPath = TMP_SOCKET_PATH) {
         const packageDef = protoLoader.loadSync(path.join(__dirname, '../../proto/map.proto'), {});
         const proto = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
         this.socketPath = socketPath;
@@ -32,7 +32,9 @@ class TestMapServer {
         Object.defineProperty(this.service, 'socketPath', { value: TMP_SOCKET_PATH });
 
         const mapServer: MapHandlers = {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             IsReady: (this.service as any).isReady.bind(this.service),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             MapFn: (this.service as any).mapFn.bind(this.service),
         };
 
@@ -141,7 +143,7 @@ describe('MapService Integration Tests', () => {
     it('should process data and return mapped values', async () => {
         // Mock the mapper to return specific responses
         const mockMapper = {
-            map: vi.fn().mockImplementation((keys: string[], datum: any): Promise<any[]> => {
+            map: vi.fn().mockImplementation((_keys: string[], _datum: Datum): Promise<Message[]> => {
                 return Promise.resolve([
                     { value: Buffer.from('mapped-value-1'), keys: ['mapped-key-1'] },
                     { value: Buffer.from('mapped-value-2'), keys: ['mapped-key-2'] },

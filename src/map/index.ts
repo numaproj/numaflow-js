@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import path from 'path';
 import { fileURLToPath } from 'url';
 import * as grpc from '@grpc/grpc-js';
@@ -9,7 +10,7 @@ import type { ReadyResponse } from './proto/map/v1/ReadyResponse.ts';
 import type { MapRequest } from './proto/map/v1/MapRequest.ts';
 import type { MapResponse } from './proto/map/v1/MapResponse.ts';
 import { DEFAULT_SERVER_INFO, parseServerOptions, prepareServer, ServerInfo, ServerOpts } from '../common/server.js';
-import { ContainerTypes, MAP_MODE_KEY, MapModes, MinimumNumaflowVersions, MSG_DROP_TAG } from '../common/constants.js';
+import { ContainerTypes, MapModes, MinimumNumaflowVersions, MSG_DROP_TAG } from '../common/constants.js';
 import { Timestamp } from './proto/google/protobuf/Timestamp.js';
 
 const Paths = {
@@ -17,14 +18,14 @@ const Paths = {
     SERVER_INFO_FILE_PATH: '/var/run/numaflow/mapper-server-info',
 };
 
-interface Datum {
+export interface Datum {
     value: Buffer;
     eventTime: Date;
     watermark: Date;
-    headers: Map<String, String>;
+    headers: Map<string, string>;
 }
 
-type Message = {
+export type Message = {
     value?: Buffer;
     keys?: string[];
     tags?: string[];
@@ -42,7 +43,7 @@ export function messageToDrop(): Message {
     return { tags: [MSG_DROP_TAG] };
 }
 
-interface Mapper {
+export interface Mapper {
     map(keys: string[], datum: Datum): Promise<Message[]>;
 }
 
@@ -51,7 +52,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 function createDatumFromRequest(request: MapRequest): Datum {
-    let buf = request.request?.value ?? '';
+    const buf = request.request?.value ?? '';
     let payload: Buffer;
     if (typeof buf === 'string') {
         payload = Buffer.from(buf);
@@ -62,7 +63,7 @@ function createDatumFromRequest(request: MapRequest): Datum {
     const eventTimeResponse = timestampToDate(request.request?.eventTime);
     const watermarkResponse = timestampToDate(request.request?.watermark);
     const headersObj = request.request?.headers ?? {};
-    const headersMap = new Map<String, String>();
+    const headersMap = new Map<string, string>();
     for (const [key, value] of Object.entries(headersObj)) {
         headersMap.set(key, value);
     }
