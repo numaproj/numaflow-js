@@ -6,7 +6,7 @@ const fbSink = {
         for (const datum of datumStream) {
             const response = {
                 id: datum.id,
-                status: 'FALLBACK',
+                fallback: true,
             };
             responses.push(response);
         }
