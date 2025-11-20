@@ -1,8 +1,8 @@
-# Ignore all Markdown files
-*.md
-
-# Ignore all json files
-*.json
-
-# Ignore the proto folders
-proto/
+target
+.yarn
+/*.js
+/*.mjs
+/*.cjs
+/index.js
+index.d.ts
+pnpm-lock.yaml

@@ -1,57 +1,23 @@
-# [WIP] Typescript SDK for Numaflow
+# Numaflow-JS
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+Numaflow-JS is a SDK for [Numaflow](https://numaflow.numaproj.io/) that provides the interfaces in JavaScript/TypeScript to implement different types of data processing tasks that Numaflow supports.
 
-This SDK provides the interfaces to implement [UDSources](https://numaflow.numaproj.io/user-guide/sources/user-defined-sources/), [UDTransformer](https://numaflow.numaproj.io/user-guide/sources/transformer/overview/), [Map UDF](https://numaflow.numaproj.io/user-guide/user-defined-functions/map/map/) and [UDSinks](https://numaflow.numaproj.io/user-guide/sinks/user-defined-sinks/) in Typescript.
+Currently, these include:
 
-## Getting Started
+- [Map UDF](https://numaflow.numaproj.io/user-guide/user-defined-functions/map/map/)
+- [UDSink](https://numaflow.numaproj.io/user-guide/sinks/user-defined-sinks/)
+- [Source Transform](https://numaflow.numaproj.io/user-guide/sources/transformer/overview/)
 
-### Requirements
+The SDK leverages Rust FFIs provided by [napi.rs](https://napi.rs/) to interact with Numaflow.
 
-- Node.js 18 or later
+## Installation
 
-### Build
-
-```bash
-npm run build
-```
-
-### Format
+Replace `npm` with your favourite package manager (`pnpm`, `yarn`, etc.) in the following command to install the SDK.
 
 ```bash
-npm run format
+npm install @numaproj/numaflow-js
 ```
 
-### Generate Protos
+## Examples
 
-```bash
-npm run codegen
-```
-
-### Run Tests
-
-```bash
-npm run test
-```
-
-### Examples on how to write UDSource, Map UDF, UDSink
-
-- **User Defined Source(UDSource)**
-
-  - [Fixed Data Generator](examples/source/fixed-data-generator)
-
-- **Map User Defined Function(UDF)**
-
-  - [Forward Message](examples/map/forward-message)
-
-- **User Defined Sink(UDSink)**
-  - [Log Sink](examples/sink/log)
-  - [Fallback Sink](examples/sink/fallback)
-
-## Code Style
-
-Use [Prettier](https://prettier.io/docs/)
-
-## Numaflow
-
-You can learn about Numaflow here https://numaflow.numaproj.io/
+The examples are available in the [examples](./examples) directory.
