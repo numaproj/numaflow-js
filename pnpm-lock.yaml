@@ -13,16 +13,16 @@ importers:
         version: 4.20.6
     devDependencies:
       '@emnapi/core':
-        specifier: ^1.5.0
+        specifier: ^1.7.1
         version: 1.7.1
       '@emnapi/runtime':
-        specifier: ^1.5.0
+        specifier: ^1.7.1
         version: 1.7.1
       '@napi-rs/cli':
-        specifier: ^3.2.0
+        specifier: ^3.4.1
         version: 3.4.1(@emnapi/runtime@1.7.1)(@types/node@24.10.1)
       '@napi-rs/wasm-runtime':
-        specifier: ^1.0.4
+        specifier: ^1.0.7
         version: 1.0.7
       '@oxc-node/core':
         specifier: ^0.0.34
@@ -31,7 +31,7 @@ importers:
         specifier: ^0.7.0
         version: 0.7.0
       '@tybys/wasm-util':
-        specifier: ^0.10.0
+        specifier: ^0.10.1
         version: 0.10.1
       '@types/node':
         specifier: ^24.10.1
@@ -43,25 +43,25 @@ importers:
         specifier: ^5.6.2
         version: 5.6.2
       emnapi:
-        specifier: ^1.5.0
+        specifier: ^1.7.1
         version: 1.7.1
       husky:
         specifier: ^9.1.7
         version: 9.1.7
       lint-staged:
-        specifier: ^16.1.6
+        specifier: ^16.2.7
         version: 16.2.7
       npm-run-all2:
         specifier: ^8.0.4
         version: 8.0.4
       oxlint:
-        specifier: ^1.14.0
+        specifier: ^1.29.0
         version: 1.29.0
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
       typescript:
-        specifier: ^5.9.2
+        specifier: ^5.9.3
         version: 5.9.3
       vitest:
         specifier: ^4.0.10
@@ -1541,8 +1541,8 @@ packages:
   universal-user-agent@7.0.3:
     resolution: {integrity: sha512-TmnEAEAsBJVZM/AADELsK76llnwcf9vMKuPz8JflO1frO8Lchitr0fNaN9d+Ap0BjKtqWqd/J17qeDnXh8CL2A==}
 
-  vite@7.2.3:
-    resolution: {integrity: sha512-rdA2LHQCBvDqLpVHd49/oor6rogVEQiQq2yw86Yhk8A8Y4x49HYiHel7ayXBRVpu1x23ltWp+ORS++M6Ct0sXA==}
+  vite@7.2.4:
+    resolution: {integrity: sha512-NL8jTlbo0Tn4dUEXEsUg8KeyG/Lkmc4Fnzb8JXN/Ykm9G4HNImjtABMJgkQoVjOBN/j2WAwDTRytdqJbZsah7w==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -2407,13 +2407,13 @@ snapshots:
       chai: 6.2.1
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.10(vite@7.2.3(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1))':
+  '@vitest/mocker@4.0.10(vite@7.2.4(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
       '@vitest/spy': 4.0.10
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.2.3(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1)
+      vite: 7.2.4(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1)
 
   '@vitest/pretty-format@4.0.10':
     dependencies:
@@ -2867,7 +2867,7 @@ snapshots:
 
   universal-user-agent@7.0.3: {}
 
-  vite@7.2.3(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1):
+  vite@7.2.4(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
@@ -2884,7 +2884,7 @@ snapshots:
   vitest@4.0.10(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1):
     dependencies:
       '@vitest/expect': 4.0.10
-      '@vitest/mocker': 4.0.10(vite@7.2.3(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1))
+      '@vitest/mocker': 4.0.10(vite@7.2.4(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1))
       '@vitest/pretty-format': 4.0.10
       '@vitest/runner': 4.0.10
       '@vitest/snapshot': 4.0.10
@@ -2901,7 +2901,7 @@ snapshots:
       tinyexec: 0.3.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: 7.2.3(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1)
+      vite: 7.2.4(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.10.1
