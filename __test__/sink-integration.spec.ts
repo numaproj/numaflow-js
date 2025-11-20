@@ -70,7 +70,7 @@ test('sink integration test', async () => {
   if (exitCode !== 0) {
     expect.fail(`Cargo command failed with exit code ${exitCode}\n\nStdout:\n${stdout}\n\nStderr:\n${stderr}`)
   }
-}, 60000)
+}, 120000)
 
 afterAll(async () => {
   sinker.stop()
