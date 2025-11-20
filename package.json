@@ -1,6 +1,6 @@
 {
   "name": "@numaproj/numaflow-js",
-  "version": "0.0.1",
+  "version": "0.0.0-alpha.0",
   "description": "Numaflow SDK for JavaScript/TypeScript",
   "main": "index.js",
   "types": "index.d.ts",
