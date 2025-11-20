@@ -311,6 +311,7 @@ jobs:
           #else
           #  echo "Not a release, skipping publish"
           #fi
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
           npm publish --tag test --access public
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
