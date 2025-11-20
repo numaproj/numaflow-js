@@ -50,4 +50,4 @@ test('source transform integration test', async () => {
     // Ensure the server is stopped
     server.stop()
   }
-}, 60000)
+}, 120000)

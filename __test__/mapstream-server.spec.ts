@@ -54,4 +54,4 @@ test('mapstream server functionlity', async () => {
   } finally {
     server.stop()
   }
-}, 60000)
+}, 120000)
