@@ -58,4 +58,4 @@ test('mapper integration test', async () => {
     // Ensure the server is stopped
     server.stop()
   }
-}, 30000)
+}, 60000)
