@@ -262,7 +262,9 @@ jobs:
             if [ -f /etc/alpine-release ]; then
               apk add --no-cache rust cargo
             else
-              apt-get update && apt-get install -y rustc cargo
+              apt-get update && apt-get install -y curl build-essential
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              export PATH="$HOME/.cargo/bin:$PATH"
             fi
             cargo build
             npm run test
