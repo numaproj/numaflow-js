@@ -34,7 +34,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
 
       - name: Install
@@ -83,7 +83,7 @@ jobs:
           # - host: windows-latest
           #   target: aarch64-pc-windows-msvc
           #   build: pnpm build --target aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@20
+    name: stable - ${{ matrix.settings.target }} - node@24
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v5
@@ -92,7 +92,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - name: Install
         uses: dtolnay/rust-toolchain@stable
@@ -157,6 +157,7 @@ jobs:
         node:
           - '20'
           - '22'
+          - '24'
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v5
@@ -168,6 +169,11 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
           architecture: ${{ matrix.settings.architecture }}
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.settings.target }}
       - name: Install dependencies
         run: pnpm install
       - name: Download artifacts
@@ -177,6 +183,9 @@ jobs:
           path: .
       - name: List packages
         run: ls -R .
+        shell: bash
+      - name: Build Rust test binaries
+        run: cargo build
         shell: bash
       - name: Test bindings
         run: pnpm test
@@ -195,6 +204,7 @@ jobs:
         node:
           - '20'
           - '22'
+          - '24'
     runs-on: ${{ contains(matrix.target, 'aarch64') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v5
@@ -263,7 +273,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
