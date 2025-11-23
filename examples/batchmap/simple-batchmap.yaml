@@ -1,0 +1,32 @@
+apiVersion: numaflow.numaproj.io/v1alpha1
+kind: Pipeline
+metadata:
+  name: simple-batch-map
+spec:
+  vertices:
+    - name: in
+      source:
+        # A self data generating source
+        generator:
+          rpu: 300
+          duration: 1s
+          keyCount: 5
+          value: 5
+    - name: batchmap-cat
+      scale:
+        min: 1
+      udf:
+        container:
+          image: quay.io/numaio/numaflow-js/batchmap-cat:stable
+          imagePullPolicy: IfNotPresent
+    - name: out
+      sink:
+        udsink:
+          container:
+            image: quay.io/numaio/numaflow-js/log-sink:stable
+            imagePullPolicy: IfNotPresent
+  edges:
+    - from: in
+      to: batchmap-cat
+    - from: batchmap-cat
+      to: out

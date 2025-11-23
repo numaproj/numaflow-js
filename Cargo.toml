@@ -1,0 +1,41 @@
+[workspace]
+members = [".", "tests"]
+resolver = "2"
+
+[workspace.package]
+authors = ["Sreekanth", "Vaibhav"]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/numaproj/numaflow-js"
+
+[package]
+authors = ["Sreekanth", "Vaibhav"]
+edition = "2024"
+name = "numaflow-js"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "3.5.2", features = ["full"] }
+napi-derive = "3.3.3"
+numaflow = { git = "https://github.com/numaproj/numaflow-rs.git", branch = "main" }
+chrono = "0.4.42"
+tokio = "1.47.1"
+async-trait = "0.1.89"
+tonic = "0.14.2"
+tower = "0.5.2"
+hyper-util = "0.1.18"
+prost-types = "0.14.1"
+tokio-stream = "0.1.17"
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"

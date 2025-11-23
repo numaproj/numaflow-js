@@ -1,49 +1,89 @@
 {
-  "name": "numaflow",
-  "version": "1.0.0",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "type": "module",
-  "files": [
-    "dist",
-    "proto"
-  ],
-  "scripts": {
-    "codegen-sink": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --importFileExtension='.ts' --includeComments --outDir=./src/sink/proto/ proto/sink.proto",
-    "codegen-source": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --importFileExtension='.ts' --includeComments --outDir=./src/source/proto/ proto/source.proto",
-    "codegen-sourcetransformer": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --importFileExtension='.ts' --includeComments --outDir=./src/sourcetransformer/proto/ proto/sourcetransformer.proto",
-    "codegen-map": "proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --importFileExtension='.ts' --includeComments --outDir=./src/map/proto/ proto/map.proto",
-    "codegen": "npm run codegen-sink && npm run codegen-source && npm run codegen-sourcetransformer && npm run codegen-map",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
-    "test": "vitest --run --reporter verbose",
-    "build": "rm -rf dist && tsc",
-    "prepare": "husky"
+  "name": "@numaproj/numaflow-js",
+  "version": "0.0.0-alpha.0",
+  "description": "Numaflow SDK for JavaScript/TypeScript",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "repository": {
+    "url": "git+ssh://git@github.com/numaproj/numaflow-js.git",
+    "type": "git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "@grpc/grpc-js": "1.13.3",
-    "@grpc/proto-loader": "0.7.15"
+  "license": "Apache-2.0",
+  "keywords": [
+    "napi-rs",
+    "NAPI",
+    "N-API",
+    "Rust",
+    "node-addon",
+    "node-addon-api"
+  ],
+  "files": [
+    "index.d.ts",
+    "index.js",
+    "binding.d.ts",
+    "binding.js"
+  ],
+  "napi": {
+    "binaryName": "numaflow-js",
+    "targets": [
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-linux-musl",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-linux-musl"
+    ]
+  },
+  "engines": {
+    "node": ">= 20"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "scripts": {
+    "artifacts": "napi artifacts",
+    "build": "napi build --platform --release --js binding.js --dts binding.d.ts",
+    "build:debug": "napi build --platform --js binding.js --dts binding.d.ts",
+    "format": "pnpm format:prettier format:rs format:toml",
+    "format:prettier": "prettier . -w",
+    "format:toml": "taplo format",
+    "format:rs": "cargo fmt",
+    "lint": "oxlint",
+    "prepublishOnly": "napi prepublish -t npm",
+    "test": "vitest run",
+    "version": "napi version"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "3.3.1",
-    "@eslint/js": "9.26.0",
-    "@types/node": "22.14.1",
-    "@typescript-eslint/eslint-plugin": "8.31.1",
-    "@typescript-eslint/parser": "8.31.1",
-    "@vitest/coverage-v8": "3.1.2",
-    "eslint": "9.26.0",
-    "eslint-config-prettier": "10.1.2",
-    "eslint-plugin-prettier": "5.2.6",
-    "globals": "16.0.0",
-    "husky": "9.1.7",
-    "prettier": "3.5.3",
-    "typescript": "5.8.3",
-    "vitest": "3.1.2"
+    "@emnapi/core": "^1.7.1",
+    "@emnapi/runtime": "^1.7.1",
+    "@napi-rs/cli": "^3.4.1",
+    "@napi-rs/wasm-runtime": "^1.0.7",
+    "@oxc-node/core": "^0.0.34",
+    "@taplo/cli": "^0.7.0",
+    "@tybys/wasm-util": "^0.10.1",
+    "@types/node": "^24.10.1",
+    "@vitest/coverage-v8": "^4.0.10",
+    "chalk": "^5.6.2",
+    "emnapi": "^1.7.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "npm-run-all2": "^8.0.4",
+    "oxlint": "^1.29.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.10"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "semi": false,
+    "trailingComma": "all",
+    "singleQuote": true,
+    "arrowParens": "always"
+  },
+  "packageManager": "pnpm@10.22.0",
+  "dependencies": {
+    "tsx": "^4.20.6"
   }
 }

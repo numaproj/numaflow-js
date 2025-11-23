@@ -1,32 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "Node18",
-    "moduleResolution": "node16",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "lib": [
-      "es2024",
-      "dom",
-      "dom.iterable"
-    ],
-    "noEmitOnError": true,
-    "esModuleInterop": true,
-    "allowJs": true,
-    "noUncheckedIndexedAccess": true,
-    "forceConsistentCasingInFileNames": true,
+    "target": "ESNext",
     "strict": true,
-    "skipLibCheck": true,
-    "declaration": true,
-    "declarationMap": true
+    "moduleResolution": "node",
+    "module": "CommonJS",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "src/**/*",
-  ],
-  "exclude": [
-    "src/map/proto/**/*",
-    "src/sink/proto/**/*",
-    "src/source/proto/**/*",
-    "src/sourcetransformer/proto/**/*"
-  ]
+  "include": ["."],
+  "exclude": ["node_modules", "benchmark", "__test__"]
 }

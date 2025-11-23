@@ -1,0 +1,36 @@
+[package]
+name = "tests"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "map"
+path = "src/map.rs"
+
+[[bin]]
+name = "mapstream"
+path = "src/mapstream.rs"
+
+[[bin]]
+name = "sink"
+path = "src/sink.rs"
+
+[[bin]]
+name = "batchmap"
+path = "src/batchmap.rs"
+
+[[bin]]
+name = "source_transform"
+path = "src/source_transform.rs"
+
+[dependencies]
+numaflow = { git = "https://github.com/numaproj/numaflow-rs.git", rev = "fde3deafea634abbc347032ff409d33d4e1514b1" }
+tokio = "1.47.1"
+tonic = "0.14.2"
+tokio-stream = "0.1.17"
+tower = "0.5.2"
+hyper-util = "0.1.16"
+prost-types = "0.14.1"
