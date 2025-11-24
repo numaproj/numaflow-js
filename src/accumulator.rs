@@ -1,14 +1,13 @@
+use chrono::{DateTime, Utc};
+use napi::bindgen_prelude::Promise;
+use napi::threadsafe_function::ThreadsafeFunction;
+use napi::{Error, Status};
+use napi_derive::napi;
+use numaflow::accumulator;
+use numaflow::shared::ServerExtras;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use chrono::{DateTime, Utc};
-use napi::bindgen_prelude::{Buffer, Promise};
-use napi::{Error, Status, Unknown};
-use napi::threadsafe_function::ThreadsafeFunction;
-use napi_derive::napi;
-use numaflow::{accumulator};
-use numaflow::shared::ServerExtras;
 use tokio::sync::mpsc::{Receiver, Sender};
-use crate::sink::SinkDatumIterator;
 
 /// A message to be sent to the next vertex from an accumulator handler.
 #[derive(Clone, Debug)]
@@ -30,7 +29,6 @@ pub struct Message {
     /// Watermark represented by time is a guarantee that we will not see an element older than this time. Read-only, set from the input datum.
     pub watermark: DateTime<Utc>,
 }
-
 
 /// Drop a Message, do not forward to the next vertex.
 #[napi(namespace = "accumulator")]
@@ -147,7 +145,9 @@ impl AccumulatorAsyncServer {
     #[napi(
         ts_args_type = "acc_fn: (datumIterator: DatumIterator) => () => Promise<Message | null>"
     )]
-    pub fn new(acc_fn: Arc<ThreadsafeFunction<DatumIterator, AccFn, DatumIterator, Status, false, true>>) -> Self {
+    pub fn new(
+        acc_fn: Arc<ThreadsafeFunction<DatumIterator, AccFn, DatumIterator, Status, false, true>>,
+    ) -> Self {
         Self {
             acc_fn,
             shutdown_tx: Mutex::new(None),
@@ -164,7 +164,11 @@ impl AccumulatorAsyncServer {
     }
 
     #[napi]
-    pub async fn start(&self, sock_file: Option<String>, info_file: Option<String>) -> napi::Result<()> {
+    pub async fn start(
+        &self,
+        sock_file: Option<String>,
+        info_file: Option<String>,
+    ) -> napi::Result<()> {
         let accumulator = AccumulatorCreator::new(self.acc_fn.clone());
         let mut server = accumulator::Server::new(accumulator);
         if let Some(sock_file) = sock_file {
@@ -194,7 +198,9 @@ struct AccumulatorCreator {
 }
 
 impl AccumulatorCreator {
-    fn new(acc_fn: Arc<ThreadsafeFunction<DatumIterator, AccFn, DatumIterator, Status, false, true>>) -> Self {
+    fn new(
+        acc_fn: Arc<ThreadsafeFunction<DatumIterator, AccFn, DatumIterator, Status, false, true>>,
+    ) -> Self {
         Self { acc_fn }
     }
 }
@@ -212,14 +218,20 @@ struct Accumulator {
 }
 
 impl Accumulator {
-    fn new(acc_fn: Arc<ThreadsafeFunction<DatumIterator, AccFn, DatumIterator, Status, false, true>>) -> Self {
+    fn new(
+        acc_fn: Arc<ThreadsafeFunction<DatumIterator, AccFn, DatumIterator, Status, false, true>>,
+    ) -> Self {
         Self { acc_fn }
     }
 }
 
 #[async_trait::async_trait]
 impl accumulator::Accumulator for Accumulator {
-    async fn accumulate(&self, input: Receiver<accumulator::AccumulatorRequest>, tx: Sender<accumulator::Message>) {
+    async fn accumulate(
+        &self,
+        input: Receiver<accumulator::AccumulatorRequest>,
+        tx: Sender<accumulator::Message>,
+    ) {
         let requests = DatumIterator::new(input);
         match self.acc_fn.call_async(requests).await {
             Ok(messages_fn) => loop {
