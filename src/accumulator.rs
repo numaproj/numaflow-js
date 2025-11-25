@@ -143,6 +143,7 @@ pub struct AccumulatorAsyncServer {
 #[napi(namespace = "accumulator")]
 impl AccumulatorAsyncServer {
     #[napi(
+        constructor,
         ts_args_type = "acc_fn: (datumIterator: DatumIterator) => () => Promise<Message | null>"
     )]
     pub fn new(

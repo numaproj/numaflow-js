@@ -89,3 +89,33 @@ export declare namespace mapstream {
     stop(): void;
   }
 }
+
+export declare namespace accumulator {
+    export import Datum = binding.accumulator.Datum;
+    export import Message = binding.accumulator.Message;
+    export import messageToDrop = binding.accumulator.messageToDrop;
+    export import DatumIteratorResult = binding.accumulator.DatumIteratorResult;
+
+    /**
+     * DatumIterator with added async iterator support
+     */
+    export class DatumIterator implements AsyncIterableIterator<accumulator.Datum> {
+        /** Returns the next datum from the stream, or None if the stream has ended */
+        next(): Promise<IteratorResult<accumulator.Datum>>;
+
+        /** Implements async iterator protocol */
+        [Symbol.asyncIterator](): AsyncIterableIterator<accumulator.Datum>;
+    }
+
+    /**
+     * AccumulatorAsyncServer is a wrapper around a accFn callable specified by the user. The accFn is called for each datum received by the Numaflow vertex.
+     */
+    export class AccumulatorAsyncServer {
+        /** Create a new AccumulatorAsyncServer with the given callback. */
+        constructor(accFn: (datum: DatumIterator) => AsyncIterable<Message>);
+        /** Start the AccumulatorAsyncServer server */
+        start(sockFile?: string, infoFile?: string): Promise<void>;
+        /** Stop the AccumulatorAsyncServer server */
+        stop(): void;
+    }
+}

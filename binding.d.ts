@@ -2,7 +2,7 @@
 /* eslint-disable */
 export declare namespace accumulator {
   export class AccumulatorAsyncServer {
-    static new(acc_fn: (datumIterator: DatumIterator) => () => Promise<Message | null>): AccumulatorAsyncServer
+    constructor(acc_fn: (datumIterator: DatumIterator) => () => Promise<Message | null>)
     stop(): void
     start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
   }
