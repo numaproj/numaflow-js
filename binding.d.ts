@@ -29,12 +29,7 @@ export declare namespace accumulator {
     done: boolean
   }
   /** Create a Message from a Datum, preserving all metadata. */
-  export function fromDatum(
-    datum: Datum,
-    value?: Array<number> | undefined | null,
-    keys?: Array<string> | undefined | null,
-    tags?: Array<string> | undefined | null,
-  ): Message
+  export function fromDatum(datum: Datum, value?: Array<number> | undefined | null, keys?: Array<string> | undefined | null, tags?: Array<string> | undefined | null): Message
   /** A message to be sent to the next vertex from an accumulator handler. */
   export interface Message {
     /**
@@ -71,7 +66,7 @@ export declare namespace batchmap {
     next(): Promise<BatchDatumIteratorResult>
   }
   export class BatchMapAsyncServer {
-    constructor(batchmapFn: (arg: BatchDatumIterator) => Promise<Array<BatchResponse>>)
+    constructor(batchmapFn: ((arg: BatchDatumIterator) => Promise<Array<BatchResponse>>))
     start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
     stop(): void
   }
@@ -126,7 +121,7 @@ export declare namespace batchmap {
 
 export declare namespace map {
   export class MapAsyncServer {
-    constructor(mapFn: (arg: Datum) => Promise<Array<Message>>)
+    constructor(mapFn: ((arg: Datum) => Promise<Array<Message>>))
     start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
     stop(): void
   }
@@ -204,7 +199,7 @@ export declare namespace sink {
    */
   export class SinkAsyncServer {
     /** Create a new SinkAsyncServer with the given callback. */
-    constructor(sinkFn: (arg: SinkDatumIterator) => Promise<Array<SinkResponse>>)
+    constructor(sinkFn: ((arg: SinkDatumIterator) => Promise<Array<SinkResponse>>))
     /** Start the SinkAsyncServer with the given callback */
     start(socketPath?: string | undefined | null, serverInfoPath?: string | undefined | null): Promise<void>
     /** Stop the sink server */
@@ -267,7 +262,7 @@ export declare namespace sink {
 
 export declare namespace sourceTransform {
   export class SourceTransformAsyncServer {
-    constructor(sourceTransformFn: (arg: SourceTransformDatum) => Promise<Array<SourceTransformMessage>>)
+    constructor(sourceTransformFn: ((arg: SourceTransformDatum) => Promise<Array<SourceTransformMessage>>))
     start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
     stop(): void
   }

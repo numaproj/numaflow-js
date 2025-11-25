@@ -26,6 +26,10 @@ path = "src/batchmap.rs"
 name = "source_transform"
 path = "src/source_transform.rs"
 
+[[bin]]
+name = "accumulator"
+path = "src/accumulator.rs"
+
 [dependencies]
 numaflow = { git = "https://github.com/numaproj/numaflow-rs.git", rev = "fde3deafea634abbc347032ff409d33d4e1514b1" }
 tokio = "1.47.1"

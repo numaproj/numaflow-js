@@ -8,7 +8,7 @@ const { MapAsyncServer, messageToDrop } = numaflow.map
 const sleep = promisify(setTimeout)
 
 test('mapper integration test', async () => {
-  const mapFn = async (datum) => {
+  const mapFn = async (datum: numaflow.map.Datum) => {
     const key = datum.keys[0] ?? 'default-key'
     const value = datum.value ?? Buffer.from('default-value')
     if (value.toString() === 'bad') {
