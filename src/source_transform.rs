@@ -14,10 +14,16 @@ pub struct UserMetadata {
 }
 
 impl From<UserMetadata> for sourcetransform::UserMetadata {
-    fn from(_value: UserMetadata) -> Self {
-        let user_metadata = sourcetransform::UserMetadata::default();
+    fn from(value: UserMetadata) -> Self {
+        let mut user_metadata = sourcetransform::UserMetadata::default();
 
-        // TODO: implement proper conversion, missing setter methods in rust SDK
+        for (group, kv) in value.data {
+            user_metadata.create_group(group.clone());
+            for (key, value) in kv {
+                user_metadata.add_kv(group.clone(), key, value);
+            }
+        }
+
         user_metadata
     }
 }
