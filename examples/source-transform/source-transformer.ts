@@ -1,13 +1,15 @@
 import { sourceTransform } from '../../index'
 
-async function sourceTransformFn(datum: sourceTransform.SourceTransformDatum): Promise<sourceTransform.SourceTransformMessage[]> {
+async function sourceTransformFn(
+  datum: sourceTransform.SourceTransformDatum,
+): Promise<sourceTransform.SourceTransformMessage[]> {
   return [
-      {
-          keys: datum.keys,
-          value: datum.value,
-          eventtime: datum.eventtime,
-          tags: [],
-      }
+    {
+      keys: datum.keys,
+      value: datum.value,
+      eventtime: datum.eventtime,
+      tags: [],
+    },
   ]
 }
 

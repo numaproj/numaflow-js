@@ -267,7 +267,6 @@ impl SinkResponses {
 
 // ==================== Datum ====================
 
-
 #[derive(Clone, Default)]
 #[napi(object, namespace = "sink")]
 pub struct SystemMetadata {
@@ -281,7 +280,9 @@ impl From<sink::SystemMetadata> for SystemMetadata {
         for group in from_system_metadata.groups() {
             for key in from_system_metadata.keys(group.as_str()) {
                 let value = from_system_metadata.value(group.as_str(), key.as_str());
-                system_metadata.data.insert(group.clone(), HashMap::from([(key.clone(), value.clone())]));
+                system_metadata
+                    .data
+                    .insert(group.clone(), HashMap::from([(key.clone(), value.clone())]));
             }
         }
 
@@ -302,7 +303,9 @@ impl From<sink::UserMetadata> for UserMetadata {
         for group in from_user_metadata.groups() {
             for key in from_user_metadata.keys(group.as_str()) {
                 let value = from_user_metadata.value(group.as_str(), key.as_str());
-                user_metadata.data.insert(group.clone(), HashMap::from([(key.clone(), value.clone())]));
+                user_metadata
+                    .data
+                    .insert(group.clone(), HashMap::from([(key.clone(), value.clone())]));
             }
         }
 

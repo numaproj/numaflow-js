@@ -206,13 +206,13 @@ impl SourceTransformer {
 
 #[async_trait::async_trait]
 impl sourcetransform::SourceTransformer for SourceTransformer {
-    async fn transform(&self, datum: sourcetransform::SourceTransformRequest) -> Vec<sourcetransform::Message> {
+    async fn transform(
+        &self,
+        datum: sourcetransform::SourceTransformRequest,
+    ) -> Vec<sourcetransform::Message> {
         match self.source_transform_fn.call_async(datum.into()).await {
             Ok(promise) => match promise.await {
-                Ok(messages) => messages
-                    .into_iter()
-                    .map(|message| message.into())
-                    .collect(),
+                Ok(messages) => messages.into_iter().map(|message| message.into()).collect(),
                 Err(e) => {
                     eprintln!("Error executing JS source transform function: {:?}", e);
                     vec![]
