@@ -1,0 +1,41 @@
+apiVersion: numaflow.numaproj.io/v1alpha1
+kind: Pipeline
+metadata:
+  name: simple-accumulator
+spec:
+  watermark:
+    idleSource:
+      threshold: 5s
+      incrementBy: 3s
+      stepInterval: 2s
+      initSourceDelay: 60s
+  vertices:
+    - name: in
+      source:
+        # A self data generating source
+        http: { }
+    - name: stream-sorter
+      scale:
+        min: 1
+      udf:
+        container:
+          image: quay.io/numaio/numaflow-js/stream-sorter:stable
+          imagePullPolicy: IfNotPresent
+        groupBy:
+          window:
+            accumulator:
+              timeout: 10s
+          keyed: true
+          storage:
+            persistentVolumeClaim:
+              volumeSize: 1Gi
+              accessMode: ReadWriteOnce
+    - name: out
+      sink:
+        # A simple log printing sink
+        log: { }
+  edges:
+    - from: in
+      to: stream-sorter
+    - from: stream-sorter
+      to: out
