@@ -8,6 +8,25 @@ use std::sync::Arc;
 use std::{collections::HashMap, sync::Mutex};
 
 #[napi(object, namespace = "map")]
+pub struct UserMetadata {
+    pub data: HashMap<String, HashMap<String, Vec<u8>>>,
+}
+
+impl From<UserMetadata> for map::UserMetadata {
+    fn from(value: UserMetadata) -> Self {
+        let mut user_metadata = map::UserMetadata::new();
+
+        for (group, kv) in value.data {
+            user_metadata.create_group(group.clone());
+            for (key, value) in kv {
+                user_metadata.add_kv(group.clone(), key, value);
+            }
+        }
+        user_metadata
+    }
+}
+
+#[napi(object, namespace = "map")]
 pub struct Message {
     /// Keys are a collection of strings which will be passed on to the next vertex as is. It can
     /// be an empty collection.
@@ -16,6 +35,8 @@ pub struct Message {
     pub value: Buffer,
     /// Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/).
     pub tags: Option<Vec<String>>,
+    /// Watermark is the watermark passed to the next vertex.
+    pub user_metadata: Option<UserMetadata>,
 }
 
 #[napi(namespace = "map")]
@@ -24,6 +45,7 @@ pub fn message_to_drop() -> Message {
         keys: None,
         value: Buffer::from(vec![]),
         tags: Some(vec![numaflow::shared::DROP.to_string()]),
+        user_metadata: None,
     }
 }
 
@@ -33,6 +55,7 @@ impl From<Message> for map::Message {
             keys: value.keys,
             value: value.value.into(),
             tags: value.tags,
+            user_metadata: value.user_metadata.map(|um| um.into()),
         }
     }
 }
@@ -150,6 +173,7 @@ impl map::Mapper for JsMapper {
                         keys: None,
                         value: vec![],
                         tags: Some(vec![numaflow::shared::DROP.to_string()]),
+                        user_metadata: None,
                     }]
                 }
             },
@@ -159,6 +183,7 @@ impl map::Mapper for JsMapper {
                     keys: None,
                     value: vec![],
                     tags: Some(vec![numaflow::shared::DROP.to_string()]),
+                    user_metadata: None,
                 }]
             }
         }

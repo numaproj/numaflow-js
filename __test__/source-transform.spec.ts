@@ -10,7 +10,12 @@ const infoPath = '/tmp/var/run/numaflow/source-transform-info.sock'
 
 test('source transform integration test', async () => {
   const server = new sourceTransform.SourceTransformAsyncServer(async (datum) => {
-    return [new sourceTransform.SourceTransformMessage(datum.value, datum.eventtime).withKeys(datum.keys).withTags([])]
+    return [{
+        keys: datum.keys,
+        value: datum.value,
+        eventtime: datum.eventtime,
+        tags: [],
+    }]
   })
 
   try {

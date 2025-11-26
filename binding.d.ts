@@ -29,12 +29,7 @@ export declare namespace accumulator {
     done: boolean
   }
   /** Create a Message from a Datum, preserving all metadata. */
-  export function fromDatum(
-    datum: Datum,
-    value?: Array<number> | undefined | null,
-    keys?: Array<string> | undefined | null,
-    tags?: Array<string> | undefined | null,
-  ): Message
+  export function fromDatum(datum: Datum, value?: Array<number> | undefined | null, keys?: Array<string> | undefined | null, tags?: Array<string> | undefined | null): Message
   /** A message to be sent to the next vertex from an accumulator handler. */
   export interface Message {
     /**
@@ -71,7 +66,7 @@ export declare namespace batchmap {
     next(): Promise<BatchDatumIteratorResult>
   }
   export class BatchMapAsyncServer {
-    constructor(batchmapFn: (arg: BatchDatumIterator) => Promise<Array<BatchResponse>>)
+    constructor(batchmapFn: ((arg: BatchDatumIterator) => Promise<Array<BatchResponse>>))
     start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
     stop(): void
   }
@@ -126,7 +121,7 @@ export declare namespace batchmap {
 
 export declare namespace map {
   export class MapAsyncServer {
-    constructor(mapFn: (arg: Datum) => Promise<Array<Message>>)
+    constructor(mapFn: ((arg: Datum) => Promise<Array<Message>>))
     start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
     stop(): void
   }
@@ -155,8 +150,13 @@ export declare namespace map {
     value: Buffer
     /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
     tags?: Array<string>
+    /** Watermark is the watermark passed to the next vertex. */
+    userMetadata?: UserMetadata
   }
   export function messageToDrop(): Message
+  export interface UserMetadata {
+    data: Record<string, Record<string, Array<number>>>
+  }
 }
 
 export declare namespace mapstream {
@@ -204,7 +204,7 @@ export declare namespace sink {
    */
   export class SinkAsyncServer {
     /** Create a new SinkAsyncServer with the given callback. */
-    constructor(sinkFn: (arg: SinkDatumIterator) => Promise<Array<SinkResponse>>)
+    constructor(sinkFn: ((arg: SinkDatumIterator) => Promise<Array<SinkResponse>>))
     /** Start the SinkAsyncServer with the given callback */
     start(socketPath?: string | undefined | null, serverInfoPath?: string | undefined | null): Promise<void>
     /** Stop the sink server */
@@ -258,23 +258,26 @@ export declare namespace sink {
     id: string
     /** Headers for the message. */
     headers: Record<string, string>
+    userMetadata: UserMetadata
+    systemMetadata: SystemMetadata
   }
   export interface SinkDatumIteratorResult {
     value?: SinkDatum
     done: boolean
   }
+  export interface SystemMetadata {
+    data: Record<string, Record<string, Array<number>>>
+  }
+  export interface UserMetadata {
+    data: Record<string, Record<string, Array<number>>>
+  }
 }
 
 export declare namespace sourceTransform {
   export class SourceTransformAsyncServer {
-    constructor(sourceTransformFn: (arg: SourceTransformDatum) => Promise<Array<SourceTransformMessage>>)
+    constructor(sourceTransformFn: ((arg: SourceTransformDatum) => Promise<Array<SourceTransformMessage>>))
     start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
     stop(): void
-  }
-  export class SourceTransformMessage {
-    constructor(value: Buffer, eventtime: Date)
-    withKeys(keys: Array<string>): SourceTransformMessage
-    withTags(tags: Array<string>): SourceTransformMessage
   }
   export function messageToDrop(eventtime: Date): SourceTransformMessage
   export interface SourceTransformDatum {
@@ -291,5 +294,26 @@ export declare namespace sourceTransform {
     eventtime: Date
     /** Headers for the message. */
     headers: Record<string, string>
+  }
+  export interface SourceTransformMessage {
+    /**
+     * Keys are a collection of strings which will be passed on to the next vertex as is. It can
+     * be an empty collection.
+     */
+    keys?: Array<string>
+    /** Value is the value passed to the next vertex. */
+    value: Buffer
+    /**
+     * Time for the given event. This will be used for tracking watermarks. If cannot be derived, set it to the incoming
+     * event_time from the [`SourceTransformRequest`].
+     */
+    eventtime: Date
+    /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
+    tags?: Array<string>
+    /** User metadata for the message. */
+    userMetadata?: UserMetadata
+  }
+  export interface UserMetadata {
+    data: Record<string, Record<string, Array<number>>>
   }
 }

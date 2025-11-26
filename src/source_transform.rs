@@ -5,57 +5,48 @@ use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
 use numaflow::shared::ServerExtras;
 use numaflow::sourcetransform;
-use numaflow::sourcetransform::SourceTransformRequest;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-#[derive(Clone, Default, Debug)]
-#[napi(namespace = "sourceTransform")]
+#[napi(object, namespace = "sourceTransform")]
+pub struct UserMetadata {
+    pub data: HashMap<String, HashMap<String, Vec<u8>>>,
+}
+
+impl From<UserMetadata> for sourcetransform::UserMetadata {
+    fn from(_value: UserMetadata) -> Self {
+        let user_metadata = sourcetransform::UserMetadata::default();
+
+        // TODO: implement proper conversion, missing setter methods in rust SDK
+        user_metadata
+    }
+}
+
+#[derive(Default)]
+#[napi(object, namespace = "sourceTransform")]
 pub struct SourceTransformMessage {
     /// Keys are a collection of strings which will be passed on to the next vertex as is. It can
     /// be an empty collection.
-    keys: Option<Vec<String>>,
+    pub keys: Option<Vec<String>>,
     /// Value is the value passed to the next vertex.
-    value: Vec<u8>,
+    pub value: Buffer,
     /// Time for the given event. This will be used for tracking watermarks. If cannot be derived, set it to the incoming
     /// event_time from the [`SourceTransformRequest`].
-    eventtime: DateTime<Utc>,
+    pub eventtime: DateTime<Utc>,
     /// Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/).
-    tags: Option<Vec<String>>,
+    pub tags: Option<Vec<String>>,
+    /// User metadata for the message.
+    pub user_metadata: Option<UserMetadata>,
 }
 
 #[napi(namespace = "sourceTransform")]
 pub fn message_to_drop(eventtime: DateTime<Utc>) -> SourceTransformMessage {
     SourceTransformMessage {
         keys: None,
-        value: vec![],
+        value: vec![].into(),
         eventtime,
         tags: Some(vec![numaflow::shared::DROP.to_string()]),
-    }
-}
-
-#[napi(namespace = "sourceTransform")]
-impl SourceTransformMessage {
-    #[napi(constructor)]
-    pub fn new(value: Buffer, eventtime: DateTime<Utc>) -> Self {
-        Self {
-            keys: None,
-            value: value.into(),
-            eventtime,
-            tags: None,
-        }
-    }
-
-    #[napi]
-    pub fn with_keys(&mut self, keys: Vec<String>) -> Self {
-        self.keys = Some(keys);
-        self.clone()
-    }
-
-    #[napi]
-    pub fn with_tags(&mut self, tags: Vec<String>) -> Self {
-        self.tags = Some(tags);
-        self.clone()
+        user_metadata: None,
     }
 }
 
@@ -63,9 +54,10 @@ impl From<SourceTransformMessage> for sourcetransform::Message {
     fn from(value: SourceTransformMessage) -> Self {
         Self {
             keys: value.keys,
-            value: value.value,
+            value: value.value.into(),
             event_time: value.eventtime,
             tags: value.tags,
+            user_metadata: value.user_metadata.map(|um| um.into()),
         }
     }
 }
@@ -114,7 +106,7 @@ pub struct SourceTransformAsyncServer {
     source_transform_fn: Arc<
         ThreadsafeFunction<
             SourceTransformDatum,
-            Promise<Vec<&'static SourceTransformMessage>>,
+            Promise<Vec<SourceTransformMessage>>,
             SourceTransformDatum,
             Status,
             false,
@@ -131,7 +123,7 @@ impl SourceTransformAsyncServer {
         source_transform_fn: Arc<
             ThreadsafeFunction<
                 SourceTransformDatum,
-                Promise<Vec<&'static SourceTransformMessage>>,
+                Promise<Vec<SourceTransformMessage>>,
                 SourceTransformDatum,
                 Status,
                 false,
@@ -184,7 +176,7 @@ struct SourceTransformer {
     source_transform_fn: Arc<
         ThreadsafeFunction<
             SourceTransformDatum,
-            Promise<Vec<&'static SourceTransformMessage>>,
+            Promise<Vec<SourceTransformMessage>>,
             SourceTransformDatum,
             Status,
             false,
@@ -198,7 +190,7 @@ impl SourceTransformer {
         source_transform_fn: Arc<
             ThreadsafeFunction<
                 SourceTransformDatum,
-                Promise<Vec<&'static SourceTransformMessage>>,
+                Promise<Vec<SourceTransformMessage>>,
                 SourceTransformDatum,
                 Status,
                 false,
@@ -214,12 +206,12 @@ impl SourceTransformer {
 
 #[async_trait::async_trait]
 impl sourcetransform::SourceTransformer for SourceTransformer {
-    async fn transform(&self, datum: SourceTransformRequest) -> Vec<sourcetransform::Message> {
+    async fn transform(&self, datum: sourcetransform::SourceTransformRequest) -> Vec<sourcetransform::Message> {
         match self.source_transform_fn.call_async(datum.into()).await {
             Ok(promise) => match promise.await {
                 Ok(messages) => messages
                     .into_iter()
-                    .map(|message| message.clone().into())
+                    .map(|message| message.into())
                     .collect(),
                 Err(e) => {
                     eprintln!("Error executing JS source transform function: {:?}", e);
