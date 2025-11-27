@@ -34,13 +34,12 @@ impl From<sourcetransform::UserMetadata> for UserMetadata {
         let mut user_metadata = UserMetadata::default();
 
         for group in from_user_metadata.groups() {
-            for keys in from_user_metadata.keys(group.as_str()) {
-                let value = from_user_metadata.value(group.as_str(), keys.as_str());
-                user_metadata.data.insert(
-                    group.clone(),
-                    HashMap::from([(keys.clone(), value.clone())]),
-                );
+            let mut kv = HashMap::new();
+            for key in from_user_metadata.keys(group.as_str()) {
+                let value = from_user_metadata.value(group.as_str(), key.as_str());
+                kv.insert(key.clone(), value);
             }
+            user_metadata.data.insert(group.clone(), kv);
         }
 
         user_metadata

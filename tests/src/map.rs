@@ -53,10 +53,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert!(handshake_response.handshake.is_some());
 
     let kv = proto::metadata::KeyValueGroup {
-        key_value: HashMap::from([
+        key_value: [
             ("key1".to_string(), b"value1".to_vec()),
             ("key2".to_string(), b"value2".to_vec()),
-        ]),
+        ]
+        .into(),
     };
     let user_metadata = HashMap::from([("group1".to_string(), kv)]);
 
@@ -102,6 +103,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let msg = &r.results[0];
     assert_eq!(msg.keys.first(), Some(&"first".to_owned()));
     assert_eq!(msg.value, "hello".as_bytes());
+    assert_ne!(msg.metadata, None);
+    if let Some(proto::metadata::Metadata {
+        previous_vertex: _,
+        sys_metadata: _,
+        user_metadata,
+    }) = msg.metadata.clone()
+    {
+        assert_eq!(user_metadata.len(), 1);
+        // The user should update the user metadata by adding (key3, value3)
+        user_metadata.get("group1").map(|kv| {
+            assert_eq!(kv.key_value.len(), 2);
+            assert_eq!(
+                kv.key_value.get("key2").unwrap(),
+                &Vec::from("value2".as_bytes())
+            );
+        });
+    }
 
     // Request 2
     let request_2 = proto::map::MapRequest {
