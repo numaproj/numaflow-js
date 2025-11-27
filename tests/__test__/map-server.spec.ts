@@ -2,33 +2,34 @@ import { test, expect } from 'vitest'
 import { spawn } from 'child_process'
 import { promisify } from 'util'
 
-import { sourceTransform } from '../index.js'
+import * as numaflow from '../../index.js'
+const { MapAsyncServer, messageToDrop } = numaflow.map
 
 const sleep = promisify(setTimeout)
-const sockPath = '/tmp/var/run/numaflow/source-transform.sock'
-const infoPath = '/tmp/var/run/numaflow/source-transform-info.sock'
 
-test('source transform integration test', async () => {
-  const server = new sourceTransform.SourceTransformAsyncServer(async (datum) => {
-    return [
-      {
-        keys: datum.keys,
-        value: datum.value,
-        eventtime: datum.eventtime,
-        tags: [],
-      },
-    ]
-  })
+test('mapper integration test', async () => {
+  const mapFn = async (datum: numaflow.map.Datum) => {
+    const key = datum.keys[0] ?? 'default-key'
+    const value = datum.value ?? Buffer.from('default-value')
+    if (value.toString() === 'bad') {
+      return [messageToDrop()]
+    }
+    return [{ keys: [key], value }]
+  }
+
+  const server = new MapAsyncServer(mapFn)
+  const sockFile = '/tmp/map.sock'
+  const infoFile = '/tmp/map.info'
 
   try {
     // Start the server (non-blocking)
-    server.start(sockPath, infoPath)
+    server.start(sockFile, infoFile)
 
     // Give the server time to initialize
     await sleep(500)
 
     // Run the cargo command
-    const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'source_transform', '--', sockPath], {
+    const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'map', '--', sockFile], {
       stdio: 'pipe',
     })
 

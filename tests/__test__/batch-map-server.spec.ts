@@ -2,34 +2,40 @@ import { test, expect } from 'vitest'
 import { spawn } from 'child_process'
 import { promisify } from 'util'
 
-import * as numaflow from '../index.js'
-const { MapAsyncServer, messageToDrop } = numaflow.map
+import { batchmap } from '../../index.js'
 
 const sleep = promisify(setTimeout)
+const sockPath = '/tmp/var/run/numaflow/batchmap.sock'
+const infoPath = '/tmp/var/run/numaflow/batchmap-info.sock'
 
-test('mapper integration test', async () => {
-  const mapFn = async (datum: numaflow.map.Datum) => {
-    const key = datum.keys[0] ?? 'default-key'
-    const value = datum.value ?? Buffer.from('default-value')
-    if (value.toString() === 'bad') {
-      return [messageToDrop()]
+test('batchmap integration test', async () => {
+  const server = new batchmap.BatchMapAsyncServer(async (datums): Promise<batchmap.Response[]> => {
+    let responses: batchmap.Response[] = []
+    for await (const datum of datums) {
+      let response = new batchmap.Response(datum.id)
+
+      const key = datum.keys[0] ?? 'default-key'
+      const value = datum.value ?? Buffer.from('default-value')
+      if (value.toString() === 'bad') {
+        response.append(batchmap.messageToDrop())
+      } else {
+        response.append(new batchmap.Message(value).withKeys([key]))
+      }
+
+      responses.push(response)
     }
-    return [{ keys: [key], value }]
-  }
-
-  const server = new MapAsyncServer(mapFn)
-  const sockFile = '/tmp/map.sock'
-  const infoFile = '/tmp/map.info'
+    return responses
+  })
 
   try {
     // Start the server (non-blocking)
-    server.start(sockFile, infoFile)
+    server.start(sockPath, infoPath)
 
     // Give the server time to initialize
     await sleep(500)
 
     // Run the cargo command
-    const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'map', '--', sockFile], {
+    const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'batchmap', '--', sockPath], {
       stdio: 'pipe',
     })
 

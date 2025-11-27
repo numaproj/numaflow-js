@@ -1,7 +1,9 @@
 use numaflow::proto::source_transformer::{
-    self as proto, source_transform_client::SourceTransformClient,
+    source_transform_client::SourceTransformClient,
 };
+use numaflow::proto;
 use std::{env, error::Error, time::Duration};
+use std::collections::HashMap;
 use tokio::net::UnixStream;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
@@ -33,9 +35,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let (tx, rx) = mpsc::channel(2);
 
-    let handshake_request = proto::SourceTransformRequest {
+    let handshake_request = proto::source_transformer::SourceTransformRequest {
         request: None,
-        handshake: Some(proto::Handshake { sot: true }),
+        handshake: Some(proto::source_transformer::Handshake { sot: true }),
     };
     tx.send(handshake_request).await.unwrap();
 
@@ -61,14 +63,32 @@ async fn main() -> Result<(), Box<dyn Error>> {
         "Not a valid response for handshake request"
     );
 
-    let request = proto::SourceTransformRequest {
-        request: Some(proto::source_transform_request::Request {
+    let kv = proto::metadata::KeyValueGroup {
+        key_value: HashMap::from([
+            ("key1".to_string(), b"value1".to_vec()),
+            ("key2".to_string(), b"value2".to_vec()),
+        ]),
+    };
+    let user_metadata = HashMap::from([("group1".to_string(), kv)]);
+
+    let sys_kv = proto::metadata::KeyValueGroup {
+        key_value: HashMap::from([("system_key1".to_string(), b"system_value1".to_vec())]),
+    };
+    let sys_metadata = HashMap::from([("system_group".to_string(), sys_kv)]);
+
+    let request = proto::source_transformer::SourceTransformRequest {
+        request: Some(proto::source_transformer::source_transform_request::Request {
             id: "1".to_string(),
             keys: vec!["first".into(), "second".into()],
             value: "hello".into(),
             watermark: Some(prost_types::Timestamp::default()),
             event_time: Some(prost_types::Timestamp::default()),
             headers: Default::default(),
+            metadata: Some(proto::metadata::Metadata {
+                previous_vertex: "sourcer".to_string(),
+                sys_metadata: sys_metadata.clone(),
+                user_metadata: user_metadata.clone(),
+            }),
         }),
         handshake: None,
     };

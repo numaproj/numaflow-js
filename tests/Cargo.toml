@@ -31,10 +31,10 @@ name = "accumulator"
 path = "src/accumulator.rs"
 
 [dependencies]
-numaflow = { git = "https://github.com/numaproj/numaflow-rs.git", rev = "fde3deafea634abbc347032ff409d33d4e1514b1" }
-tokio = "1.47.1"
-tonic = "0.14.2"
-tokio-stream = "0.1.17"
-tower = "0.5.2"
-hyper-util = "0.1.16"
-prost-types = "0.14.1"
+numaflow.workspace = true
+tokio.workspace = true
+tonic.workspace = true
+tower.workspace = true
+hyper-util.workspace = true
+prost-types.workspace = true
+tokio-stream.workspace = true

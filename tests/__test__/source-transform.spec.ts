@@ -2,29 +2,22 @@ import { test, expect } from 'vitest'
 import { spawn } from 'child_process'
 import { promisify } from 'util'
 
-import { batchmap } from '../index.js'
+import { sourceTransform } from '../../index.js'
 
 const sleep = promisify(setTimeout)
-const sockPath = '/tmp/var/run/numaflow/batchmap.sock'
-const infoPath = '/tmp/var/run/numaflow/batchmap-info.sock'
+const sockPath = '/tmp/var/run/numaflow/source-transform.sock'
+const infoPath = '/tmp/var/run/numaflow/source-transform-info.sock'
 
-test('batchmap integration test', async () => {
-  const server = new batchmap.BatchMapAsyncServer(async (datums): Promise<batchmap.Response[]> => {
-    let responses: batchmap.Response[] = []
-    for await (const datum of datums) {
-      let response = new batchmap.Response(datum.id)
-
-      const key = datum.keys[0] ?? 'default-key'
-      const value = datum.value ?? Buffer.from('default-value')
-      if (value.toString() === 'bad') {
-        response.append(batchmap.messageToDrop())
-      } else {
-        response.append(new batchmap.Message(value).withKeys([key]))
-      }
-
-      responses.push(response)
-    }
-    return responses
+test('source transform integration test', async () => {
+  const server = new sourceTransform.SourceTransformAsyncServer(async (datum) => {
+    return [
+      {
+        keys: datum.keys,
+        value: datum.value,
+        eventtime: datum.eventtime,
+        tags: [],
+      },
+    ]
   })
 
   try {
@@ -35,7 +28,7 @@ test('batchmap integration test', async () => {
     await sleep(500)
 
     // Run the cargo command
-    const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'batchmap', '--', sockPath], {
+    const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'source_transform', '--', sockPath], {
       stdio: 'pipe',
     })
 

@@ -2,7 +2,7 @@ import { test, expect } from 'vitest'
 import { spawn } from 'child_process'
 import { promisify } from 'util'
 
-import { mapstream } from '../index.js'
+import { mapstream } from '../../index.js'
 
 const sleep = promisify(setTimeout)
 

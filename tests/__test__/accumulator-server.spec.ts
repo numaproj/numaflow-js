@@ -2,7 +2,7 @@ import { test, expect } from 'vitest'
 import { spawn } from 'child_process'
 import { promisify } from 'util'
 
-import { accumulator } from '../index.js'
+import { accumulator } from '../../index.js'
 
 const sleep = promisify(setTimeout)
 const sockPath = '/tmp/var/run/numaflow/accumulator.sock'

@@ -52,6 +52,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let handshake_response = handshake_response.unwrap();
     assert!(handshake_response.handshake.is_some());
 
+    let kv = proto::metadata::KeyValueGroup {
+        key_value: HashMap::from([
+            ("key1".to_string(), b"value1".to_vec()),
+            ("key2".to_string(), b"value2".to_vec()),
+        ]),
+    };
+    let user_metadata = HashMap::from([("group1".to_string(), kv)]);
+
+    let sys_kv = proto::metadata::KeyValueGroup {
+        key_value: HashMap::from([("system_key1".to_string(), b"system_value1".to_vec())]),
+    };
+    let sys_metadata = HashMap::from([("system_group".to_string(), sys_kv)]);
+
+
     // Build three requests with IDs
     let mk_req = |id: &str, keys: Vec<&str>, value: &str| -> proto::map::MapRequest {
         proto::map::MapRequest {
@@ -61,6 +75,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 watermark: Some(prost_types::Timestamp::default()),
                 event_time: Some(prost_types::Timestamp::default()),
                 headers: HashMap::new(),
+                metadata: Some(proto::metadata::Metadata {
+                    previous_vertex: "sourcer".to_string(),
+                    sys_metadata: sys_metadata.clone(),
+                    user_metadata: user_metadata.clone(),
+                }),
             }),
             id: id.to_string(),
             handshake: None,
