@@ -65,7 +65,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let sys_metadata = HashMap::from([("system_group".to_string(), sys_kv)]);
 
-
     // Request 1
     let request_1 = proto::map::MapRequest {
         request: Some(proto::map::map_request::Request {

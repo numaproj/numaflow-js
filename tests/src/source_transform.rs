@@ -1,9 +1,7 @@
-use numaflow::proto::source_transformer::{
-    source_transform_client::SourceTransformClient,
-};
 use numaflow::proto;
-use std::{env, error::Error, time::Duration};
+use numaflow::proto::source_transformer::source_transform_client::SourceTransformClient;
 use std::collections::HashMap;
+use std::{env, error::Error, time::Duration};
 use tokio::net::UnixStream;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
@@ -77,19 +75,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let sys_metadata = HashMap::from([("system_group".to_string(), sys_kv)]);
 
     let request = proto::source_transformer::SourceTransformRequest {
-        request: Some(proto::source_transformer::source_transform_request::Request {
-            id: "1".to_string(),
-            keys: vec!["first".into(), "second".into()],
-            value: "hello".into(),
-            watermark: Some(prost_types::Timestamp::default()),
-            event_time: Some(prost_types::Timestamp::default()),
-            headers: Default::default(),
-            metadata: Some(proto::metadata::Metadata {
-                previous_vertex: "sourcer".to_string(),
-                sys_metadata: sys_metadata.clone(),
-                user_metadata: user_metadata.clone(),
-            }),
-        }),
+        request: Some(
+            proto::source_transformer::source_transform_request::Request {
+                id: "1".to_string(),
+                keys: vec!["first".into(), "second".into()],
+                value: "hello".into(),
+                watermark: Some(prost_types::Timestamp::default()),
+                event_time: Some(prost_types::Timestamp::default()),
+                headers: Default::default(),
+                metadata: Some(proto::metadata::Metadata {
+                    previous_vertex: "sourcer".to_string(),
+                    sys_metadata: sys_metadata.clone(),
+                    user_metadata: user_metadata.clone(),
+                }),
+            },
+        ),
         handshake: None,
     };
 

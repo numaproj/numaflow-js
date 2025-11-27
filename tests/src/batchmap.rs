@@ -65,7 +65,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let sys_metadata = HashMap::from([("system_group".to_string(), sys_kv)]);
 
-
     // Build three requests with IDs
     let mk_req = |id: &str, keys: Vec<&str>, value: &str| -> proto::map::MapRequest {
         proto::map::MapRequest {

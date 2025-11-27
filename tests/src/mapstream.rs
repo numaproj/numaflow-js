@@ -49,7 +49,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let sys_metadata = HashMap::from([("system_group".to_string(), sys_kv)]);
 
-
     // Build one request with comma-separated payload
     let request = proto::map::MapRequest {
         request: Some(proto::map::map_request::Request {
