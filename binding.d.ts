@@ -29,12 +29,7 @@ export declare namespace accumulator {
     done: boolean
   }
   /** Create a Message from a Datum, preserving all metadata. */
-  export function fromDatum(
-    datum: Datum,
-    value?: Array<number> | undefined | null,
-    keys?: Array<string> | undefined | null,
-    tags?: Array<string> | undefined | null,
-  ): Message
+  export function fromDatum(datum: Datum, value?: Array<number> | undefined | null, keys?: Array<string> | undefined | null, tags?: Array<string> | undefined | null): Message
   /** A message to be sent to the next vertex from an accumulator handler. */
   export interface Message {
     /**
@@ -71,7 +66,7 @@ export declare namespace batchmap {
     next(): Promise<BatchDatumIteratorResult>
   }
   export class BatchMapAsyncServer {
-    constructor(batchmapFn: (arg: BatchDatumIterator) => Promise<Array<BatchResponse>>)
+    constructor(batchmapFn: ((arg: BatchDatumIterator) => Promise<Array<BatchResponse>>))
     start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
     stop(): void
   }
@@ -125,29 +120,35 @@ export declare namespace batchmap {
 }
 
 export declare namespace map {
+  export class Datum {
+    /** Set of keys in the (key, value) terminology of map/reduce paradigm. */
+    keys: Array<string>
+    constructor(keys: Array<string>, value: Array<number>, watermark: Date, eventtime: Date, headers: Record<string, string>, userMetadata?: UserMetadata | undefined | null, systemMetadata?: SystemMetadata | undefined | null)
+    get value(): Buffer
+    get watermark(): Date
+    get eventtime(): Date
+    get headers(): Record<string, string>
+    get userMetadata(): UserMetadata | null
+    get systemMetadata(): SystemMetadata | null
+    set userMetadata(userMetadata: UserMetadata)
+  }
   export class MapAsyncServer {
-    constructor(mapFn: (arg: Datum) => Promise<Array<Message>>)
+    constructor(mapFn: ((arg: Datum) => Promise<Array<Message>>))
     start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
     stop(): void
   }
-  export interface Datum {
-    /** Set of keys in the (key, value) terminology of map/reduce paradigm. */
-    keys: Array<string>
-    /** The value in the (key, value) terminology of map/reduce paradigm. */
-    value: Buffer
-    /**
-     * [watermark](https://numaflow.numaproj.io/core-concepts/watermarks/) represented by time is a
-     * guarantee that we will not see an element older than this time.
-     */
-    watermark: Date
-    /** Time of the element as seen at source or aligned after a reduce operation. */
-    eventtime: Date
-    /** Headers for the message. */
-    headers: Record<string, string>
-    /** User metadata for the message. */
-    userMetadata: UserMetadata
-    /** System metadata for the message. */
-    systemMetadata: SystemMetadata
+  export class SystemMetadata {
+
+  }
+  export class UserMetadata {
+    constructor()
+    getGroups(): Array<string>
+    getKeys(group: string): Array<string>
+    getValue(group: string, key: string): Buffer
+    createGroup(group: string): void
+    addKv(group: string, key: string, value: Buffer): void
+    removeKey(group: string, key: string): void
+    removeGroup(group: string): void
   }
   export interface Message {
     /**
@@ -159,15 +160,8 @@ export declare namespace map {
     value: Buffer
     /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
     tags?: Array<string>
-    /** Watermark is the watermark passed to the next vertex. */
-    userMetadata?: UserMetadata
-  }
-  export function messageToDrop(): Message
-  export interface SystemMetadata {
-    data: Record<string, Record<string, Array<number>>>
-  }
-  export interface UserMetadata {
-    data: Record<string, Record<string, Array<number>>>
+    /** User metadata for the message. */
+    userMetadata?: Record<string, Record<string, Buffer>>
   }
 }
 
@@ -216,7 +210,7 @@ export declare namespace sink {
    */
   export class SinkAsyncServer {
     /** Create a new SinkAsyncServer with the given callback. */
-    constructor(sinkFn: (arg: SinkDatumIterator) => Promise<Array<SinkResponse>>)
+    constructor(sinkFn: ((arg: SinkDatumIterator) => Promise<Array<SinkResponse>>))
     /** Start the SinkAsyncServer with the given callback */
     start(socketPath?: string | undefined | null, serverInfoPath?: string | undefined | null): Promise<void>
     /** Stop the sink server */
@@ -287,7 +281,7 @@ export declare namespace sink {
 
 export declare namespace sourceTransform {
   export class SourceTransformAsyncServer {
-    constructor(sourceTransformFn: (arg: SourceTransformDatum) => Promise<Array<SourceTransformMessage>>)
+    constructor(sourceTransformFn: ((arg: SourceTransformDatum) => Promise<Array<SourceTransformMessage>>))
     start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
     stop(): void
   }
