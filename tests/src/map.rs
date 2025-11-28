@@ -113,10 +113,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(user_metadata.len(), 1);
         // The user should update the user metadata by adding (key3, value3)
         user_metadata.get("group1").map(|kv| {
-            assert_eq!(kv.key_value.len(), 2);
+            assert_eq!(kv.key_value.len(), 3);
             assert_eq!(
-                kv.key_value.get("key2").unwrap(),
-                &Vec::from("value2".as_bytes())
+                kv.key_value.get("key3").unwrap(),
+                &Vec::from("value3".as_bytes())
             );
         });
     }

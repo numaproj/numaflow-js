@@ -46,13 +46,13 @@
     "build:ts": "pnpm tsc -p tsconfig.index.json",
     "build": "napi build --platform --release --js binding.js --dts binding.d.ts && pnpm run build:ts",
     "build:debug": "napi build --platform --js binding.js --dts binding.d.ts && pnpm run build:ts",
-    "format": "pnpm format:prettier; pnpm format:rs; pnpm format:toml",
+    "format": "pnpm format:prettier && pnpm format:rs && pnpm format:toml",
     "format:prettier": "prettier . -w",
     "format:toml": "taplo format",
     "format:rs": "cargo fmt --all",
     "lint": "oxlint",
     "prepublishOnly": "napi prepublish -t npm",
-    "test": "vitest run --dir tests/__test__",
+    "test": "pnpm build:debug && vitest run --dir tests/__test__",
     "version": "napi version"
   },
   "devDependencies": {
