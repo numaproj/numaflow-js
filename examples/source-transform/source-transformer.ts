@@ -1,7 +1,16 @@
 import { sourceTransform } from '../../index'
 
-async function sourceTransformFn(datum: sourceTransform.SourceTransformDatum) {
-  return [new sourceTransform.SourceTransformMessage(datum.value, datum.eventtime).withKeys(datum.keys).withTags([])]
+async function sourceTransformFn(
+  datum: sourceTransform.SourceTransformDatum,
+): Promise<sourceTransform.SourceTransformMessage[]> {
+  return [
+    {
+      keys: datum.keys,
+      value: datum.value,
+      eventtime: datum.eventtime,
+      tags: [],
+    },
+  ]
 }
 
 async function main() {

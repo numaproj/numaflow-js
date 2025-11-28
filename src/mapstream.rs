@@ -20,6 +20,16 @@ pub struct Message {
     pub tags: Option<Vec<String>>,
 }
 
+impl From<Message> for mapstream::Message {
+    fn from(value: Message) -> Self {
+        Self {
+            keys: value.keys,
+            value: value.value.into(),
+            tags: value.tags,
+        }
+    }
+}
+
 #[napi(object, namespace = "mapstream")]
 pub struct Datum {
     /// Set of keys in the (key, value) terminology of the map/reduce paradigm.
@@ -55,16 +65,6 @@ impl From<numaflow::mapstream::MapStreamRequest> for Datum {
             watermark: value.watermark,
             eventtime: value.eventtime,
             headers: value.headers,
-        }
-    }
-}
-
-impl From<Message> for mapstream::Message {
-    fn from(value: Message) -> Self {
-        Self {
-            keys: value.keys,
-            value: value.value.into(),
-            tags: value.tags,
         }
     }
 }
