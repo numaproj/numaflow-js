@@ -2,7 +2,7 @@ import { test, expect } from 'vitest'
 import { spawn } from 'child_process'
 import { promisify } from 'util'
 
-import {map} from '../../index.js'
+import { map } from '../../index.js'
 const { MapServer, Message } = map
 
 const sleep = promisify(setTimeout)
@@ -16,16 +16,16 @@ test('mapper integration test', async () => {
     }
 
     let userMetadataGroups = datum.userMetadata?.getGroups() ?? []
-    console.log(`userMetadataGroups: ${JSON.stringify(userMetadataGroups)}`);
+    console.log(`userMetadataGroups: ${JSON.stringify(userMetadataGroups)}`)
 
-    const userMetadata = datum.userMetadata ?? new map.UserMetadata();
-    userMetadata.addKv('group1', 'key3', Buffer.from('value3'));
+    const userMetadata = datum.userMetadata ?? new map.UserMetadata()
+    userMetadata.addKv('group1', 'key3', Buffer.from('value3'))
 
     return [
       {
-          keys: [key],
-          value: value,
-          userMetadata,
+        keys: [key],
+        value: value,
+        userMetadata,
       },
     ]
   }
