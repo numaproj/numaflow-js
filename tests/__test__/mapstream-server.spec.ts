@@ -2,30 +2,35 @@ import { test, expect } from 'vitest'
 import { spawn } from 'child_process'
 import { promisify } from 'util'
 
-import { sourceTransform } from '../index.js'
+import { mapstream } from '../../index.js'
 
 const sleep = promisify(setTimeout)
-const sockPath = '/tmp/var/run/numaflow/source-transform.sock'
-const infoPath = '/tmp/var/run/numaflow/source-transform-info.sock'
 
-test('source transform integration test', async () => {
-  const server = new sourceTransform.SourceTransformAsyncServer(async (datum) => {
-    return [new sourceTransform.SourceTransformMessage(datum.value, datum.eventtime).withKeys(datum.keys).withTags([])]
-  })
+test('mapstream server functionlity', async () => {
+  const mapFn = async function* (datum: mapstream.Datum) {
+    const payload = datum.value.toString()
+    for (const item of payload.split(',')) {
+      yield {
+        keys: [],
+        value: Buffer.from(item),
+        tags: [],
+      }
+    }
+  }
+
+  const server = new mapstream.MapStreamAsyncServer(mapFn)
+
+  const socketPath = '/tmp/mapstream.sock'
+  const serverInfoPath = '/tmp/mapstream.info'
 
   try {
-    // Start the server (non-blocking)
-    server.start(sockPath, infoPath)
-
-    // Give the server time to initialize
+    server.start(socketPath, serverInfoPath)
     await sleep(500)
 
-    // Run the cargo command
-    const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'source_transform', '--', sockPath], {
+    const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'mapstream', '--', socketPath], {
       stdio: 'pipe',
     })
 
-    // Capture stdout and stderr
     let stdout = ''
     let stderr = ''
     cargoProcess.stdout?.on('data', (data) => {
@@ -47,7 +52,6 @@ test('source transform integration test', async () => {
       expect.fail(`Cargo command failed with exit code ${exitCode}\n\nStdout:\n${stdout}\n\nStderr:\n${stderr}`)
     }
   } finally {
-    // Ensure the server is stopped
     server.stop()
   }
 }, 120000)

@@ -7,6 +7,66 @@ use numaflow::shared::ServerExtras;
 use std::sync::Arc;
 use std::{collections::HashMap, sync::Mutex};
 
+#[derive(Clone, Default)]
+#[napi(object, namespace = "map")]
+pub struct UserMetadata {
+    pub data: HashMap<String, HashMap<String, Vec<u8>>>,
+}
+
+impl From<UserMetadata> for map::UserMetadata {
+    fn from(value: UserMetadata) -> Self {
+        let mut user_metadata = map::UserMetadata::new();
+
+        for (group, kv) in value.data {
+            user_metadata.create_group(group.clone());
+            for (key, value) in kv {
+                user_metadata.add_kv(group.clone(), key, value);
+            }
+        }
+        user_metadata
+    }
+}
+
+impl From<map::UserMetadata> for UserMetadata {
+    fn from(from_user_metadata: map::UserMetadata) -> Self {
+        let mut user_metadata = UserMetadata::default();
+
+        for group in from_user_metadata.groups() {
+            let mut kv = HashMap::new();
+            for key in from_user_metadata.keys(group.as_str()) {
+                let value = from_user_metadata.value(group.as_str(), key.as_str());
+                kv.insert(key.clone(), value);
+            }
+            user_metadata.data.insert(group.clone(), kv);
+        }
+
+        user_metadata
+    }
+}
+
+#[derive(Clone, Default)]
+#[napi(object, namespace = "map")]
+pub struct SystemMetadata {
+    pub data: HashMap<String, HashMap<String, Vec<u8>>>,
+}
+
+impl From<map::SystemMetadata> for SystemMetadata {
+    fn from(from_system_metadata: map::SystemMetadata) -> Self {
+        let mut system_metadata = SystemMetadata::default();
+
+        for group in from_system_metadata.groups() {
+            for keys in from_system_metadata.keys(group.as_str()) {
+                let value = from_system_metadata.value(group.as_str(), keys.as_str());
+                system_metadata.data.insert(
+                    group.clone(),
+                    HashMap::from([(keys.clone(), value.clone())]),
+                );
+            }
+        }
+        system_metadata
+    }
+}
+
 #[napi(object, namespace = "map")]
 pub struct Message {
     /// Keys are a collection of strings which will be passed on to the next vertex as is. It can
@@ -16,6 +76,8 @@ pub struct Message {
     pub value: Buffer,
     /// Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/).
     pub tags: Option<Vec<String>>,
+    /// Watermark is the watermark passed to the next vertex.
+    pub user_metadata: Option<UserMetadata>,
 }
 
 #[napi(namespace = "map")]
@@ -24,6 +86,7 @@ pub fn message_to_drop() -> Message {
         keys: None,
         value: Buffer::from(vec![]),
         tags: Some(vec![numaflow::shared::DROP.to_string()]),
+        user_metadata: None,
     }
 }
 
@@ -33,6 +96,7 @@ impl From<Message> for map::Message {
             keys: value.keys,
             value: value.value.into(),
             tags: value.tags,
+            user_metadata: value.user_metadata.map(|um| um.into()),
         }
     }
 }
@@ -50,6 +114,10 @@ pub struct Datum {
     pub eventtime: DateTime<Utc>,
     /// Headers for the message.
     pub headers: HashMap<String, String>,
+    /// User metadata for the message.
+    pub user_metadata: UserMetadata,
+    /// System metadata for the message.
+    pub system_metadata: SystemMetadata,
 }
 
 impl Clone for Datum {
@@ -60,6 +128,8 @@ impl Clone for Datum {
             watermark: self.watermark,
             eventtime: self.eventtime,
             headers: self.headers.clone(),
+            user_metadata: self.user_metadata.clone(),
+            system_metadata: self.system_metadata.clone(),
         }
     }
 }
@@ -72,6 +142,8 @@ impl From<map::MapRequest> for Datum {
             watermark: value.watermark,
             eventtime: value.eventtime,
             headers: value.headers,
+            user_metadata: value.user_metadata.into(),
+            system_metadata: value.system_metadata.into(),
         }
     }
 }
@@ -150,6 +222,7 @@ impl map::Mapper for JsMapper {
                         keys: None,
                         value: vec![],
                         tags: Some(vec![numaflow::shared::DROP.to_string()]),
+                        user_metadata: None,
                     }]
                 }
             },
@@ -159,6 +232,7 @@ impl map::Mapper for JsMapper {
                     keys: None,
                     value: vec![],
                     tags: Some(vec![numaflow::shared::DROP.to_string()]),
+                    user_metadata: None,
                 }]
             }
         }

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 
@@ -5,6 +6,7 @@ use tokio::net::UnixStream;
 use tonic::transport::Uri;
 use tower::service_fn;
 
+use numaflow::proto;
 use numaflow::proto::sink::TransmissionStatus;
 use numaflow::proto::sink::sink_request::Request;
 use numaflow::proto::sink::{Handshake, SinkRequest};
@@ -36,6 +38,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
         status: None,
         handshake: Some(Handshake { sot: true }),
     };
+
+    let kv = proto::metadata::KeyValueGroup {
+        key_value: HashMap::from([
+            ("key1".to_string(), b"value1".to_vec()),
+            ("key2".to_string(), b"value2".to_vec()),
+        ]),
+    };
+    let user_metadata = HashMap::from([("group1".to_string(), kv)]);
+
+    let sys_kv = proto::metadata::KeyValueGroup {
+        key_value: HashMap::from([("system_key1".to_string(), b"system_value1".to_vec())]),
+    };
+    let sys_metadata = HashMap::from([("system_group".to_string(), sys_kv)]);
+
     let request = SinkRequest {
         request: Some(Request {
             keys: vec!["first".into(), "second".into()],
@@ -44,6 +60,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             event_time: Some(prost_types::Timestamp::default()),
             id: "1".to_string(),
             headers: Default::default(),
+            metadata: Some(proto::metadata::Metadata {
+                previous_vertex: "mapper".to_string(),
+                sys_metadata: sys_metadata.clone(),
+                user_metadata: user_metadata.clone(),
+            }),
         }),
         status: None,
         handshake: None,
@@ -63,6 +84,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             event_time: Some(prost_types::Timestamp::default()),
             id: "2".to_string(),
             headers: Default::default(),
+            metadata: Some(proto::metadata::Metadata {
+                previous_vertex: "mapper".to_string(),
+                sys_metadata: sys_metadata.clone(),
+                user_metadata: user_metadata.clone(),
+            }),
         }),
         status: None,
         handshake: None,

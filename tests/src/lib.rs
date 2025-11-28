@@ -1,3 +1,4 @@
+mod accumulator;
 mod batchmap;
 mod map;
 mod sink;

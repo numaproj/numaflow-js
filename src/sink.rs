@@ -267,6 +267,52 @@ impl SinkResponses {
 
 // ==================== Datum ====================
 
+#[derive(Clone, Default)]
+#[napi(object, namespace = "sink")]
+pub struct SystemMetadata {
+    pub data: HashMap<String, HashMap<String, Vec<u8>>>,
+}
+
+impl From<sink::SystemMetadata> for SystemMetadata {
+    fn from(from_system_metadata: sink::SystemMetadata) -> Self {
+        let mut system_metadata = SystemMetadata::default();
+
+        for group in from_system_metadata.groups() {
+            for key in from_system_metadata.keys(group.as_str()) {
+                let value = from_system_metadata.value(group.as_str(), key.as_str());
+                system_metadata
+                    .data
+                    .insert(group.clone(), HashMap::from([(key.clone(), value.clone())]));
+            }
+        }
+
+        system_metadata
+    }
+}
+
+#[derive(Clone, Default)]
+#[napi(object, namespace = "sink")]
+pub struct UserMetadata {
+    pub data: HashMap<String, HashMap<String, Vec<u8>>>,
+}
+
+impl From<sink::UserMetadata> for UserMetadata {
+    fn from(from_user_metadata: sink::UserMetadata) -> Self {
+        let mut user_metadata = UserMetadata::default();
+
+        for group in from_user_metadata.groups() {
+            let mut kv = HashMap::new();
+            for key in from_user_metadata.keys(group.as_str()) {
+                let value = from_user_metadata.value(group.as_str(), key.as_str());
+                kv.insert(key.clone(), value);
+            }
+            user_metadata.data.insert(group.clone(), kv);
+        }
+
+        user_metadata
+    }
+}
+
 #[napi(object, namespace = "sink")]
 pub struct SinkDatum {
     /// Set of keys in the (key, value) terminology of map/reduce paradigm.
@@ -281,6 +327,8 @@ pub struct SinkDatum {
     pub id: String,
     /// Headers for the message.
     pub headers: HashMap<String, String>,
+    pub user_metadata: UserMetadata,
+    pub system_metadata: SystemMetadata,
 }
 
 impl From<sink::SinkRequest> for SinkDatum {
@@ -292,19 +340,8 @@ impl From<sink::SinkRequest> for SinkDatum {
             eventtime: value.event_time,
             id: value.id,
             headers: value.headers,
-        }
-    }
-}
-
-impl From<SinkDatum> for sink::SinkRequest {
-    fn from(value: SinkDatum) -> Self {
-        Self {
-            keys: value.keys,
-            value: value.value.to_vec(),
-            watermark: value.watermark,
-            event_time: value.eventtime,
-            id: value.id,
-            headers: value.headers,
+            user_metadata: value.user_metadata.into(),
+            system_metadata: value.system_metadata.into(),
         }
     }
 }

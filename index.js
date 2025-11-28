@@ -182,3 +182,74 @@ exports.mapstream = {
     }
   }
 };
+
+exports.accumulator = {
+    /**
+     * DatumIterator with added async iterator support
+     */
+    DatumIterator: class DatumIterator {
+        constructor(nativeDatumIterator) {
+            this._native = nativeDatumIterator;
+        }
+
+        /**
+         * Returns the next datum from the stream, or None if the stream has ended
+         */
+        async next() {
+            const result = await this._native.next();
+            return {
+                value: result.value,
+                done: result.done
+            };
+        }
+
+        /**
+         * Implements async iterator protocol
+         */
+        [Symbol.asyncIterator]() {
+            return this;
+        }
+    },
+
+    /**
+     * AccumulatorAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * data received by the Sink.
+     */
+    AccumulatorAsyncServer: class AccumulatorAsyncServer {
+        /**
+         * Create a new Sink with the given callback.
+         */
+        constructor(accFn) {
+            const wrapperMapFn = (nativeDatumIterator) => {
+                const iterator = new exports.accumulator.DatumIterator(nativeDatumIterator);
+                const wrappedIterator = accFn(iterator)[Symbol.asyncIterator]();
+
+                // Return a function that pulls the next message from the iterator
+                return async () => {
+                    const result = await wrappedIterator.next()
+                    if (result.done) {
+                        return null
+                    }
+
+                    return result.value
+                }
+            }
+
+            this._native = new binding.accumulator.AccumulatorAsyncServer(wrapperMapFn);
+        }
+
+        /**
+         * Start the sink server with the given callback
+         */
+        async start(socketPath, serverInfoPath) {
+            return await this._native.start(socketPath, serverInfoPath);
+        }
+
+        /**
+         * Stop the sink server
+         */
+        stop() {
+            return this._native.stop();
+        }
+    }
+};

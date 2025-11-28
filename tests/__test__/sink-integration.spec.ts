@@ -1,6 +1,6 @@
 import { test, expect, beforeAll, afterAll } from 'vitest'
 import { spawn } from 'child_process'
-import { sink } from '../index.js'
+import { sink } from '../../index.js'
 import { access } from 'fs/promises'
 import { constants } from 'fs'
 import { promisify } from 'util'
