@@ -11,7 +11,7 @@ repository = "https://github.com/numaproj/numaflow-js"
 [workspace.dependencies]
 napi = { version = "3.5.2", features = ["full"] }
 napi-derive = "3.3.3"
-numaflow = { git = "https://github.com/numaproj/numaflow-rs.git", branch = "main" }
+numaflow = { git = "https://github.com/numaproj/numaflow-rs.git", rev = "42a1e814459d18b89eb6ca874fd0a989fd134303" }
 chrono = "0.4.42"
 tokio = "1.47.1"
 async-trait = "0.1.89"
