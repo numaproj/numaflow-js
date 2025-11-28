@@ -1,6 +1,45 @@
 import binding from './binding';
 export import sourceTransform = binding.sourceTransform;
-export import accumulator = binding.accumulator;
+export declare namespace accumulator {
+    type Datum = binding.accumulator.Datum;
+    type Message = binding.accumulator.Message;
+    const messageToDrop: typeof binding.accumulator.messageToDrop;
+    type DatumIteratorResult = binding.accumulator.DatumIteratorResult;
+    /**
+     * DatumIterator with added async iterator support
+     */
+    class DatumIterator implements AsyncIterableIterator<Datum> {
+        private readonly nativeDatumIterator;
+        constructor(nativeDatumIterator: binding.accumulator.DatumIterator);
+        /**
+         * Returns the next datum from the stream, or None if the stream has ended
+         */
+        next(): Promise<IteratorResult<Datum>>;
+        /**
+         * Implements async iterator protocol
+         */
+        [Symbol.asyncIterator](): AsyncIterableIterator<Datum>;
+    }
+    /**
+     * AccumulatorAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * data received by the Sink.
+     */
+    class AccumulatorAsyncServer {
+        private readonly nativeServer;
+        /**
+         * Create a new Sink with the given callback.
+         */
+        constructor(accumulatorFn: (datum: DatumIterator) => AsyncIterable<Message>);
+        /**
+         * Start the sink server with the given callback
+         */
+        start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
+        /**
+         * Stop the sink server
+         */
+        stop(): void;
+    }
+}
 export declare namespace map {
     type Datum = binding.map.Datum;
     type NativeMessage = binding.map.Message;
