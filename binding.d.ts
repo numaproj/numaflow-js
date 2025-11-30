@@ -211,6 +211,61 @@ export declare namespace mapstream {
   export function messageToDrop(): Message
 }
 
+export declare namespace reduce {
+  export class ReduceAsyncServer {
+    /** Create a new ReduceAsyncServer with the given callback. */
+    constructor(reduceFn: ReduceFn)
+    /** Start the ReduceAsyncServer with the given callback */
+    start(socketPath?: string | undefined | null, serverInfoPath?: string | undefined | null): Promise<void>
+    /** Stop the reduce server */
+    stop(): void
+  }
+  export class ReduceCallbackArgs {
+    get keys(): Array<string>
+    get takeIterator(): ReduceDatumIterator
+    get metadata(): Metadata
+  }
+  export class ReduceDatumIterator {
+    /**
+     * Returns the next datum from the stream, or None if the stream has ended
+     * # SAFETY
+     *
+     * Async function with &mut self is unsafe in napi because the self is also owned
+     * by the Node.js runtime. You cannot ensure that the self is only owned by Rust.
+     */
+    next(): Promise<ReduceDatumIteratorResult>
+  }
+  export interface Datum {
+    keys: Array<string>
+    value: Buffer
+    watermark: Date
+    eventTime: Date
+    headers: Record<string, string>
+  }
+  export interface IntervalWindow {
+    start: Date
+    end: Date
+  }
+  export interface Message {
+    /** optional keys */
+    keys?: Array<string>
+    /** payload */
+    value: Buffer
+    /** optional tags */
+    tags?: Array<string>
+  }
+  /** Drop a Message, do not forward to the next vertex. */
+  export function messageToDrop(): Message
+  /** Metadata passed to reducer handler */
+  export interface Metadata {
+    intervalWindow: IntervalWindow
+  }
+  export interface ReduceDatumIteratorResult {
+    value?: Datum
+    done: boolean
+  }
+}
+
 export declare namespace sink {
   export class KeyValueGroup {
     static new(keyValue?: Record<string, Buffer> | undefined | null): KeyValueGroup

@@ -30,6 +30,10 @@ path = "src/source_transform.rs"
 name = "accumulator"
 path = "src/accumulator.rs"
 
+[[bin]]
+name = "reduce"
+path = "src/reduce.rs"
+
 [dependencies]
 numaflow.workspace = true
 tokio.workspace = true

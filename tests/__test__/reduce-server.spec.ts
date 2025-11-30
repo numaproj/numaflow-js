@@ -2,44 +2,32 @@ import { test, expect } from 'vitest'
 import { spawn } from 'child_process'
 import { promisify } from 'util'
 
-import { map } from '../../index.js'
-const { MapServer, Message } = map
+import { reduce } from '../../index.js'
 
 const sleep = promisify(setTimeout)
+const sockPath = '/tmp/var/run/numaflow/reduce.sock'
+const infoPath = '/tmp/var/run/numaflow/reduce-info.sock'
 
-test('mapper integration test', async () => {
-  const mapFn = async (datum: map.Datum): Promise<map.Message[]> => {
-    const key = datum.keys[0] ?? 'default-key'
-    const value = datum.value ?? Buffer.from('default-value')
-    if (value.toString() === 'bad') {
-      return [Message.toDrop()]
+test('reduce integration test', async () => {
+  const server = new reduce.ReduceAsyncServer(async (keys, datums, md) => {
+    let counter = 0
+    for await (const _ of datums) {
+      counter += 1
     }
+    let msg = `counter:${counter} | keys:${keys} | start:${md.intervalWindow.start} | end:${md.intervalWindow.end}`
 
-    const userMetadata = datum.userMetadata ?? new map.UserMetadata()
-    userMetadata.addKv('group1', 'key3', Buffer.from('value3'))
-
-    return [
-      {
-        keys: [key],
-        value: value,
-        userMetadata,
-      },
-    ]
-  }
-
-  const server = new MapServer(mapFn)
-  const sockFile = '/tmp/map.sock'
-  const infoFile = '/tmp/map.info'
+    return [{ keys, value: Buffer.from(msg, 'utf-8') }]
+  })
 
   try {
     // Start the server (non-blocking)
-    server.start(sockFile, infoFile)
+    server.start(sockPath, infoPath)
 
     // Give the server time to initialize
     await sleep(500)
 
     // Run the cargo command
-    const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'map', '--', sockFile], {
+    const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'reduce', '--', sockPath], {
       stdio: 'pipe',
     })
 

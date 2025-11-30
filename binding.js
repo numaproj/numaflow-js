@@ -576,5 +576,6 @@ module.exports.accumulator = nativeBinding.accumulator
 module.exports.batchmap = nativeBinding.batchmap
 module.exports.map = nativeBinding.map
 module.exports.mapstream = nativeBinding.mapstream
+module.exports.reduce = nativeBinding.reduce
 module.exports.sink = nativeBinding.sink
 module.exports.sourceTransform = nativeBinding.sourceTransform
