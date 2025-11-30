@@ -9,13 +9,13 @@ make image
 Load it to `kind` cluster
 
 ```bash
-kind image import quay.io/numaio/numaflow/batchmap-cat:stable --name <kind-cluster-name>
+kind image import quay.io/numaio/numaflow-js/batchmap-cat:stable --name <kind-cluster-name>
 ```
 
 or `k3d`
 
 ```bash
-k3d image import quay.io/numaio/numaflow/batchmap-cat:stable --cluster <k3d-cluster-name>
+k3d image import quay.io/numaio/numaflow-js/batchmap-cat:stable --cluster <k3d-cluster-name>
 ```
 
 ## Run the pipeline
