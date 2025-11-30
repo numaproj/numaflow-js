@@ -52,7 +52,7 @@
     "format:rs": "cargo fmt --all",
     "lint": "oxlint",
     "prepublishOnly": "napi prepublish -t npm",
-    "test": "pnpm build:debug && vitest run --dir tests/__test__",
+    "test": "vitest run --dir tests/__test__",
     "version": "napi version"
   },
   "devDependencies": {
