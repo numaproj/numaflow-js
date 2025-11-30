@@ -1,0 +1,36 @@
+apiVersion: numaflow.numaproj.io/v1alpha1
+kind: Pipeline
+metadata:
+  name: simple-source-transform
+spec:
+  vertices:
+    - name: in
+      source:
+        # A self data generating source
+        generator:
+          rpu: 300
+          duration: 1s
+          keyCount: 5
+          value: 5
+        transformer:
+          container:
+            image: quay.io/numaio/numaflow-js/simple-source-transform:stable
+            imagePullPolicy: IfNotPresent
+    - name: cat
+      scale:
+        min: 1
+      udf:
+        container:
+          image: quay.io/numaio/numaflow-js/map-cat:stable
+          imagePullPolicy: IfNotPresent
+    - name: out
+      sink:
+        udsink:
+          container:
+            image: quay.io/numaio/numaflow-js/log-sink:stable
+            imagePullPolicy: IfNotPresent
+  edges:
+    - from: in
+      to: cat
+    - from: cat
+      to: out
