@@ -5,6 +5,10 @@ Numaflow-JS is a SDK for [Numaflow](https://numaflow.numaproj.io/) that provides
 Currently, these include:
 
 - [Map UDF](https://numaflow.numaproj.io/user-guide/user-defined-functions/map/map/)
+  - [Streaming mode](https://numaflow.numaproj.io/user-guide/user-defined-functions/map/map/#streaming-mode)
+  - [BatchMap mode](https://numaflow.numaproj.io/user-guide/user-defined-functions/map/map/#batch-map-mode)
+- [Reduce UDF](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/reduce/)
+  - [Accumulator](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/accumulator/)
 - [UDSink](https://numaflow.numaproj.io/user-guide/sinks/user-defined-sinks/)
 - [Source Transform](https://numaflow.numaproj.io/user-guide/sources/transformer/overview/)
 
