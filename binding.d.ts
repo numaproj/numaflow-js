@@ -138,7 +138,10 @@ export declare namespace map {
     stop(): void
   }
   export class SystemMetadata {
-
+    constructor()
+    getGroups(): Array<string>
+    getKeys(group: string): Array<string>
+    getValue(group: string, key: string): Buffer
   }
   export class UserMetadata {
     constructor()

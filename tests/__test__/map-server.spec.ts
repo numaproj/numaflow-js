@@ -15,6 +15,13 @@ test('mapper integration test', async () => {
             return [Message.toDrop()]
         }
 
+        let incomingSystemMetadata = datum.systemMetadata?.getGroups() ?? []
+        if (!incomingSystemMetadata.includes('system_group')) {
+            expect.fail('custom-group not found in incoming system metadata')
+        }
+        const systemValue = datum.systemMetadata?.getValue('system_group', 'system_key1')
+        expect(systemValue?.toString()).toBe('system_value1')
+
         let incomingUserMetadata = datum.userMetadata?.getGroups() ?? []
         const userMetadata = new UserMetadata()
         userMetadata.addKv('custom-group', 'custom-key', Buffer.from('custom-value'))
