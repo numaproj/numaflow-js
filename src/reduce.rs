@@ -1,5 +1,4 @@
 use chrono::{DateTime, Utc};
-use napi::Status::CallbackScopeMismatch;
 use napi::bindgen_prelude::{Buffer, Promise};
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi::{Error, Status};

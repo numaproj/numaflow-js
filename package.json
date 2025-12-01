@@ -44,9 +44,9 @@
   "scripts": {
     "artifacts": "napi artifacts",
     "build:ts": "pnpm tsc -p tsconfig.index.json",
-    "build:rs": "napi build --platform --release --js binding.js --dts binding.d.ts",
-    "build": "pnpm run build:rs && pnpm run build:ts",
-    "build:debug": "napi build --platform --js binding.js --dts binding.d.ts && pnpm run build:ts",
+    "build:rs": "napi build --platform --js binding.js --dts binding.d.ts",
+    "build": "pnpm run build:rs --release && pnpm run build:ts && pnpm format",
+    "build:debug": "pnpm run build:rs && pnpm run build:ts && pnpm format",
     "format": "pnpm format:prettier && pnpm format:rs && pnpm format:toml",
     "format:prettier": "prettier . -w",
     "format:toml": "taplo format",
