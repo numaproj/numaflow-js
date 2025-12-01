@@ -150,7 +150,12 @@ export declare namespace map {
     start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
     stop(): void
   }
-  export class SystemMetadata {}
+  export class SystemMetadata {
+    constructor()
+    getGroups(): Array<string>
+    getKeys(group: string): Array<string>
+    getValue(group: string, key: string): Buffer
+  }
   export class UserMetadata {
     constructor()
     getGroups(): Array<string>
