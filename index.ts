@@ -307,54 +307,58 @@ export namespace mapstream {
 }
 
 export namespace reduce {
-  type Datum = binding.reduce.Datum
-  type DatumIteratorNative = binding.reduce.ReduceDatumIterator
-  type Callback = (keys: string[], iterator: DatumIteratorImpl, metadata: Metadata) => Promise<binding.reduce.Message[]>
-  type ReduceCallbackArgs = binding.reduce.ReduceCallbackArgs
+    type Datum = binding.reduce.Datum
+    type DatumIteratorNative = binding.reduce.ReduceDatumIterator
+    type Callback = (
+        keys: string[],
+        iterator: DatumIteratorImpl,
+        metadata: Metadata,
+    ) => Promise<binding.reduce.Message[]>
+    type ReduceCallbackArgs = binding.reduce.ReduceCallbackArgs
 
-  class DatumIteratorImpl implements AsyncIterableIterator<Datum> {
-    constructor(private readonly nativeIterator: DatumIteratorNative) {}
+    class DatumIteratorImpl implements AsyncIterableIterator<Datum> {
+        constructor(private readonly nativeIterator: DatumIteratorNative) {}
 
-    async next(): Promise<IteratorResult<Datum>> {
-      const result = await this.nativeIterator.next()
-      if (result.done) {
-        return { done: true, value: undefined }
-      }
-      return { done: false, value: result.value as Datum }
+        async next(): Promise<IteratorResult<Datum>> {
+            const result = await this.nativeIterator.next()
+            if (result.done) {
+                return { done: true, value: undefined }
+            }
+            return { done: false, value: result.value as Datum }
+        }
+
+        [Symbol.asyncIterator](): AsyncIterableIterator<Datum> {
+            return this
+        }
     }
 
-    [Symbol.asyncIterator](): AsyncIterableIterator<Datum> {
-      return this
+    class ReduceAsyncServerImpl {
+        private readonly nativeServer: binding.reduce.ReduceAsyncServer
+
+        constructor(reduceFn: Callback) {
+            const wrappedCallback = async (args: ReduceCallbackArgs): Promise<Message[]> => {
+                const iterator = new DatumIteratorImpl(args.takeIterator)
+                return reduceFn(args.keys, iterator, args.metadata)
+            }
+
+            this.nativeServer = new binding.reduce.ReduceAsyncServer(wrappedCallback)
+        }
+
+        async start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void> {
+            return this.nativeServer.start(socketPath, serverInfoPath)
+        }
+
+        stop(): void {
+            this.nativeServer.stop()
+        }
     }
-  }
 
-  class ReduceAsyncServerImpl {
-    private readonly nativeServer: binding.reduce.ReduceAsyncServer
-
-    constructor(reduceFn: Callback) {
-      const wrappedCallback = async (args: ReduceCallbackArgs): Promise<Message[]> => {
-        const iterator = new DatumIteratorImpl(args.takeIterator)
-        return reduceFn(args.keys, iterator, args.metadata)
-      }
-
-      this.nativeServer = new binding.reduce.ReduceAsyncServer(wrappedCallback)
-    }
-
-    async start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void> {
-      return this.nativeServer.start(socketPath, serverInfoPath)
-    }
-
-    stop(): void {
-      this.nativeServer.stop()
-    }
-  }
-
-  export type Metadata = binding.reduce.Metadata
-  export type IntervalWindow = binding.reduce.IntervalWindow
-  export type Message = binding.reduce.Message
-  export type DatumIteratorResult = binding.reduce.ReduceDatumIteratorResult
-  export const DatumIterator = DatumIteratorImpl
-  export type DatumIterator = DatumIteratorImpl
-  export const ReduceAsyncServer = ReduceAsyncServerImpl
-  export type ReduceAsyncServer = ReduceAsyncServerImpl
+    export type Metadata = binding.reduce.Metadata
+    export type IntervalWindow = binding.reduce.IntervalWindow
+    export type Message = binding.reduce.Message
+    export type DatumIteratorResult = binding.reduce.ReduceDatumIteratorResult
+    export const DatumIterator = DatumIteratorImpl
+    export type DatumIterator = DatumIteratorImpl
+    export const ReduceAsyncServer = ReduceAsyncServerImpl
+    export type ReduceAsyncServer = ReduceAsyncServerImpl
 }

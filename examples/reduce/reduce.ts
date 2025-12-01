@@ -11,16 +11,16 @@ async function reduceFn(keys: string[], datums: reduce.DatumIterator, md: reduce
 }
 
 async function main() {
-  const sinker = new reduce.ReduceAsyncServer(reduceFn)
+    const sinker = new reduce.ReduceAsyncServer(reduceFn)
 
-  const shutdown = () => {
-    sinker.stop()
-  }
-  process.on('SIGTERM', shutdown)
-  process.on('SIGINT', shutdown)
+    const shutdown = () => {
+        sinker.stop()
+    }
+    process.on('SIGTERM', shutdown)
+    process.on('SIGINT', shutdown)
 
-  console.log('Starting reduce async server')
-  await sinker.start()
+    console.log('Starting reduce async server')
+    await sinker.start()
 }
 
 main().catch(console.error)
