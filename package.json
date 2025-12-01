@@ -81,7 +81,20 @@
     "semi": false,
     "trailingComma": "all",
     "singleQuote": true,
-    "arrowParens": "always"
+    "arrowParens": "always",
+    "tabWidth": 4,
+    "overrides": [
+      {
+        "files": [
+          "*.yaml",
+          "*.yml",
+          "*.json"
+        ],
+        "options": {
+          "tabWidth": 2
+        }
+      }
+    ]
   },
   "packageManager": "pnpm@10.24.0",
   "dependencies": {
