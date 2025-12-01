@@ -2,23 +2,33 @@ import { test, expect } from 'vitest'
 import { spawn } from 'child_process'
 import { promisify } from 'util'
 
-import * as numaflow from '../../index.js'
-const { MapAsyncServer, messageToDrop } = numaflow.map
+import { map } from '../../index.js'
+const { MapServer, Message, UserMetadata } = map
 
 const sleep = promisify(setTimeout)
 
 test('mapper integration test', async () => {
-    const mapFn = async (datum: numaflow.map.Datum): Promise<numaflow.map.Message[]> => {
+    const mapFn = async (datum: map.Datum): Promise<map.Message[]> => {
         const key = datum.keys[0] ?? 'default-key'
         const value = datum.value ?? Buffer.from('default-value')
         if (value.toString() === 'bad') {
-            return [messageToDrop()]
+            return [Message.toDrop()]
         }
 
-        return [{ keys: [key], value, userMetadata: datum.userMetadata }]
+        let incomingUserMetadata = datum.userMetadata?.getGroups() ?? []
+        const userMetadata = new UserMetadata()
+        userMetadata.addKv('custom-group', 'custom-key', Buffer.from('custom-value'))
+        // forward all the incoming user metadata
+        for (const group of incomingUserMetadata) {
+            datum.userMetadata?.getKeys(group).forEach((key) => {
+                userMetadata.addKv(group, key, datum.userMetadata?.getValue(group, key)!)
+            })
+        }
+
+        return [{ keys: [key], value, userMetadata }]
     }
 
-    const server = new MapAsyncServer(mapFn)
+    const server = new MapServer(mapFn)
     const sockFile = '/tmp/map.sock'
     const infoFile = '/tmp/map.info'
 
