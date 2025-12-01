@@ -59,6 +59,29 @@ impl UserMetadata {
 pub struct SystemMetadata(map::SystemMetadata);
 
 #[napi(namespace = "map")]
+impl SystemMetadata {
+    #[napi(constructor)]
+    pub fn new() -> Self {
+        Self(map::SystemMetadata::default())
+    }
+
+    #[napi]
+    pub fn get_groups(&self) -> Vec<String> {
+        self.0.groups()
+    }
+
+    #[napi]
+    pub fn get_keys(&self, group: String) -> Vec<String> {
+        self.0.keys(group.as_str())
+    }
+
+    #[napi]
+    pub fn get_value(&self, group: String, key: String) -> Buffer {
+        Buffer::from(self.0.value(group.as_str(), key.as_str()))
+    }
+}
+
+#[napi(namespace = "map")]
 pub struct Datum {
     /// Set of keys in the (key, value) terminology of map/reduce paradigm.
     pub keys: Vec<String>,
