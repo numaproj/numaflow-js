@@ -9,52 +9,52 @@ const sockPath = '/tmp/var/run/numaflow/source-transform.sock'
 const infoPath = '/tmp/var/run/numaflow/source-transform-info.sock'
 
 test('source transform integration test', async () => {
-  const server = new sourceTransform.SourceTransformAsyncServer(async (datum) => {
-    return [
-      {
-        keys: datum.keys,
-        value: datum.value,
-        eventtime: datum.eventtime,
-        tags: [],
-      },
-    ]
-  })
-
-  try {
-    // Start the server (non-blocking)
-    server.start(sockPath, infoPath)
-
-    // Give the server time to initialize
-    await sleep(500)
-
-    // Run the cargo command
-    const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'source_transform', '--', sockPath], {
-      stdio: 'pipe',
+    const server = new sourceTransform.SourceTransformAsyncServer(async (datum) => {
+        return [
+            {
+                keys: datum.keys,
+                value: datum.value,
+                eventtime: datum.eventtime,
+                tags: [],
+            },
+        ]
     })
 
-    // Capture stdout and stderr
-    let stdout = ''
-    let stderr = ''
-    cargoProcess.stdout?.on('data', (data) => {
-      stdout += data.toString()
-    })
-    cargoProcess.stderr?.on('data', (data) => {
-      stderr += data.toString()
-    })
+    try {
+        // Start the server (non-blocking)
+        server.start(sockPath, infoPath)
 
-    // Wait for the cargo command to complete
-    const exitCode = await new Promise<number>((resolve) => {
-      cargoProcess.on('close', (code) => {
-        resolve(code ?? 1)
-      })
-    })
+        // Give the server time to initialize
+        await sleep(500)
 
-    // Verify the command exited successfully
-    if (exitCode !== 0) {
-      expect.fail(`Cargo command failed with exit code ${exitCode}\n\nStdout:\n${stdout}\n\nStderr:\n${stderr}`)
+        // Run the cargo command
+        const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'source_transform', '--', sockPath], {
+            stdio: 'pipe',
+        })
+
+        // Capture stdout and stderr
+        let stdout = ''
+        let stderr = ''
+        cargoProcess.stdout?.on('data', (data) => {
+            stdout += data.toString()
+        })
+        cargoProcess.stderr?.on('data', (data) => {
+            stderr += data.toString()
+        })
+
+        // Wait for the cargo command to complete
+        const exitCode = await new Promise<number>((resolve) => {
+            cargoProcess.on('close', (code) => {
+                resolve(code ?? 1)
+            })
+        })
+
+        // Verify the command exited successfully
+        if (exitCode !== 0) {
+            expect.fail(`Cargo command failed with exit code ${exitCode}\n\nStdout:\n${stdout}\n\nStderr:\n${stderr}`)
+        }
+    } finally {
+        // Ensure the server is stopped
+        server.stop()
     }
-  } finally {
-    // Ensure the server is stopped
-    server.stop()
-  }
 }, 120000)
