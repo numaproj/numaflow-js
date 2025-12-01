@@ -110,7 +110,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         user_metadata,
     }) = msg.metadata.clone()
     {
-        assert_eq!(user_metadata.len(), 1);
+        // we send 1 group, and test code forwards this and adds another group
+        assert_eq!(user_metadata.len(), 2);
         // The user should update the user metadata by adding (key3, value3)
         user_metadata.get("group1").map(|kv| {
             assert_eq!(kv.key_value.len(), 2);
