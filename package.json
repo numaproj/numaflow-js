@@ -47,7 +47,7 @@
     "build:rs": "napi build --platform --js binding.js --dts binding.d.ts",
     "build": "pnpm run build:rs --release && pnpm run build:ts && pnpm format",
     "build:debug": "pnpm run build:rs && pnpm run build:ts && pnpm format",
-    "format": "pnpm format:prettier && pnpm format:rs && pnpm format:toml",
+    "format": "pnpm format:prettier; pnpm format:rs; pnpm format:toml",
     "format:prettier": "prettier . -w",
     "format:toml": "taplo format",
     "format:rs": "cargo fmt --all",
