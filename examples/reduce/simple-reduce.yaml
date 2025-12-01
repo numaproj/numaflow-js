@@ -16,13 +16,19 @@ spec:
           container:
             image: quay.io/numaio/numaflow-js/simple-source-transform:stable
             imagePullPolicy: IfNotPresent
-    - name: cat
-      scale:
-        min: 1
+    - name: reduce
+      partitions: 1
       udf:
         container:
-          image: quay.io/numaio/numaflow-js/map-cat:stable
-          imagePullPolicy: IfNotPresent
+          image: quay.io/numaio/numaflow-js/reduce:stable
+          imagePullPolicy: Never
+        groupBy:
+          window:
+            fixed:
+              length: 10s
+          keyed: false
+          storage:
+            emptyDir: { }
     - name: out
       sink:
         udsink:
