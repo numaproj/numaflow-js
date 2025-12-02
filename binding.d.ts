@@ -219,7 +219,7 @@ export declare namespace mapstream {
 export declare namespace reduce {
     export class ReduceAsyncServer {
         /** Create a new ReduceAsyncServer with the given callback. */
-        constructor(reduceFn: ReduceFn)
+        constructor(reduceFn: (iterator: ReduceCallbackArgs) => Promise<Array<Message>>)
         /** Start the ReduceAsyncServer with the given callback */
         start(socketPath?: string | undefined | null, serverInfoPath?: string | undefined | null): Promise<void>
         /** Stop the reduce server */
@@ -235,13 +235,7 @@ export declare namespace reduce {
         get metadata(): Metadata
     }
     export class ReduceDatumIterator {
-        /**
-         * Returns the next datum from the stream, or None if the stream has ended
-         * # SAFETY
-         *
-         * Async function with &mut self is unsafe in napi because the self is also owned
-         * by the Node.js runtime. You cannot ensure that the self is only owned by Rust.
-         */
+        /** Returns the next datum from the stream, or None if the stream has ended */
         next(): Promise<ReduceDatumIteratorResult>
     }
     export interface Datum {
@@ -328,9 +322,6 @@ export declare namespace sessionReduce {
 }
 
 export declare namespace sink {
-    export class KeyValueGroup {
-        static new(keyValue?: Record<string, Buffer> | undefined | null): KeyValueGroup
-    }
     /**
      * SinkAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
      * data received by the Sink.
@@ -343,6 +334,18 @@ export declare namespace sink {
         /** Stop the sink server */
         stop(): void
     }
+    export class SinkDatum {
+        /** Set of keys in the (key, value) terminology of map/reduce paradigm. */
+        keys: Array<string>
+        /** ID is the unique id of the message to be sent to the Sink. */
+        id: string
+        getValue(): Buffer
+        getWatermark(): Date
+        getEventtime(): Date
+        getHeaders(): Record<string, string>
+        userMetadata(): SinkUserMetadata
+        systemMetadata(): SinkSystemMetadata
+    }
     export class SinkDatumIterator {
         /**
          * Returns the next datum from the stream, or None if the stream has ended
@@ -351,18 +354,14 @@ export declare namespace sink {
          * Async function with &mut self is unsafe in napi because the self is also owned
          * by the Node.js runtime. You cannot ensure that the self is only owned by Rust.
          */
-        next(): Promise<SinkDatumIteratorResult>
+        next(): Promise<SinkDatum | null>
     }
     export class SinkMessage {
         /**
          * Create a new Message with the given value.
          * Keys and user_metadata are optional.
          */
-        constructor(value: Buffer)
-        withKeys(keys: Array<string>): SinkMessage
-        /** Accept KeyValueGroup as a reference [ref](https://github.com/napi-rs/napi-rs/blob/main/crates/napi/src/bindgen_runtime/js_values/class.rs#L60) */
-        withUserMetadata(metadata: Record<string, KeyValueGroup>): SinkMessage
-        build(): SinkMessage | null
+        constructor(value: Buffer, keys?: Array<string> | undefined | null)
     }
     export class SinkResponse {
         static failure(id: string, err: string): SinkResponse
@@ -378,31 +377,17 @@ export declare namespace sink {
         len(): number
         isEmpty(): boolean
     }
-    export interface SinkDatum {
-        /** Set of keys in the (key, value) terminology of map/reduce paradigm. */
-        keys: Array<string>
-        /** The value in the (key, value) terminology of map/reduce paradigm. */
-        value: Buffer
-        /** Watermark represented by time (Unix timestamp in milliseconds). */
-        watermark: Date
-        /** Event time (Unix timestamp in milliseconds). */
-        eventtime: Date
-        /** ID is the unique id of the message to be sent to the Sink. */
-        id: string
-        /** Headers for the message. */
-        headers: Record<string, string>
-        userMetadata: UserMetadata
-        systemMetadata: SystemMetadata
+    export class SinkSystemMetadata {
+        constructor()
+        getGroups(): Array<string>
+        getKeys(group: string): Array<string>
+        getValue(group: string, key: string): Buffer
     }
-    export interface SinkDatumIteratorResult {
-        value?: SinkDatum
-        done: boolean
-    }
-    export interface SystemMetadata {
-        data: Record<string, Record<string, Array<number>>>
-    }
-    export interface UserMetadata {
-        data: Record<string, Record<string, Array<number>>>
+    export class SinkUserMetadata {
+        constructor()
+        getGroups(): Array<string>
+        getKeys(group: string): Array<string>
+        getValue(group: string, key: string): Buffer
     }
 }
 

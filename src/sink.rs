@@ -8,41 +8,58 @@ use numaflow::sink;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
-// ==================== KeyValueGroup ====================
 
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Default)]
 #[napi(namespace = "sink")]
-pub struct KeyValueGroup {
-    key_value: HashMap<String, Vec<u8>>,
-}
+pub struct SinkSystemMetadata(sink::SystemMetadata);
 
 #[napi(namespace = "sink")]
-impl KeyValueGroup {
+impl SinkSystemMetadata {
+    #[napi(constructor)]
+    pub fn new() -> Self {
+        Self(sink::SystemMetadata::default())
+    }
+
     #[napi]
-    pub fn new(key_value: Option<HashMap<String, Buffer>>) -> Self {
-        Self {
-            key_value: key_value
-                .unwrap_or_default()
-                .into_iter()
-                .map(|(k, v)| (k, v.into()))
-                .collect(),
-        }
+    pub fn get_groups(&self) -> Vec<String> {
+        self.0.groups()
+    }
+
+    #[napi]
+    pub fn get_keys(&self, group: String) -> Vec<String> {
+        self.0.keys(group.as_str())
+    }
+
+    #[napi]
+    pub fn get_value(&self, group: String, key: String) -> Buffer {
+        Buffer::from(self.0.value(group.as_str(), key.as_str()))
     }
 }
 
-impl From<KeyValueGroup> for sink::KeyValueGroup {
-    fn from(value: KeyValueGroup) -> Self {
-        Self {
-            key_value: value.key_value.into_iter().collect(),
-        }
-    }
-}
+#[derive(Clone, Default)]
+#[napi(namespace = "sink")]
+pub struct SinkUserMetadata(sink::UserMetadata);
 
-impl From<sink::KeyValueGroup> for KeyValueGroup {
-    fn from(value: sink::KeyValueGroup) -> Self {
-        Self {
-            key_value: value.key_value.into_iter().collect(),
-        }
+#[napi(namespace = "sink")]
+impl SinkUserMetadata {
+    #[napi(constructor)]
+    pub fn new() -> Self {
+        Self(sink::UserMetadata::default())
+    }
+
+    #[napi]
+    pub fn get_groups(&self) -> Vec<String> {
+        self.0.groups()
+    }
+
+    #[napi]
+    pub fn get_keys(&self, group: String) -> Vec<String> {
+        self.0.keys(group.as_str())
+    }
+
+    #[napi]
+    pub fn get_value(&self, group: String, key: String) -> Buffer {
+        Buffer::from(self.0.value(group.as_str(), key.as_str()))
     }
 }
 
@@ -53,7 +70,6 @@ impl From<sink::KeyValueGroup> for KeyValueGroup {
 pub struct SinkMessage {
     keys: Option<Vec<String>>,
     value: Vec<u8>,
-    user_metadata: Option<HashMap<String, KeyValueGroup>>,
 }
 
 #[napi(namespace = "sink")]
@@ -61,42 +77,11 @@ impl SinkMessage {
     /// Create a new Message with the given value.
     /// Keys and user_metadata are optional.
     #[napi(constructor)]
-    pub fn new(value: Buffer) -> Self {
+    pub fn new(value: Buffer, keys: Option<Vec<String>>) -> Self {
         Self {
-            keys: None,
+            keys: keys,
             value: value.into(),
-            user_metadata: None,
         }
-    }
-
-    #[napi]
-    pub fn with_keys(&mut self, keys: Vec<String>) -> Self {
-        self.keys = Some(keys);
-        self.clone()
-    }
-
-    #[napi]
-    /// Accept KeyValueGroup as a reference [ref](https://github.com/napi-rs/napi-rs/blob/main/crates/napi/src/bindgen_runtime/js_values/class.rs#L60)
-    pub fn with_user_metadata(&mut self, metadata: HashMap<String, &KeyValueGroup>) -> Self {
-        let converted: HashMap<String, KeyValueGroup> = metadata
-            .into_iter()
-            .map(|(k, v)| {
-                (
-                    k,
-                    KeyValueGroup {
-                        key_value: v.clone().key_value,
-                    },
-                )
-            })
-            .collect();
-
-        self.user_metadata = Some(converted);
-        self.clone()
-    }
-
-    #[napi]
-    pub fn build(&mut self) -> Option<SinkMessage> {
-        Some(self.clone())
     }
 }
 
@@ -105,9 +90,7 @@ impl From<SinkMessage> for sink::Message {
         Self {
             keys: value.keys,
             value: value.value,
-            user_metadata: value
-                .user_metadata
-                .map(|m| m.into_iter().map(|(k, v)| (k, v.into())).collect()),
+            user_metadata: None, // FIXME:
         }
     }
 }
@@ -267,82 +250,69 @@ impl SinkResponses {
 
 // ==================== Datum ====================
 
-#[derive(Clone, Default)]
-#[napi(object, namespace = "sink")]
-pub struct SystemMetadata {
-    pub data: HashMap<String, HashMap<String, Vec<u8>>>,
-}
-
-impl From<sink::SystemMetadata> for SystemMetadata {
-    fn from(from_system_metadata: sink::SystemMetadata) -> Self {
-        let mut system_metadata = SystemMetadata::default();
-
-        for group in from_system_metadata.groups() {
-            for key in from_system_metadata.keys(group.as_str()) {
-                let value = from_system_metadata.value(group.as_str(), key.as_str());
-                system_metadata
-                    .data
-                    .insert(group.clone(), HashMap::from([(key.clone(), value.clone())]));
-            }
-        }
-
-        system_metadata
-    }
-}
-
-#[derive(Clone, Default)]
-#[napi(object, namespace = "sink")]
-pub struct UserMetadata {
-    pub data: HashMap<String, HashMap<String, Vec<u8>>>,
-}
-
-impl From<sink::UserMetadata> for UserMetadata {
-    fn from(from_user_metadata: sink::UserMetadata) -> Self {
-        let mut user_metadata = UserMetadata::default();
-
-        for group in from_user_metadata.groups() {
-            let mut kv = HashMap::new();
-            for key in from_user_metadata.keys(group.as_str()) {
-                let value = from_user_metadata.value(group.as_str(), key.as_str());
-                kv.insert(key.clone(), value);
-            }
-            user_metadata.data.insert(group.clone(), kv);
-        }
-
-        user_metadata
-    }
-}
-
-#[napi(object, namespace = "sink")]
+#[napi(namespace = "sink")]
 pub struct SinkDatum {
     /// Set of keys in the (key, value) terminology of map/reduce paradigm.
     pub keys: Vec<String>,
     /// The value in the (key, value) terminology of map/reduce paradigm.
-    pub value: Buffer,
+    value: Vec<u8>,
     /// Watermark represented by time (Unix timestamp in milliseconds).
-    pub watermark: DateTime<Utc>,
+    watermark: DateTime<Utc>,
     /// Event time (Unix timestamp in milliseconds).
-    pub eventtime: DateTime<Utc>,
+    eventtime: DateTime<Utc>,
     /// ID is the unique id of the message to be sent to the Sink.
     pub id: String,
     /// Headers for the message.
-    pub headers: HashMap<String, String>,
-    pub user_metadata: UserMetadata,
-    pub system_metadata: SystemMetadata,
+    headers: HashMap<String, String>,
+    user_metadata: SinkUserMetadata,
+    system_metadata: SinkSystemMetadata,
 }
 
 impl From<sink::SinkRequest> for SinkDatum {
     fn from(value: sink::SinkRequest) -> Self {
         Self {
             keys: value.keys,
-            value: Buffer::from(value.value.as_slice()),
+            value: value.value,
             watermark: value.watermark,
             eventtime: value.event_time,
             id: value.id,
             headers: value.headers,
-            user_metadata: value.user_metadata.into(),
-            system_metadata: value.system_metadata.into(),
+            user_metadata: SinkUserMetadata(value.user_metadata),
+            system_metadata: SinkSystemMetadata(value.system_metadata),
         }
+    }
+}
+
+#[napi(namespace = "sink")]
+impl SinkDatum {
+    #[napi]
+    pub fn get_value(&self) -> Buffer {
+        Buffer::from(self.value.clone())
+    }
+
+    #[napi]
+    pub fn get_watermark(&self) -> DateTime<Utc> {
+        self.watermark
+    }
+
+    #[napi]
+    pub fn get_eventtime(&self) -> DateTime<Utc> {
+        self.eventtime
+    }
+
+    #[napi]
+    pub fn get_headers(&self) -> HashMap<String, String> {
+        self.headers.clone()
+    }
+
+    #[napi]
+    pub fn user_metadata(&self) -> SinkUserMetadata {
+        self.user_metadata.clone()
+    }
+
+    #[napi]
+    pub fn system_metadata(&self) -> SinkSystemMetadata {
+        self.system_metadata.clone()
     }
 }
 
@@ -404,32 +374,20 @@ impl SinkAsyncServer {
         };
 
         // Use socket_file and server_info_file if both are provided, else use default
-        let server = sink::Server::new(sinker);
-        let server_result = if let Some(ref socket_path_str) = socket_path
-            && let Some(ref server_info_path_str) = server_info_path
-        {
-            Ok(server
-                .with_socket_file(socket_path_str)
-                .with_server_info_file(server_info_path_str))
-        } else if socket_path.is_none() && server_info_path.is_none() {
-            Ok(server)
-        } else {
-            // If only one of the paths is provided, return error
-            Err(Error::new(
-                Status::GenericFailure,
-                "Both socket path and server info path should be provided, else leave both blank",
-            ))
-        };
+        let mut server = sink::Server::new(sinker);
+        if let Some(sock_file) = socket_path {
+            server = server.with_socket_file(sock_file);
+        }
+        if let Some(info_file) = server_info_path {
+            server = server.with_server_info_file(info_file);
+        }
 
-        server_result?
-            .start_with_shutdown(shutdown_rx)
-            .await
-            .map_err(|e| {
-                Error::new(
-                    Status::GenericFailure,
-                    format!("Failed to start server: {}", e),
-                )
-            })
+        server.start_with_shutdown(shutdown_rx).await.map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to start server: {}", e),
+            )
+        })
     }
 
     /// Stop the sink server
@@ -486,12 +444,6 @@ pub struct SinkDatumIterator {
     source: tokio::sync::mpsc::Receiver<sink::SinkRequest>,
 }
 
-#[napi(object, namespace = "sink")]
-pub struct SinkDatumIteratorResult {
-    pub value: Option<SinkDatum>,
-    pub done: bool,
-}
-
 #[napi(namespace = "sink")]
 impl SinkDatumIterator {
     /// Internal constructor - not exposed to JavaScript
@@ -505,9 +457,7 @@ impl SinkDatumIterator {
     /// Async function with &mut self is unsafe in napi because the self is also owned
     /// by the Node.js runtime. You cannot ensure that the self is only owned by Rust.
     #[napi(namespace = "sink")]
-    pub async unsafe fn next(&mut self) -> SinkDatumIteratorResult {
-        let value = self.source.recv().await.map(SinkDatum::from);
-        let done = value.is_none();
-        SinkDatumIteratorResult { value, done }
+    pub async unsafe fn next(&mut self) -> Option<SinkDatum> {
+        self.source.recv().await.map(SinkDatum::from)
     }
 }
