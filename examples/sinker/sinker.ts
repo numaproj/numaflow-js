@@ -26,7 +26,7 @@ async function main() {
     process.on('SIGINT', shutdown)
 
     console.log('Starting sink server')
-    await sinker.start('/tmp/sinker.sock', '/tmp/sinker.info')
+    await sinker.start()
 }
 
 main().catch(console.error)

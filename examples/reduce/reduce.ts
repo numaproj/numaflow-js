@@ -24,7 +24,7 @@ async function main() {
     process.on('SIGINT', shutdown)
 
     console.log('Starting reduce async server')
-    await sinker.start('/tmp/reduce.sock', '/tmp/reduce.info')
+    await sinker.start()
 }
 
 main().catch(console.error)
