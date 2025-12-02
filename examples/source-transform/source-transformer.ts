@@ -14,16 +14,16 @@ async function sourceTransformFn(
 }
 
 async function main() {
-    const sinker = new sourceTransform.SourceTransformAsyncServer(sourceTransformFn)
+    const server = new sourceTransform.SourceTransformAsyncServer(sourceTransformFn)
 
     const shutdown = () => {
-        sinker.stop()
+        server.stop()
     }
     process.on('SIGTERM', shutdown)
     process.on('SIGINT', shutdown)
 
     console.log('Starting source transformer server')
-    await sinker.start()
+    await server.start()
 }
 
 main().catch(console.error)
