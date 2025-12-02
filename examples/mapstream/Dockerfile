@@ -21,7 +21,7 @@ WORKDIR /app
 COPY . .
 
 RUN pnpm run build
-RUN cd examples/batchmap/ && pnpm tsc
+RUN cd examples/mapstream/ && pnpm tsc
 
 FROM node:24-trixie-slim
 

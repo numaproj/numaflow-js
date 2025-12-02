@@ -1,0 +1,42 @@
+apiVersion: numaflow.numaproj.io/v1alpha1
+kind: Pipeline
+metadata:
+  name: simple-source-transform
+spec:
+  watermark:
+    idleSource:
+      threshold: 5s # The pipeline will be considered idle if the source has not emitted any data for given threshold value.
+      incrementBy: 3s # If source is found to be idle then increment the watermark by given incrementBy value.
+      stepInterval: 2s # If source is idling then publish the watermark only when step interval has passed.
+      initSourceDelay: 10s # The initial watermark will be progressed after 10s to prevent one inactive source from holding up the pipeline.
+  vertices:
+    - name: in
+      source:
+        # A self data generating source
+        http: {}
+    - name: session-reduce
+      partitions: 1
+      udf:
+        container:
+          image: quay.io/numaio/numaflow-js/session-reduce:stable
+          imagePullPolicy: Never
+        groupBy:
+          window:
+            session:
+              timeout: 30s
+          keyed: true
+          storage:
+            persistentVolumeClaim:
+              volumeSize: 1Gi
+              accessMode: ReadWriteOnce
+    - name: out
+      sink:
+        udsink:
+          container:
+            image: quay.io/numaio/numaflow-js/log-sink:stable
+            imagePullPolicy: IfNotPresent
+  edges:
+    - from: in
+      to: session-reduce
+    - from: session-reduce
+      to: out

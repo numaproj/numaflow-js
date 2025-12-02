@@ -15,16 +15,16 @@ async function reduceFn(
 }
 
 async function main() {
-    const sinker = new reduce.ReduceAsyncServer(reduceFn)
+    const server = new reduce.ReduceAsyncServer(reduceFn)
 
     const shutdown = () => {
-        sinker.stop()
+        server.stop()
     }
     process.on('SIGTERM', shutdown)
     process.on('SIGINT', shutdown)
 
     console.log('Starting reduce async server')
-    await sinker.start()
+    await server.start()
 }
 
 main().catch(console.error)
