@@ -1,0 +1,37 @@
+apiVersion: numaflow.numaproj.io/v1alpha1
+kind: Pipeline
+metadata:
+  name: simple-source-transform
+spec:
+  vertices:
+    - name: in
+      source:
+        # A self data generating source
+        generator:
+          rpu: 30
+          duration: 1s
+    - name: reducestream
+      partitions: 1
+      udf:
+        container:
+          image: quay.io/numaio/numaflow-js/reducestream:stable
+          imagePullPolicy: IfNotPresent
+        groupBy:
+          window:
+            fixed:
+              length: 10s
+              streaming: true
+          keyed: true
+          storage:
+            emptyDir: { }
+    - name: out
+      sink:
+        udsink:
+          container:
+            image: quay.io/numaio/numaflow-js/log-sink:stable
+            imagePullPolicy: IfNotPresent
+  edges:
+    - from: in
+      to: reducestream
+    - from: reducestream
+      to: out

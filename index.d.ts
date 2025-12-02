@@ -31,11 +31,11 @@ export declare namespace accumulator {
          */
         constructor(accumulatorFn: (datum: DatumIterator) => AsyncIterable<Message>);
         /**
-         * Start the sink server with the given callback
+         * Start the AccumulatorAsyncServer server with the given callback
          */
         start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
         /**
-         * Stop the sink server
+         * Stop the AccumulatorAsyncServer server
          */
         stop(): void;
     }
@@ -149,7 +149,6 @@ export declare namespace sessionReduce {
     export type Datum = binding.sessionReduce.Datum;
     export type Message = binding.sessionReduce.Message;
     export const messageToDrop: typeof binding.sessionReduce.messageToDrop;
-    export type DatumIteratorResult = binding.accumulator.DatumIteratorResult;
     type SessionReduceFnCallback = (keys: string[], iterator: AsyncIterableIterator<Datum>) => AsyncIterable<Message>;
     type AccumulatorFnCallback = () => Promise<Buffer>;
     type MergeAccumulatorFnCallback = (accumulator: Buffer) => Promise<void>;
@@ -169,11 +168,38 @@ export declare namespace sessionReduce {
          */
         constructor(sessionReducerImpl: SessionReducer);
         /**
-         * Start the sink server with the given callback
+         * Start the SessionReduceAsyncServer server with the given callback
          */
         start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
         /**
-         * Stop the sink server
+         * Stop the SessionReduceAsyncServer server
+         */
+        stop(): void;
+    }
+    export {};
+}
+export declare namespace reduceStream {
+    export type Datum = binding.reduce.Datum;
+    export type Message = binding.reduce.Message;
+    export type Metadata = binding.reduce.Metadata;
+    export const messageToDrop: typeof binding.reduce.messageToDrop;
+    type CallbackFn = (keys: string[], iterator: AsyncIterableIterator<Datum>, metadata: Metadata) => AsyncIterable<Message>;
+    /**
+     * SessionReduceAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * data received by the SessionReduce.
+     */
+    export class ReduceStreamAsyncServer {
+        private readonly nativeServer;
+        /**
+         * Create a new ReduceStreamAsyncServer with the given callback.
+         */
+        constructor(callbackFn: CallbackFn);
+        /**
+         * Start the ReduceStreamAsyncServer server with the given callback
+         */
+        start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
+        /**
+         * Stop the ReduceStreamAsyncServer server
          */
         stop(): void;
     }

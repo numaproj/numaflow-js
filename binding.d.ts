@@ -266,6 +266,17 @@ export declare namespace reduce {
   }
 }
 
+export declare namespace reduceStream {
+    export class ReduceStreamAsyncServer {
+        /** Create a new ReduceStreamAsyncServer with the given callback. */
+        constructor(reduceStreamFn: (iterator: ReduceCallbackArgs) => () => Promise<Message | null>)
+        /** Start the ReduceStreamAsyncServer with the given callback */
+        start(socketPath?: string | undefined | null, serverInfoPath?: string | undefined | null): Promise<void>
+        /** Stop the reduce stream server */
+        stop(): void
+    }
+}
+
 export declare namespace sessionReduce {
     export class SessionReduceAsyncServer {
         /** Create a new SessionReduceAsyncServer with the given callback. */
