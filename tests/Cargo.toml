@@ -34,6 +34,10 @@ path = "src/accumulator.rs"
 name = "reduce"
 path = "src/reduce.rs"
 
+[[bin]]
+name = "session_reduce"
+path = "src/session_reduce.rs"
+
 [dependencies]
 numaflow.workspace = true
 tokio.workspace = true

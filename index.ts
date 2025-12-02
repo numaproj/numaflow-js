@@ -362,3 +362,98 @@ export namespace reduce {
     export const ReduceAsyncServer = ReduceAsyncServerImpl
     export type ReduceAsyncServer = ReduceAsyncServerImpl
 }
+
+export namespace sessionReduce {
+    export type Datum = binding.sessionReduce.Datum
+    export type Message = binding.sessionReduce.Message
+    export const messageToDrop = binding.sessionReduce.messageToDrop
+    export type DatumIteratorResult = binding.accumulator.DatumIteratorResult
+
+    type SessionReduceFnCallback = (keys: string[], iterator: DatumIteratorImpl) => AsyncIterable<Message>
+    type AccumulatorFnCallback = () => Promise<Buffer>
+    type MergeAccumulatorFnCallback = (accumulator: Buffer) => Promise<void>
+    type SessionReduceCallbackArgs = binding.sessionReduce.SessionReduceCallbackArgs
+
+    /**
+     * DatumIterator with added async iterator support
+     */
+    class DatumIteratorImpl implements AsyncIterableIterator<Datum> {
+        private readonly nativeDatumIterator: binding.sessionReduce.SessionReduceDatumIterator
+
+        constructor(nativeDatumIterator: binding.sessionReduce.SessionReduceDatumIterator) {
+            this.nativeDatumIterator = nativeDatumIterator
+        }
+
+        /**
+         * Returns the next datum from the stream, or None if the stream has ended
+         */
+        async next(): Promise<IteratorResult<Datum>> {
+            const result = await this.nativeDatumIterator.next()
+            if (result.done) {
+                return { done: true, value: undefined }
+            }
+            return { done: false, value: result.value as Datum }
+        }
+
+        /**
+         * Implements async iterator protocol
+         */
+        [Symbol.asyncIterator](): AsyncIterableIterator<Datum> {
+            return this
+        }
+    }
+
+    /**
+     * SessionReduceAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * data received by the SessionReduce.
+     */
+    export class SessionReduceAsyncServer {
+        private readonly nativeServer: binding.sessionReduce.SessionReduceAsyncServer
+        /**
+         * Create a new SessionReduceAsyncServer with the given callback.
+         */
+        constructor(
+            sessionReduceFnCallback: SessionReduceFnCallback,
+            accumulatorFn: AccumulatorFnCallback,
+            mergeAccumulatorFn: MergeAccumulatorFnCallback,
+        ) {
+            const wrapperSessionReduceFnCallback = (callbackArgs: SessionReduceCallbackArgs) => {
+                const iterator = new DatumIteratorImpl(callbackArgs.takeIterator)
+                const wrappedIterator = sessionReduceFnCallback(callbackArgs.keys, iterator)[Symbol.asyncIterator]()
+
+                // Return a function that pulls the next message from the iterator
+                return async () => {
+                    const result = await wrappedIterator.next()
+                    if (result.done) {
+                        return null
+                    }
+
+                    return result.value
+                }
+            }
+
+            this.nativeServer = new binding.sessionReduce.SessionReduceAsyncServer(
+                wrapperSessionReduceFnCallback,
+                accumulatorFn,
+                mergeAccumulatorFn,
+            )
+        }
+
+        /**
+         * Start the sink server with the given callback
+         */
+        async start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void> {
+            return await this.nativeServer.start(socketPath, serverInfoPath)
+        }
+
+        /**
+         * Stop the sink server
+         */
+        stop() {
+            return this.nativeServer.stop()
+        }
+    }
+
+    export const DatumIterator = DatumIteratorImpl
+    export type DatumIterator = DatumIteratorImpl
+}
