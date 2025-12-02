@@ -66,33 +66,20 @@ export declare namespace map {
     }
 }
 export declare namespace sink {
-    type SinkDatum = binding.sink.SinkDatum;
-    type SinkDatumIteratorNative = binding.sink.SinkDatumIterator;
-    type SinkCallback = (iterator: SinkDatumIteratorImpl) => Promise<binding.sink.SinkResponse[]>;
-    class SinkDatumIteratorImpl implements AsyncIterableIterator<SinkDatum> {
-        private readonly nativeIterator;
-        constructor(nativeIterator: SinkDatumIteratorNative);
-        next(): Promise<IteratorResult<SinkDatum>>;
-        [Symbol.asyncIterator](): AsyncIterableIterator<SinkDatum>;
-    }
+    export type Datum = binding.sink.SinkDatum;
+    type SinkCallback = (iterator: AsyncIterableIterator<Datum>) => Promise<binding.sink.SinkResponse[]>;
     class SinkAsyncServerImpl {
         private readonly nativeServer;
         constructor(sinkFn: SinkCallback);
         start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
         stop(): void;
     }
-    export type Datum = binding.sink.SinkDatum;
-    export type DatumIteratorResult = binding.sink.SinkDatumIteratorResult;
     export const Response: typeof binding.sink.SinkResponse;
     export type Response = binding.sink.SinkResponse;
     export const Responses: typeof binding.sink.SinkResponses;
     export type Responses = binding.sink.SinkResponses;
     export const Message: typeof binding.sink.SinkMessage;
     export type Message = binding.sink.SinkMessage;
-    export const KeyValueGroup: typeof binding.sink.KeyValueGroup;
-    export type KeyValueGroup = binding.sink.KeyValueGroup;
-    export const DatumIterator: typeof SinkDatumIteratorImpl;
-    export type DatumIterator = SinkDatumIteratorImpl;
     export const SinkAsyncServer: typeof SinkAsyncServerImpl;
     export type SinkAsyncServer = SinkAsyncServerImpl;
     export {};
@@ -142,15 +129,8 @@ export declare namespace mapstream {
     export {};
 }
 export declare namespace reduce {
-    type Datum = binding.reduce.Datum;
-    type DatumIteratorNative = binding.reduce.ReduceDatumIterator;
-    type Callback = (keys: string[], iterator: DatumIteratorImpl, metadata: Metadata) => Promise<binding.reduce.Message[]>;
-    class DatumIteratorImpl implements AsyncIterableIterator<Datum> {
-        private readonly nativeIterator;
-        constructor(nativeIterator: DatumIteratorNative);
-        next(): Promise<IteratorResult<Datum>>;
-        [Symbol.asyncIterator](): AsyncIterableIterator<Datum>;
-    }
+    export type Datum = binding.reduce.Datum;
+    type Callback = (keys: string[], iterator: AsyncIterableIterator<Datum>, metadata: Metadata) => Promise<binding.reduce.Message[]>;
     class ReduceAsyncServerImpl {
         private readonly nativeServer;
         constructor(reduceFn: Callback);
@@ -161,8 +141,6 @@ export declare namespace reduce {
     export type IntervalWindow = binding.reduce.IntervalWindow;
     export type Message = binding.reduce.Message;
     export type DatumIteratorResult = binding.reduce.ReduceDatumIteratorResult;
-    export const DatumIterator: typeof DatumIteratorImpl;
-    export type DatumIterator = DatumIteratorImpl;
     export const ReduceAsyncServer: typeof ReduceAsyncServerImpl;
     export type ReduceAsyncServer = ReduceAsyncServerImpl;
     export {};
