@@ -395,6 +395,12 @@ export namespace sessionReduce {
         }
     }
 
+    export interface SessionReducer {
+        sessionReduceFn: SessionReduceFnCallback
+        accumulatorFn: AccumulatorFnCallback
+        mergeAccumulatorFn: MergeAccumulatorFnCallback
+    }
+
     /**
      * SessionReduceAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
      * data received by the SessionReduce.
@@ -404,14 +410,12 @@ export namespace sessionReduce {
         /**
          * Create a new SessionReduceAsyncServer with the given callback.
          */
-        constructor(
-            sessionReduceFnCallback: SessionReduceFnCallback,
-            accumulatorFn: AccumulatorFnCallback,
-            mergeAccumulatorFn: MergeAccumulatorFnCallback,
-        ) {
+        constructor(sessionReducerImpl: SessionReducer) {
             const wrapperSessionReduceFnCallback = (callbackArgs: SessionReduceCallbackArgs) => {
                 const iterator = new DatumIteratorImpl(callbackArgs.takeIterator)
-                const wrappedIterator = sessionReduceFnCallback(callbackArgs.keys, iterator)[Symbol.asyncIterator]()
+                const wrappedIterator = sessionReducerImpl
+                    .sessionReduceFn(callbackArgs.keys, iterator)
+                    [Symbol.asyncIterator]()
 
                 // Return a function that pulls the next message from the iterator
                 return async () => {
@@ -426,8 +430,8 @@ export namespace sessionReduce {
 
             this.nativeServer = new binding.sessionReduce.SessionReduceAsyncServer(
                 wrapperSessionReduceFnCallback,
-                accumulatorFn,
-                mergeAccumulatorFn,
+                sessionReducerImpl.accumulatorFn,
+                sessionReducerImpl.mergeAccumulatorFn,
             )
         }
 
