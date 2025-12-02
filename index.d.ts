@@ -168,6 +168,11 @@ export declare namespace sessionReduce {
          */
         [Symbol.asyncIterator](): AsyncIterableIterator<Datum>;
     }
+    export interface SessionReducer {
+        sessionReduceFn: SessionReduceFnCallback;
+        accumulatorFn: AccumulatorFnCallback;
+        mergeAccumulatorFn: MergeAccumulatorFnCallback;
+    }
     /**
      * SessionReduceAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
      * data received by the SessionReduce.
@@ -177,7 +182,7 @@ export declare namespace sessionReduce {
         /**
          * Create a new SessionReduceAsyncServer with the given callback.
          */
-        constructor(sessionReduceFnCallback: SessionReduceFnCallback, accumulatorFn: AccumulatorFnCallback, mergeAccumulatorFn: MergeAccumulatorFnCallback);
+        constructor(sessionReducerImpl: SessionReducer);
         /**
          * Start the sink server with the given callback
          */

@@ -1,6 +1,6 @@
 import { sessionReduce } from '../../index'
 
-class SessionReduceCounter {
+class SessionReduceCounter implements sessionReduce.SessionReducer {
     counter = 0
 
     async *sessionReduceFn(
@@ -27,12 +27,7 @@ class SessionReduceCounter {
 }
 
 async function main() {
-    let sessionReduceCounter = new SessionReduceCounter()
-    const server = new sessionReduce.SessionReduceAsyncServer(
-        sessionReduceCounter.sessionReduceFn.bind(sessionReduceCounter),
-        sessionReduceCounter.accumulatorFn.bind(sessionReduceCounter),
-        sessionReduceCounter.mergeAccumulatorFn.bind(sessionReduceCounter),
-    )
+    const server = new sessionReduce.SessionReduceAsyncServer(new SessionReduceCounter())
 
     const shutdown = () => {
         server.stop()

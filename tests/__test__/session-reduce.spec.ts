@@ -8,7 +8,7 @@ const sleep = promisify(setTimeout)
 const sockPath = '/tmp/var/run/numaflow/session-reduce.sock'
 const infoPath = '/tmp/var/run/numaflow/session-reduce-info.sock'
 
-class SessionReduceCounter {
+class SessionReduceCounter implements sessionReduce.SessionReducer {
     counter = 0
 
     async *sessionReduceFn(
@@ -36,11 +36,7 @@ class SessionReduceCounter {
 
 test('session reduce integration test', async () => {
     let sessionReduceCounter = new SessionReduceCounter()
-    const server = new sessionReduce.SessionReduceAsyncServer(
-        sessionReduceCounter.sessionReduceFn.bind(sessionReduceCounter),
-        sessionReduceCounter.accumulatorFn.bind(sessionReduceCounter),
-        sessionReduceCounter.mergeAccumulatorFn.bind(sessionReduceCounter),
-    )
+    const server = new sessionReduce.SessionReduceAsyncServer(sessionReduceCounter)
 
     try {
         // Start the server (non-blocking)
