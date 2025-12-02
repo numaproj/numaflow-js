@@ -5,7 +5,7 @@ class SessionReduceCounter implements sessionReduce.SessionReducer {
 
     async *sessionReduceFn(
         keys: string[],
-        datums: sessionReduce.DatumIterator,
+        datums: AsyncIterableIterator<sessionReduce.Datum>
     ): AsyncIterableIterator<sessionReduce.Message> {
         for await (const _ of datums) {
             this.counter += 1

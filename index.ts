@@ -70,14 +70,14 @@ export namespace accumulator {
         }
 
         /**
-         * Start the sink server with the given callback
+         * Start the AccumulatorAsyncServer server with the given callback
          */
         async start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void> {
             return await this.nativeServer.start(socketPath, serverInfoPath)
         }
 
         /**
-         * Stop the sink server
+         * Stop the AccumulatorAsyncServer server
          */
         stop() {
             return this.nativeServer.stop()
@@ -359,7 +359,6 @@ export namespace sessionReduce {
     export type Datum = binding.sessionReduce.Datum
     export type Message = binding.sessionReduce.Message
     export const messageToDrop = binding.sessionReduce.messageToDrop
-    export type DatumIteratorResult = binding.accumulator.DatumIteratorResult
 
     type SessionReduceFnCallback = (keys: string[], iterator: AsyncIterableIterator<Datum>) => AsyncIterable<Message>
     type AccumulatorFnCallback = () => Promise<Buffer>
@@ -436,14 +435,102 @@ export namespace sessionReduce {
         }
 
         /**
-         * Start the sink server with the given callback
+         * Start the SessionReduceAsyncServer server with the given callback
          */
         async start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void> {
             return await this.nativeServer.start(socketPath, serverInfoPath)
         }
 
         /**
-         * Stop the sink server
+         * Stop the SessionReduceAsyncServer server
+         */
+        stop() {
+            return this.nativeServer.stop()
+        }
+    }
+}
+
+export namespace reduceStream {
+    export type Datum = binding.reduce.Datum
+    export type Message = binding.reduce.Message
+    export type Metadata = binding.reduce.Metadata
+    export const messageToDrop = binding.reduce.messageToDrop
+
+    type CallbackFn = (
+        keys: string[],
+        iterator: AsyncIterableIterator<Datum>,
+        metadata: Metadata,
+    ) => AsyncIterable<Message>
+    type CallbackArgs = binding.reduce.ReduceCallbackArgs
+
+    /**
+     * DatumIterator with added async iterator support
+     */
+    class DatumIteratorImpl implements AsyncIterableIterator<Datum> {
+        private readonly nativeDatumIterator: binding.reduce.ReduceDatumIterator
+
+        constructor(nativeDatumIterator: binding.reduce.ReduceDatumIterator) {
+            this.nativeDatumIterator = nativeDatumIterator
+        }
+
+        /**
+         * Returns the next datum from the stream, or None if the stream has ended
+         */
+        async next(): Promise<IteratorResult<Datum>> {
+            const result = await this.nativeDatumIterator.next()
+            if (result.done) {
+                return { done: true, value: undefined }
+            }
+            return { done: false, value: result.value as Datum }
+        }
+
+        /**
+         * Implements async iterator protocol
+         */
+        [Symbol.asyncIterator](): AsyncIterableIterator<Datum> {
+            return this
+        }
+    }
+
+    /**
+     * SessionReduceAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * data received by the SessionReduce.
+     */
+    export class ReduceStreamAsyncServer {
+        private readonly nativeServer: binding.reduceStream.ReduceStreamAsyncServer
+        /**
+         * Create a new ReduceStreamAsyncServer with the given callback.
+         */
+        constructor(callbackFn: CallbackFn) {
+            const wrapperCallbackFn = (callbackArgs: CallbackArgs) => {
+                const iterator = new DatumIteratorImpl(callbackArgs.takeIterator)
+                const wrappedIterator = callbackFn(callbackArgs.keys, iterator, callbackArgs.metadata)[
+                    Symbol.asyncIterator
+                ]()
+
+                // Return a function that pulls the next message from the iterator
+                return async () => {
+                    const result = await wrappedIterator.next()
+                    if (result.done) {
+                        return null
+                    }
+
+                    return result.value
+                }
+            }
+
+            this.nativeServer = new binding.reduceStream.ReduceStreamAsyncServer(wrapperCallbackFn)
+        }
+
+        /**
+         * Start the ReduceStreamAsyncServer server with the given callback
+         */
+        async start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void> {
+            return await this.nativeServer.start(socketPath, serverInfoPath)
+        }
+
+        /**
+         * Stop the ReduceStreamAsyncServer server
          */
         stop() {
             return this.nativeServer.stop()
