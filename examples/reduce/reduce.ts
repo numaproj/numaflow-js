@@ -1,6 +1,10 @@
 import { reduce } from '../../index'
 
-async function reduceFn(keys: string[], datums: reduce.DatumIterator, md: reduce.Metadata): Promise<reduce.Message[]> {
+async function reduceFn(
+    keys: string[],
+    datums: AsyncIterableIterator<reduce.Datum>,
+    md: reduce.Metadata,
+): Promise<reduce.Message[]> {
     let counter = 0
     for await (const _ of datums) {
         counter += 1

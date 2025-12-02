@@ -156,22 +156,22 @@ export namespace map {
 }
 
 export namespace sink {
-    type SinkDatum = binding.sink.SinkDatum
+    export type Datum = binding.sink.SinkDatum
     type SinkDatumIteratorNative = binding.sink.SinkDatumIterator
-    type SinkCallback = (iterator: SinkDatumIteratorImpl) => Promise<binding.sink.SinkResponse[]>
+    type SinkCallback = (iterator: AsyncIterableIterator<Datum>) => Promise<binding.sink.SinkResponse[]>
 
-    class SinkDatumIteratorImpl implements AsyncIterableIterator<SinkDatum> {
+    class SinkDatumIteratorImpl implements AsyncIterableIterator<Datum> {
         constructor(private readonly nativeIterator: SinkDatumIteratorNative) {}
 
-        async next(): Promise<IteratorResult<SinkDatum>> {
+        async next(): Promise<IteratorResult<Datum>> {
             const result = await this.nativeIterator.next()
-            if (result.done) {
+            if (result == null) {
                 return { done: true, value: undefined }
             }
-            return { done: false, value: result.value as SinkDatum }
+            return { done: false, value: result }
         }
 
-        [Symbol.asyncIterator](): AsyncIterableIterator<SinkDatum> {
+        [Symbol.asyncIterator](): AsyncIterableIterator<Datum> {
             return this
         }
     }
@@ -197,18 +197,12 @@ export namespace sink {
         }
     }
 
-    export type Datum = binding.sink.SinkDatum
-    export type DatumIteratorResult = binding.sink.SinkDatumIteratorResult
     export const Response = binding.sink.SinkResponse
     export type Response = binding.sink.SinkResponse
     export const Responses = binding.sink.SinkResponses
     export type Responses = binding.sink.SinkResponses
     export const Message = binding.sink.SinkMessage
     export type Message = binding.sink.SinkMessage
-    export const KeyValueGroup = binding.sink.KeyValueGroup
-    export type KeyValueGroup = binding.sink.KeyValueGroup
-    export const DatumIterator = SinkDatumIteratorImpl
-    export type DatumIterator = SinkDatumIteratorImpl
     export const SinkAsyncServer = SinkAsyncServerImpl
     export type SinkAsyncServer = SinkAsyncServerImpl
 }
@@ -307,11 +301,11 @@ export namespace mapstream {
 }
 
 export namespace reduce {
-    type Datum = binding.reduce.Datum
+    export type Datum = binding.reduce.Datum
     type DatumIteratorNative = binding.reduce.ReduceDatumIterator
     type Callback = (
         keys: string[],
-        iterator: DatumIteratorImpl,
+        iterator: AsyncIterableIterator<Datum>,
         metadata: Metadata,
     ) => Promise<binding.reduce.Message[]>
     type ReduceCallbackArgs = binding.reduce.ReduceCallbackArgs
@@ -357,8 +351,6 @@ export namespace reduce {
     export type IntervalWindow = binding.reduce.IntervalWindow
     export type Message = binding.reduce.Message
     export type DatumIteratorResult = binding.reduce.ReduceDatumIteratorResult
-    export const DatumIterator = DatumIteratorImpl
-    export type DatumIterator = DatumIteratorImpl
     export const ReduceAsyncServer = ReduceAsyncServerImpl
     export type ReduceAsyncServer = ReduceAsyncServerImpl
 }

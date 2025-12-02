@@ -129,10 +129,10 @@ impl ReduceDatumIterator {
     }
 
     /// Returns the next datum from the stream, or None if the stream has ended
-    /// # SAFETY
-    ///
-    /// Async function with &mut self is unsafe in napi because the self is also owned
-    /// by the Node.js runtime. You cannot ensure that the self is only owned by Rust.
+    // # SAFETY
+    //
+    // Async function with &mut self is unsafe in napi because the self is also owned
+    // by the Node.js runtime. You cannot ensure that the self is only owned by Rust.
     #[napi(namespace = "reduce")]
     pub async unsafe fn next(&mut self) -> ReduceDatumIteratorResult {
         let value = self.source.recv().await.map(Datum::from);
@@ -198,7 +198,10 @@ pub struct ReduceAsyncServer {
 #[napi(namespace = "reduce")]
 impl ReduceAsyncServer {
     /// Create a new ReduceAsyncServer with the given callback.
-    #[napi(constructor)]
+    #[napi(
+        constructor,
+        ts_args_type = "reduceFn: (iterator: ReduceCallbackArgs) => Promise<Array<Message>>"
+    )]
     pub fn new(reduce_fn: ReduceFn) -> napi::Result<Self> {
         Ok(Self {
             reduce_fn: Arc::new(reduce_fn),
