@@ -1,6 +1,10 @@
 import { reduce } from '../../index'
 
-async function reduceFn(keys: string[], datums: reduce.DatumIterator, md: reduce.Metadata): Promise<reduce.Message[]> {
+async function reduceFn(
+    keys: string[],
+    datums: AsyncIterableIterator<reduce.Datum>,
+    md: reduce.Metadata,
+): Promise<reduce.Message[]> {
     let counter = 0
     for await (const _ of datums) {
         counter += 1
@@ -20,7 +24,7 @@ async function main() {
     process.on('SIGINT', shutdown)
 
     console.log('Starting reduce async server')
-    await sinker.start()
+    await sinker.start('/tmp/reduce.sock', '/tmp/reduce.info')
 }
 
 main().catch(console.error)

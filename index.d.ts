@@ -142,15 +142,8 @@ export declare namespace mapstream {
     export {};
 }
 export declare namespace reduce {
-    type Datum = binding.reduce.Datum;
-    type DatumIteratorNative = binding.reduce.ReduceDatumIterator;
-    type Callback = (keys: string[], iterator: DatumIteratorImpl, metadata: Metadata) => Promise<binding.reduce.Message[]>;
-    class DatumIteratorImpl implements AsyncIterableIterator<Datum> {
-        private readonly nativeIterator;
-        constructor(nativeIterator: DatumIteratorNative);
-        next(): Promise<IteratorResult<Datum>>;
-        [Symbol.asyncIterator](): AsyncIterableIterator<Datum>;
-    }
+    export type Datum = binding.reduce.Datum;
+    type Callback = (keys: string[], iterator: AsyncIterableIterator<Datum>, metadata: Metadata) => Promise<binding.reduce.Message[]>;
     class ReduceAsyncServerImpl {
         private readonly nativeServer;
         constructor(reduceFn: Callback);
@@ -161,8 +154,6 @@ export declare namespace reduce {
     export type IntervalWindow = binding.reduce.IntervalWindow;
     export type Message = binding.reduce.Message;
     export type DatumIteratorResult = binding.reduce.ReduceDatumIteratorResult;
-    export const DatumIterator: typeof DatumIteratorImpl;
-    export type DatumIterator = DatumIteratorImpl;
     export const ReduceAsyncServer: typeof ReduceAsyncServerImpl;
     export type ReduceAsyncServer = ReduceAsyncServerImpl;
     export {};

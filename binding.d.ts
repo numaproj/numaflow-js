@@ -235,13 +235,7 @@ export declare namespace reduce {
         get metadata(): Metadata
     }
     export class ReduceDatumIterator {
-        /**
-         * Returns the next datum from the stream, or None if the stream has ended
-         * # SAFETY
-         *
-         * Async function with &mut self is unsafe in napi because the self is also owned
-         * by the Node.js runtime. You cannot ensure that the self is only owned by Rust.
-         */
+        /** Returns the next datum from the stream, or None if the stream has ended */
         next(): Promise<ReduceDatumIteratorResult>
     }
     export interface Datum {

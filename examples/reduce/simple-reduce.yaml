@@ -28,7 +28,7 @@ spec:
               length: 10s
           keyed: false
           storage:
-            emptyDir: { }
+            emptyDir: {}
     - name: out
       sink:
         udsink:

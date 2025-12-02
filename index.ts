@@ -307,11 +307,11 @@ export namespace mapstream {
 }
 
 export namespace reduce {
-    type Datum = binding.reduce.Datum
+    export type Datum = binding.reduce.Datum
     type DatumIteratorNative = binding.reduce.ReduceDatumIterator
     type Callback = (
         keys: string[],
-        iterator: DatumIteratorImpl,
+        iterator: AsyncIterableIterator<Datum>,
         metadata: Metadata,
     ) => Promise<binding.reduce.Message[]>
     type ReduceCallbackArgs = binding.reduce.ReduceCallbackArgs
@@ -357,8 +357,6 @@ export namespace reduce {
     export type IntervalWindow = binding.reduce.IntervalWindow
     export type Message = binding.reduce.Message
     export type DatumIteratorResult = binding.reduce.ReduceDatumIteratorResult
-    export const DatumIterator = DatumIteratorImpl
-    export type DatumIterator = DatumIteratorImpl
     export const ReduceAsyncServer = ReduceAsyncServerImpl
     export type ReduceAsyncServer = ReduceAsyncServerImpl
 }
