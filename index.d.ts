@@ -167,3 +167,49 @@ export declare namespace reduce {
     export type ReduceAsyncServer = ReduceAsyncServerImpl;
     export {};
 }
+export declare namespace sessionReduce {
+    export type Datum = binding.sessionReduce.Datum;
+    export type Message = binding.sessionReduce.Message;
+    export const messageToDrop: typeof binding.sessionReduce.messageToDrop;
+    export type DatumIteratorResult = binding.accumulator.DatumIteratorResult;
+    type SessionReduceFnCallback = (keys: string[], iterator: DatumIteratorImpl) => AsyncIterable<Message>;
+    type AccumulatorFnCallback = () => Promise<Buffer>;
+    type MergeAccumulatorFnCallback = (accumulator: Buffer) => Promise<void>;
+    /**
+     * DatumIterator with added async iterator support
+     */
+    class DatumIteratorImpl implements AsyncIterableIterator<Datum> {
+        private readonly nativeDatumIterator;
+        constructor(nativeDatumIterator: binding.sessionReduce.SessionReduceDatumIterator);
+        /**
+         * Returns the next datum from the stream, or None if the stream has ended
+         */
+        next(): Promise<IteratorResult<Datum>>;
+        /**
+         * Implements async iterator protocol
+         */
+        [Symbol.asyncIterator](): AsyncIterableIterator<Datum>;
+    }
+    /**
+     * SessionReduceAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * data received by the SessionReduce.
+     */
+    export class SessionReduceAsyncServer {
+        private readonly nativeServer;
+        /**
+         * Create a new SessionReduceAsyncServer with the given callback.
+         */
+        constructor(sessionReduceFnCallback: SessionReduceFnCallback, accumulatorFn: AccumulatorFnCallback, mergeAccumulatorFn: MergeAccumulatorFnCallback);
+        /**
+         * Start the sink server with the given callback
+         */
+        start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
+        /**
+         * Stop the sink server
+         */
+        stop(): void;
+    }
+    export const DatumIterator: typeof DatumIteratorImpl;
+    export type DatumIterator = DatumIteratorImpl;
+    export {};
+}
