@@ -189,7 +189,10 @@ impl ReduceCallbackArgs {
 #[napi(namespace = "reduce")]
 impl ReduceAsyncServer {
     /// Create a new ReduceAsyncServer with the given callback.
-    #[napi(constructor)]
+    #[napi(
+        constructor,
+        ts_args_type = "reduceFn: (iterator: ReduceCallbackArgs) => Promise<Array<Message>>"
+    )]
     pub fn new(reduce_fn: ReduceFn) -> napi::Result<Self> {
         Ok(Self {
             reduce_fn: Arc::new(reduce_fn),

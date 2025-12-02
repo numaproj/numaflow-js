@@ -219,7 +219,7 @@ export declare namespace mapstream {
 export declare namespace reduce {
     export class ReduceAsyncServer {
         /** Create a new ReduceAsyncServer with the given callback. */
-        constructor(reduceFn: ReduceFn)
+        constructor(reduceFn: (iterator: ReduceCallbackArgs) => Promise<Array<Message>>)
         /** Start the ReduceAsyncServer with the given callback */
         start(socketPath?: string | undefined | null, serverInfoPath?: string | undefined | null): Promise<void>
         /** Stop the reduce server */
