@@ -361,7 +361,7 @@ export namespace sessionReduce {
     export const messageToDrop = binding.sessionReduce.messageToDrop
     export type DatumIteratorResult = binding.accumulator.DatumIteratorResult
 
-    type SessionReduceFnCallback = (keys: string[], iterator: DatumIteratorImpl) => AsyncIterable<Message>
+    type SessionReduceFnCallback = (keys: string[], iterator: AsyncIterableIterator<Datum>) => AsyncIterable<Message>
     type AccumulatorFnCallback = () => Promise<Buffer>
     type MergeAccumulatorFnCallback = (accumulator: Buffer) => Promise<void>
     type SessionReduceCallbackArgs = binding.sessionReduce.SessionReduceCallbackArgs
@@ -449,7 +449,4 @@ export namespace sessionReduce {
             return this.nativeServer.stop()
         }
     }
-
-    export const DatumIterator = DatumIteratorImpl
-    export type DatumIterator = DatumIteratorImpl
 }

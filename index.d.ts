@@ -150,24 +150,9 @@ export declare namespace sessionReduce {
     export type Message = binding.sessionReduce.Message;
     export const messageToDrop: typeof binding.sessionReduce.messageToDrop;
     export type DatumIteratorResult = binding.accumulator.DatumIteratorResult;
-    type SessionReduceFnCallback = (keys: string[], iterator: DatumIteratorImpl) => AsyncIterable<Message>;
+    type SessionReduceFnCallback = (keys: string[], iterator: AsyncIterableIterator<Datum>) => AsyncIterable<Message>;
     type AccumulatorFnCallback = () => Promise<Buffer>;
     type MergeAccumulatorFnCallback = (accumulator: Buffer) => Promise<void>;
-    /**
-     * DatumIterator with added async iterator support
-     */
-    class DatumIteratorImpl implements AsyncIterableIterator<Datum> {
-        private readonly nativeDatumIterator;
-        constructor(nativeDatumIterator: binding.sessionReduce.SessionReduceDatumIterator);
-        /**
-         * Returns the next datum from the stream, or None if the stream has ended
-         */
-        next(): Promise<IteratorResult<Datum>>;
-        /**
-         * Implements async iterator protocol
-         */
-        [Symbol.asyncIterator](): AsyncIterableIterator<Datum>;
-    }
     export interface SessionReducer {
         sessionReduceFn: SessionReduceFnCallback;
         accumulatorFn: AccumulatorFnCallback;
@@ -192,7 +177,5 @@ export declare namespace sessionReduce {
          */
         stop(): void;
     }
-    export const DatumIterator: typeof DatumIteratorImpl;
-    export type DatumIterator = DatumIteratorImpl;
     export {};
 }
