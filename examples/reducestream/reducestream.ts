@@ -1,4 +1,4 @@
-import {reduceStream} from '../../index'
+import { reduceStream } from '../../index'
 
 async function* reduceStreamFn(
     keys: string[],

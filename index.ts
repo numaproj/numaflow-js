@@ -428,9 +428,9 @@ export namespace sessionReduce {
             }
 
             this.nativeServer = new binding.sessionReduce.SessionReduceAsyncServer(
-                wrapperSessionReduceFnCallback,
-                sessionReducerImpl.accumulatorFn,
-                sessionReducerImpl.mergeAccumulatorFn,
+                wrapperSessionReduceFnCallback.bind(sessionReducerImpl),
+                sessionReducerImpl.accumulatorFn.bind(sessionReducerImpl),
+                sessionReducerImpl.mergeAccumulatorFn.bind(sessionReducerImpl),
             )
         }
 
@@ -532,6 +532,53 @@ export namespace reduceStream {
         /**
          * Stop the ReduceStreamAsyncServer server
          */
+        stop() {
+            return this.nativeServer.stop()
+        }
+    }
+}
+
+export namespace source {
+    export type ReadRequest = binding.source.ReadRequest
+    export type Message = binding.source.Message
+    export type Offset = binding.source.Offset
+    export interface Sourcer {
+        read: (request: ReadRequest) => AsyncIterable<Message>
+        ack: (offsets: Offset[]) => Promise<void>
+        nack: (offsets: Offset[]) => Promise<void>
+        pending: () => Promise<number | null>
+        partitions: () => Promise<number[] | null>
+    }
+
+    export class SourceAsyncServer {
+        private readonly nativeServer: binding.source.SourceAsyncServer
+
+        constructor(sourcer: Sourcer) {
+            const wrapperReadFn = (request: ReadRequest) => {
+                const iterator = sourcer.read(request)[Symbol.asyncIterator]()
+
+                return async () => {
+                    const result = await iterator.next()
+                    if (result.done) {
+                        return null
+                    }
+                    return result.value
+                }
+            }
+
+            this.nativeServer = new binding.source.SourceAsyncServer(
+                wrapperReadFn.bind(sourcer),
+                sourcer.ack.bind(sourcer),
+                sourcer.nack.bind(sourcer),
+                sourcer.pending.bind(sourcer),
+                sourcer.partitions.bind(sourcer),
+            )
+        }
+
+        async start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void> {
+            return await this.nativeServer.start(socketPath, serverInfoPath)
+        }
+
         stop() {
             return this.nativeServer.stop()
         }

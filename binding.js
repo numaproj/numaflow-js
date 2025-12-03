@@ -580,4 +580,5 @@ module.exports.reduce = nativeBinding.reduce
 module.exports.reduceStream = nativeBinding.reduceStream
 module.exports.sessionReduce = nativeBinding.sessionReduce
 module.exports.sink = nativeBinding.sink
+module.exports.source = nativeBinding.source
 module.exports.sourceTransform = nativeBinding.sourceTransform
