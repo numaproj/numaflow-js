@@ -205,3 +205,21 @@ export declare namespace reduceStream {
     }
     export {};
 }
+export declare namespace source {
+    type ReadRequest = binding.source.ReadRequest;
+    type Message = binding.source.Message;
+    type Offset = binding.source.Offset;
+    interface Sourcer {
+        read(request: ReadRequest): AsyncIterable<Message>;
+        ack(offsets: Offset[]): Promise<void>;
+        nack(offsets: Offset[]): Promise<void>;
+        pending(): Promise<number | null>;
+        partitions(): Promise<number[] | null>;
+    }
+    class SourceAsyncServer {
+        private readonly nativeServer;
+        constructor(sourcer: Sourcer);
+        start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
+        stop(): void;
+    }
+}

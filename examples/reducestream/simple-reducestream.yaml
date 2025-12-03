@@ -23,7 +23,7 @@ spec:
               streaming: true
           keyed: true
           storage:
-            emptyDir: { }
+            emptyDir: {}
     - name: out
       sink:
         udsink:

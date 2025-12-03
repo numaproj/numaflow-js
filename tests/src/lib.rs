@@ -5,4 +5,5 @@ mod reduce;
 mod reducestream;
 mod session_reduce;
 mod sink;
+mod source;
 mod source_transform;

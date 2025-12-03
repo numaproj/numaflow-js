@@ -402,6 +402,46 @@ export declare namespace sink {
     }
 }
 
+export declare namespace source {
+    export class ReadRequest {
+        /** Get the number of records to read. */
+        get numRecords(): number
+        /** Get the timeout in milliseconds. */
+        get timeoutMs(): number
+    }
+    export class SourceAsyncServer {
+        constructor(
+            read_fn: (request: ReadRequest) => () => Promise<Message | null>,
+            ack_fn: (offsets: Offset[]) => Promise<void>,
+            nack_fn: (offsets: Offset[]) => Promise<void>,
+            pending_fn: () => Promise<number | null>,
+            partition_fn: () => Promise<number[] | null>,
+        )
+        /** Start the SourceAsyncServer with the given callback */
+        start(socketPath?: string | undefined | null, serverInfoPath?: string | undefined | null): Promise<void>
+        /** Stop the SourceAsyncServer server */
+        stop(): void
+    }
+    export interface Message {
+        /** The payload of the message. */
+        payload: Buffer
+        /** The offset of the message */
+        offset: Offset
+        /** The event time of the message. */
+        eventTime: Date
+        /** Keys of the message. */
+        keys: Array<string>
+        /** Headers of the message. */
+        headers: Record<string, string>
+    }
+    export interface Offset {
+        /** Offset value in bytes. */
+        offset: Buffer
+        /** Partition ID of the message. */
+        partitionId: number
+    }
+}
+
 export declare namespace sourceTransform {
     export class SourceTransformAsyncServer {
         constructor(sourceTransformFn: (arg: SourceTransformDatum) => Promise<Array<SourceTransformMessage>>)
