@@ -12,7 +12,7 @@ class Sourcer implements source.Sourcer {
     counter = 0
     partitionIdx = 0
 
-    async *read(requests: source.ReadRequest): AsyncIterableIterator<source.Message> {
+    read = async function* (requests: source.ReadRequest): AsyncIterableIterator<source.Message> {
         for (let i = 1; i <= requests.numRecords; i++) {
             const payload = Buffer.from(`message-${this.counter}`, 'utf-8')
 
@@ -35,19 +35,19 @@ class Sourcer implements source.Sourcer {
         }
     }
 
-    async ack(offsets: source.Offset[]): Promise<void> {
+    ack = async (offsets: source.Offset[]): Promise<void> => {
         console.log('ack', offsets)
     }
 
-    async nack(offsets: source.Offset[]): Promise<void> {
+    nack = async (offsets: source.Offset[]): Promise<void> => {
         console.log('nack', offsets)
     }
 
-    async pending(): Promise<number | null> {
+    pending = async (): Promise<number | null> => {
         return 0
     }
 
-    async partitions(): Promise<number[] | null> {
+    partitions = async () : Promise<number[] | null> => {
         return [this.partitionIdx]
     }
 }

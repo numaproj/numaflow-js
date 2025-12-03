@@ -543,11 +543,11 @@ export namespace source {
     export type Message = binding.source.Message
     export type Offset = binding.source.Offset
     export interface Sourcer {
-        read(request: ReadRequest): AsyncIterable<Message>
-        ack(offsets: Offset[]): Promise<void>
-        nack(offsets: Offset[]): Promise<void>
-        pending(): Promise<number | null>
-        partitions(): Promise<number[] | null>
+        read: (request: ReadRequest) => AsyncIterable<Message>
+        ack: (offsets: Offset[]) => Promise<void>
+        nack: (offsets: Offset[]) => Promise<void>
+        pending: () => Promise<number | null>
+        partitions: () => Promise<number[] | null>
     }
 
     export class SourceAsyncServer {
