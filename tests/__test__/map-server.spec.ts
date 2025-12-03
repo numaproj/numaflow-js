@@ -3,7 +3,7 @@ import { spawn } from 'child_process'
 import { promisify } from 'util'
 
 import { map } from '../../index.js'
-const { MapServer, Message } = map
+const { MapServer, Message, UserMetadata } = map
 
 const sleep = promisify(setTimeout)
 
@@ -15,16 +15,24 @@ test('mapper integration test', async () => {
             return [Message.toDrop()]
         }
 
-        const userMetadata = datum.userMetadata ?? new map.UserMetadata()
-        userMetadata.addKv('group1', 'key3', Buffer.from('value3'))
+        let incomingSystemMetadata = datum.systemMetadata?.getGroups() ?? []
+        if (!incomingSystemMetadata.includes('system_group')) {
+            expect.fail('custom-group not found in incoming system metadata')
+        }
+        const systemValue = datum.systemMetadata?.getValue('system_group', 'system_key1')
+        expect(systemValue?.toString()).toBe('system_value1')
 
-        return [
-            {
-                keys: [key],
-                value: value,
-                userMetadata,
-            },
-        ]
+        let incomingUserMetadata = datum.userMetadata?.getGroups() ?? []
+        const userMetadata = new UserMetadata()
+        userMetadata.addKv('custom-group', 'custom-key', Buffer.from('custom-value'))
+        // forward all the incoming user metadata
+        for (const group of incomingUserMetadata) {
+            datum.userMetadata?.getKeys(group).forEach((key) => {
+                userMetadata.addKv(group, key, datum.userMetadata?.getValue(group, key)!)
+            })
+        }
+
+        return [{ keys: [key], value, userMetadata }]
     }
 
     const server = new MapServer(mapFn)
