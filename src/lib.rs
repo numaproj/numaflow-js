@@ -3,6 +3,8 @@ mod batchmap;
 mod map;
 mod mapstream;
 mod reduce;
+mod reducestream;
 mod session_reduce;
 mod sink;
+mod source;
 mod source_transform;
