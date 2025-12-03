@@ -145,3 +145,37 @@ export declare namespace reduce {
     export type ReduceAsyncServer = ReduceAsyncServerImpl;
     export {};
 }
+export declare namespace sessionReduce {
+    export type Datum = binding.sessionReduce.Datum;
+    export type Message = binding.sessionReduce.Message;
+    export const messageToDrop: typeof binding.sessionReduce.messageToDrop;
+    export type DatumIteratorResult = binding.accumulator.DatumIteratorResult;
+    type SessionReduceFnCallback = (keys: string[], iterator: AsyncIterableIterator<Datum>) => AsyncIterable<Message>;
+    type AccumulatorFnCallback = () => Promise<Buffer>;
+    type MergeAccumulatorFnCallback = (accumulator: Buffer) => Promise<void>;
+    export interface SessionReducer {
+        sessionReduceFn: SessionReduceFnCallback;
+        accumulatorFn: AccumulatorFnCallback;
+        mergeAccumulatorFn: MergeAccumulatorFnCallback;
+    }
+    /**
+     * SessionReduceAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * data received by the SessionReduce.
+     */
+    export class SessionReduceAsyncServer {
+        private readonly nativeServer;
+        /**
+         * Create a new SessionReduceAsyncServer with the given callback.
+         */
+        constructor(sessionReducerImpl: SessionReducer);
+        /**
+         * Start the sink server with the given callback
+         */
+        start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
+        /**
+         * Stop the sink server
+         */
+        stop(): void;
+    }
+    export {};
+}

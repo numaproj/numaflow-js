@@ -12,16 +12,16 @@ async function* streamMapFn(datum: mapstream.Datum) {
 }
 
 async function main() {
-    const batchMapper = new mapstream.MapStreamAsyncServer(streamMapFn)
+    const server = new mapstream.MapStreamAsyncServer(streamMapFn)
 
     const shutdown = () => {
-        batchMapper.stop()
+        server.stop()
     }
     process.on('SIGTERM', shutdown)
     process.on('SIGINT', shutdown)
 
     console.log('Starting map stream server')
-    await batchMapper.start()
+    await server.start()
 }
 
 main().catch(console.error)

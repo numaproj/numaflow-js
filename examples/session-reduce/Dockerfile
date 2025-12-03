@@ -21,7 +21,7 @@ WORKDIR /app
 COPY . .
 
 RUN pnpm run build
-RUN cd examples/accumulator/ && pnpm tsc
+RUN cd examples/session-reduce/ && pnpm tsc
 
 FROM node:24-trixie-slim
 
@@ -34,11 +34,10 @@ COPY --from=builder /app/index.d.ts /app/index.d.ts
 COPY --from=builder /app/*.node /app/
 COPY --from=builder /app/examples /app/examples
 
-
 RUN addgroup --system appuser && adduser --system --ingroup appuser appuser
 RUN chown -R appuser:appuser /app
 USER appuser
 
 # Set default command (can be changed as needed)
-CMD ["node", "examples/accumulator/stream-sorter.js"]
+CMD ["node", "examples/session-reduce/session-reduce.js"]
 

@@ -269,6 +269,58 @@ export declare namespace reduce {
     }
 }
 
+export declare namespace sessionReduce {
+    export class SessionReduceAsyncServer {
+        /** Create a new SessionReduceAsyncServer with the given callback. */
+        constructor(
+            session_reduce_fn: (args: SessionReduceCallbackArgs) => () => Promise<Message | null>,
+            accumulator_fn: () => Promise<Buffer>,
+            merge_accumulator_fn: (accumulator: Buffer) => Promise<void>,
+        )
+        stop(): void
+        start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
+    }
+    /**
+     * Arguments passed to the reduce callback
+     * Only to be used as part of internal implementation, not to be exposed to final users
+     */
+    export class SessionReduceCallbackArgs {
+        get keys(): Array<string>
+        get takeIterator(): SessionReduceDatumIterator
+    }
+    export class SessionReduceDatumIterator {
+        /**
+         * Returns the next datum from the stream, or None if the stream has ended
+         * # SAFETY
+         *
+         * Async function with &mut self is unsafe in napi because the self is also owned
+         * by the Node.js runtime. You cannot ensure that the self is only owned by Rust.
+         */
+        next(): Promise<SessionReduceDatumIteratorResult>
+    }
+    export interface Datum {
+        keys: Array<string>
+        value: Array<number>
+        watermark: Date
+        eventtime: Date
+        headers: Record<string, string>
+    }
+    export interface Message {
+        /** optional keys */
+        keys?: Array<string>
+        /** payload */
+        value: Buffer
+        /** optional tags (e.g., DROP) */
+        tags?: Array<string>
+    }
+    /** Drop a Message, do not forward to the next vertex. */
+    export function messageToDrop(): Message
+    export interface SessionReduceDatumIteratorResult {
+        value?: Datum
+        done: boolean
+    }
+}
+
 export declare namespace sink {
     /**
      * SinkAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
