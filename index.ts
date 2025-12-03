@@ -428,9 +428,9 @@ export namespace sessionReduce {
             }
 
             this.nativeServer = new binding.sessionReduce.SessionReduceAsyncServer(
-                wrapperSessionReduceFnCallback,
-                sessionReducerImpl.accumulatorFn,
-                sessionReducerImpl.mergeAccumulatorFn,
+                wrapperSessionReduceFnCallback.bind(sessionReducerImpl),
+                sessionReducerImpl.accumulatorFn.bind(sessionReducerImpl),
+                sessionReducerImpl.mergeAccumulatorFn.bind(sessionReducerImpl),
             )
         }
 
@@ -567,11 +567,11 @@ export namespace source {
             }
 
             this.nativeServer = new binding.source.SourceAsyncServer(
-                wrapperReadFn,
-                sourcer.ack,
-                sourcer.nack,
-                sourcer.pending,
-                sourcer.partitions,
+                wrapperReadFn.bind(sourcer),
+                sourcer.ack.bind(sourcer),
+                sourcer.nack.bind(sourcer),
+                sourcer.pending.bind(sourcer),
+                sourcer.partitions.bind(sourcer),
             )
         }
 
