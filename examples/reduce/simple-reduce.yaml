@@ -37,6 +37,6 @@ spec:
             imagePullPolicy: IfNotPresent
   edges:
     - from: in
-      to: cat
-    - from: cat
+      to: reduce
+    - from: reduce
       to: out

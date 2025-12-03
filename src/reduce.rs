@@ -141,12 +141,6 @@ impl ReduceDatumIterator {
     }
 }
 
-#[napi(namespace = "reduce")]
-pub struct ReduceAsyncServer {
-    reduce_fn: Arc<ReduceFn>,
-    shutdown_tx: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
-}
-
 /// Arguments passed to the reduce callback
 /// Only to be used as part of internal implementation, not to be exposed to final users
 #[napi(namespace = "reduce")]
@@ -184,6 +178,21 @@ impl ReduceCallbackArgs {
     pub fn get_metadata(&self) -> Metadata {
         self.metadata.clone()
     }
+}
+
+type ReduceFn = ThreadsafeFunction<
+    ReduceCallbackArgs,
+    Promise<Vec<Message>>,
+    ReduceCallbackArgs,
+    Status,
+    false,
+    true,
+>;
+
+#[napi(namespace = "reduce")]
+pub struct ReduceAsyncServer {
+    reduce_fn: Arc<ReduceFn>,
+    shutdown_tx: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
 }
 
 #[napi(namespace = "reduce")]
@@ -240,16 +249,6 @@ impl ReduceAsyncServer {
         Ok(())
     }
 }
-
-type ReduceFn = ThreadsafeFunction<
-    //(Vec<String>, ReduceDatumIterator, Metadata),
-    ReduceCallbackArgs,
-    Promise<Vec<Message>>,
-    ReduceCallbackArgs,
-    Status,
-    false,
-    true,
->;
 
 struct ReducerCreator {
     reduce_fn: Arc<ReduceFn>,
