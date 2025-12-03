@@ -1,5 +1,6 @@
 import binding from './binding';
 export import sourceTransform = binding.sourceTransform;
+export import sideInput = binding.sideInput;
 export declare namespace accumulator {
     type Datum = binding.accumulator.Datum;
     type Message = binding.accumulator.Message;

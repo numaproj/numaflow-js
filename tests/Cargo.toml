@@ -46,6 +46,10 @@ path = "src/reducestream.rs"
 name = "source"
 path = "src/source.rs"
 
+[[bin]]
+name = "sideinput"
+path = "src/sideinput.rs"
+
 [dependencies]
 numaflow.workspace = true
 tokio.workspace = true

@@ -5,6 +5,7 @@ import binding from './binding'
 const DROP = 'U+005C__DROP__'
 
 export import sourceTransform = binding.sourceTransform
+export import sideInput = binding.sideInput
 
 export namespace accumulator {
     export type Datum = binding.accumulator.Datum
