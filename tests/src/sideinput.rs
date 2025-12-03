@@ -29,13 +29,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut client = SideInputClient::new(channel);
 
-    eprintln!("\nTesting side input response...");
+    println!("Testing side input response...");
+    println!("Every non-even numbered call returns side input");
     let side_input_response = client.retrieve_side_input(Request::new(())).await?;
     let side_input_value = side_input_response.into_inner().value;
     assert_eq!(
         String::from_utf8(side_input_value).unwrap(),
         "side-input-value".to_string()
     );
+
+    println!("Every even numbered call returns no side input");
+    let side_input_response = client.retrieve_side_input(Request::new(())).await?;
+    assert!(side_input_response.into_inner().no_broadcast);
 
     Ok(())
 }

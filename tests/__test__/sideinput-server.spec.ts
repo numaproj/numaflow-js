@@ -8,12 +8,24 @@ const sleep = promisify(setTimeout)
 const sockPath = '/tmp/var/run/numaflow/side-input.sock'
 const infoPath = '/tmp/var/run/numaflow/side-input-info.sock'
 
-async function sideInputFn(): Promise<Buffer | null> {
-    return Buffer.from('side-input-value')
+class SideInputer {
+    counter = 0
+    async retrieveSideInput(): Promise<Buffer | null> {
+        this.counter++
+        console.log('counter: ', this.counter)
+        if (this.counter % 2 == 0) {
+            console.log('returning null')
+            return null
+        } else {
+            console.log('returning side-input')
+            return Buffer.from('side-input-value')
+        }
+    }
 }
 
 test('sideinput integration test', async () => {
-    const server = new sideInput.SideInputAsyncServer(sideInputFn)
+    const sideInputer = new SideInputer()
+    const server = new sideInput.SideInputAsyncServer(sideInputer.retrieveSideInput.bind(sideInputer))
 
     try {
         // Start the server (non-blocking)
@@ -24,7 +36,7 @@ test('sideinput integration test', async () => {
 
         // Run the cargo command
         const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'sideinput', '--', sockPath], {
-            stdio: 'pipe',
+            stdio: 'inherit',
         })
 
         // Capture stdout and stderr
