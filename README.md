@@ -9,7 +9,11 @@ Currently, these include:
   - [BatchMap mode](https://numaflow.numaproj.io/user-guide/user-defined-functions/map/map/#batch-map-mode)
 - [Reduce UDF](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/reduce/)
   - [Accumulator](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/accumulator/)
-- [UDSink](https://numaflow.numaproj.io/user-guide/sinks/user-defined-sinks/)
+  - [Session](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/session/)
+  - [Fixed](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/fixed/)
+  - [Sliding](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/sliding/)
+- [UD Sink](https://numaflow.numaproj.io/user-guide/sinks/user-defined-sinks/)
+- [UD Source](https://numaflow.numaproj.io/user-guide/sources/user-defined-sources/)
 - [Source Transform](https://numaflow.numaproj.io/user-guide/sources/transformer/overview/)
 
 The SDK leverages Rust FFIs provided by [napi.rs](https://napi.rs/) to interact with Numaflow.
