@@ -38,6 +38,14 @@ path = "src/reduce.rs"
 name = "session_reduce"
 path = "src/session_reduce.rs"
 
+[[bin]]
+name = "reducestream"
+path = "src/reducestream.rs"
+
+[[bin]]
+name = "source"
+path = "src/source.rs"
+
 [dependencies]
 numaflow.workspace = true
 tokio.workspace = true

@@ -2,6 +2,8 @@ mod accumulator;
 mod batchmap;
 mod map;
 mod reduce;
+mod reducestream;
 mod session_reduce;
 mod sink;
+mod source;
 mod source_transform;
