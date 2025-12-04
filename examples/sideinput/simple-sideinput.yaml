@@ -9,7 +9,7 @@ spec:
         image: quay.io/numaio/numaflow-js/simple-sideinput:stable
         imagePullPolicy: IfNotPresent
       trigger:
-        schedule: '*/2 * * * *'
+        schedule: '0 */2 * * * *'
   vertices:
     - name: in
       source:
