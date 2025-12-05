@@ -169,10 +169,8 @@ impl SourceTransformDatum {
             watermark,
             eventtime,
             headers,
-            user_metadata: user_metadata
-                .map(|metadata| UserMetadata(metadata.0.clone())),
-            system_metadata: system_metadata
-                .map(|metadata| SystemMetadata(metadata.0.clone())),
+            user_metadata: user_metadata.map(|metadata| UserMetadata(metadata.0.clone())),
+            system_metadata: system_metadata.map(|metadata| SystemMetadata(metadata.0.clone())),
         }
     }
 
