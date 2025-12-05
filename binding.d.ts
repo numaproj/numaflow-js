@@ -433,6 +433,8 @@ export declare namespace source {
         keys: Array<string>
         /** Headers of the message. */
         headers: Record<string, string>
+        /** User metadata for the message. */
+        userMetadata?: Record<string, Record<string, Buffer>>
     }
     export interface Offset {
         /** Offset value in bytes. */
@@ -448,26 +450,43 @@ export declare namespace sourceTransform {
         start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
         stop(): void
     }
-    export function messageToDrop(eventtime: Date): SourceTransformMessage
-    export interface SourceTransformDatum {
+    export class SourceTransformDatum {
         /** Set of keys in the (key, value) terminology of map/reduce paradigm. */
         keys: Array<string>
-        /** The value in the (key, value) terminology of map/reduce paradigm. */
-        value: Buffer
-        /**
-         * [watermark](https://numaflow.numaproj.io/core-concepts/watermarks/) represented by time is a
-         * guarantee that we will not see an element older than this time.
-         */
-        watermark: Date
-        /** Time of the element as seen at source or aligned after a reduce operation. */
-        eventtime: Date
-        /** Headers for the message. */
-        headers: Record<string, string>
-        /** User metadata for the message. */
-        userMetadata: UserMetadata
-        /** System metadata for the message. */
-        systemMetadata: SystemMetadata
+        constructor(
+            keys: Array<string>,
+            value: Buffer,
+            watermark: Date,
+            eventtime: Date,
+            headers: Record<string, string>,
+            userMetadata?: SourceTransformUserMetadata | undefined | null,
+            systemMetadata?: SourceTransformSystemMetadata | undefined | null,
+        )
+        get value(): Buffer
+        get watermark(): Date
+        get eventtime(): Date
+        get headers(): Record<string, string>
+        get userMetadata(): SourceTransformUserMetadata | null
+        get systemMetadata(): SourceTransformSystemMetadata | null
+        set userMetadata(userMetadata: SourceTransformUserMetadata)
     }
+    export class SourceTransformSystemMetadata {
+        constructor()
+        getGroups(): Array<string>
+        getKeys(group: string): Array<string>
+        getValue(group: string, key: string): Buffer
+    }
+    export class SourceTransformUserMetadata {
+        constructor()
+        getGroups(): Array<string>
+        getKeys(group: string): Array<string>
+        getValue(group: string, key: string): Buffer
+        createGroup(group: string): void
+        addKv(group: string, key: string, value: Buffer): void
+        removeKey(group: string, key: string): void
+        removeGroup(group: string): void
+    }
+    export function messageToDrop(eventtime: Date): SourceTransformMessage
     export interface SourceTransformMessage {
         /**
          * Keys are a collection of strings which will be passed on to the next vertex as is. It can
@@ -484,12 +503,6 @@ export declare namespace sourceTransform {
         /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
         tags?: Array<string>
         /** User metadata for the message. */
-        userMetadata?: UserMetadata
-    }
-    export interface SystemMetadata {
-        data: Record<string, Record<string, Array<number>>>
-    }
-    export interface UserMetadata {
-        data: Record<string, Record<string, Array<number>>>
+        userMetadata?: Record<string, Record<string, Buffer>>
     }
 }

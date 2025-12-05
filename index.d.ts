@@ -1,5 +1,42 @@
 import binding from './binding';
-export import sourceTransform = binding.sourceTransform;
+export declare namespace sourceTransform {
+    type NativeDatum = binding.sourceTransform.SourceTransformDatum;
+    export type UserMetadata = binding.sourceTransform.SourceTransformUserMetadata;
+    export const UserMetadata: typeof binding.sourceTransform.SourceTransformUserMetadata;
+    export type SystemMetadata = binding.sourceTransform.SourceTransformSystemMetadata;
+    export const SystemMetadata: typeof binding.sourceTransform.SourceTransformSystemMetadata;
+    export class Datum {
+        keys: string[];
+        value: Buffer;
+        watermark: Date;
+        eventtime: Date;
+        headers: Record<string, string>;
+        userMetadata: UserMetadata | null;
+        systemMetadata: SystemMetadata | null;
+        constructor(sourceTransformDatum: NativeDatum);
+    }
+    export interface MessageOptions {
+        keys?: string[];
+        tags?: string[];
+        userMetadata?: UserMetadata;
+    }
+    export class Message {
+        value: Buffer;
+        eventtime: Date;
+        keys?: string[];
+        tags?: string[];
+        userMetadata?: UserMetadata;
+        constructor(value: Buffer, eventtime: Date, options?: MessageOptions);
+        static toDrop(eventtime: Date): Message;
+    }
+    export class SourceTransformAsyncServer {
+        private readonly nativeServer;
+        constructor(sourceTransformFn: (message: Datum) => Promise<Message[]>);
+        start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
+        stop(): void;
+    }
+    export {};
+}
 export declare namespace accumulator {
     type Datum = binding.accumulator.Datum;
     type Message = binding.accumulator.Message;
@@ -42,7 +79,6 @@ export declare namespace accumulator {
 }
 export declare namespace map {
     type Datum = binding.map.Datum;
-    type NativeMessage = binding.map.Message;
     const UserMetadata: typeof binding.map.UserMetadata;
     type UserMetadata = binding.map.UserMetadata;
     interface MessageOptions {

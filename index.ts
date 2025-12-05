@@ -4,7 +4,100 @@ import binding from './binding'
 
 const DROP = 'U+005C__DROP__'
 
-export import sourceTransform = binding.sourceTransform
+export namespace sourceTransform {
+    type NativeDatum = binding.sourceTransform.SourceTransformDatum
+    type NativeMessage = binding.sourceTransform.SourceTransformMessage
+    export type UserMetadata = binding.sourceTransform.SourceTransformUserMetadata
+    export const UserMetadata = binding.sourceTransform.SourceTransformUserMetadata
+    export type SystemMetadata = binding.sourceTransform.SourceTransformSystemMetadata
+    export const SystemMetadata = binding.sourceTransform.SourceTransformSystemMetadata
+
+    export class Datum {
+        keys: string[]
+        value: Buffer
+        watermark: Date
+        eventtime: Date
+        headers: Record<string, string>
+        userMetadata: UserMetadata | null
+        systemMetadata: SystemMetadata | null
+
+        constructor(sourceTransformDatum: NativeDatum) {
+            this.keys = sourceTransformDatum.keys
+            this.value = sourceTransformDatum.value
+            this.watermark = sourceTransformDatum.watermark
+            this.eventtime = sourceTransformDatum.eventtime
+            this.headers = sourceTransformDatum.headers
+            this.userMetadata = sourceTransformDatum.userMetadata
+            this.systemMetadata = sourceTransformDatum.systemMetadata
+        }
+    }
+
+    export interface MessageOptions {
+        keys?: string[]
+        tags?: string[]
+        userMetadata?: UserMetadata
+    }
+
+    export class Message {
+        value: Buffer
+        eventtime: Date
+        keys?: string[]
+        tags?: string[]
+        userMetadata?: UserMetadata
+
+        constructor(value: Buffer, eventtime: Date, options?: MessageOptions) {
+            this.value = value
+            this.eventtime = eventtime
+            this.keys = options?.keys
+            this.tags = options?.tags
+            this.userMetadata = options?.userMetadata
+        }
+
+        public static toDrop(eventtime: Date): Message {
+            return new Message(Buffer.from([]), eventtime, { tags: [DROP] })
+        }
+    }
+
+    function toNativeMetadata(metadata: UserMetadata): Record<string, Record<string, Buffer>> {
+        let nativeMetadata: Record<string, Record<string, Buffer>> = {}
+        for (const group of metadata.getGroups()) {
+            nativeMetadata[group] = {}
+            for (const key of metadata.getKeys(group)) {
+                nativeMetadata[group][key] = metadata.getValue(group, key)
+            }
+        }
+        return nativeMetadata
+    }
+
+    export class SourceTransformAsyncServer {
+        private readonly nativeServer: binding.sourceTransform.SourceTransformAsyncServer
+
+        constructor(sourceTransformFn: (message: Datum) => Promise<Message[]>) {
+            const wrappedCallback = async (datum: NativeDatum) => {
+                let messages = await sourceTransformFn(new Datum(datum))
+                let nativeMessages = messages.map((message: Message): NativeMessage => {
+                    return {
+                        value: message.value,
+                        keys: message.keys,
+                        tags: message.tags,
+                        eventtime: message.eventtime,
+                        userMetadata: message.userMetadata ? toNativeMetadata(message.userMetadata) : undefined,
+                    } satisfies NativeMessage
+                })
+                return nativeMessages
+            }
+            this.nativeServer = new binding.sourceTransform.SourceTransformAsyncServer(wrappedCallback)
+        }
+
+        public async start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void> {
+            return this.nativeServer.start(socketPath, serverInfoPath)
+        }
+
+        public stop(): void {
+            this.nativeServer.stop()
+        }
+    }
+}
 
 export namespace accumulator {
     export type Datum = binding.accumulator.Datum
@@ -87,7 +180,7 @@ export namespace accumulator {
 
 export namespace map {
     export type Datum = binding.map.Datum
-    export type NativeMessage = binding.map.Message
+    type NativeMessage = binding.map.Message
     export const UserMetadata = binding.map.UserMetadata
     export type UserMetadata = binding.map.UserMetadata
 

@@ -10,26 +10,26 @@ use std::sync::{Arc, Mutex};
 
 #[derive(Clone, Default)]
 #[napi(namespace = "sourceTransform")]
-pub struct UserMetadata(sourcetransform::UserMetadata);
+pub struct SourceTransformUserMetadata(sourcetransform::UserMetadata);
 
 #[napi(namespace = "sourceTransform")]
-impl UserMetadata {
+impl SourceTransformUserMetadata {
     #[napi(constructor)]
     pub fn new() -> Self {
         Self(sourcetransform::UserMetadata::default())
     }
 
-    #[napi(getter)]
+    #[napi]
     pub fn get_groups(&self) -> Vec<String> {
         self.0.groups()
     }
 
-    #[napi(getter)]
+    #[napi]
     pub fn get_keys(&self, group: String) -> Vec<String> {
         self.0.keys(group.as_str())
     }
 
-    #[napi(getter)]
+    #[napi]
     pub fn get_value(&self, group: String, key: String) -> Buffer {
         Buffer::from(self.0.value(group.as_str(), key.as_str()))
     }
@@ -56,27 +56,27 @@ impl UserMetadata {
 }
 
 #[derive(Clone, Default)]
-#[napi(namespace = "sourceTransform", js_name = "SystemMetadata")]
-pub struct SystemMetadata(sourcetransform::SystemMetadata);
+#[napi(namespace = "sourceTransform")]
+pub struct SourceTransformSystemMetadata(sourcetransform::SystemMetadata);
 
 #[napi(namespace = "sourceTransform")]
-impl SystemMetadata {
+impl SourceTransformSystemMetadata {
     #[napi(constructor)]
     pub fn new() -> Self {
         Self(sourcetransform::SystemMetadata::default())
     }
 
-    #[napi(getter)]
+    #[napi]
     pub fn get_groups(&self) -> Vec<String> {
         self.0.groups()
     }
 
-    #[napi(getter)]
+    #[napi]
     pub fn get_keys(&self, group: String) -> Vec<String> {
         self.0.keys(group.as_str())
     }
 
-    #[napi(getter)]
+    #[napi]
     pub fn get_value(&self, group: String, key: String) -> Buffer {
         Buffer::from(self.0.value(group.as_str(), key.as_str()))
     }
@@ -146,9 +146,9 @@ pub struct SourceTransformDatum {
     /// Headers for the message.
     headers: HashMap<String, String>,
     /// User metadata for the message.
-    user_metadata: Option<UserMetadata>,
+    user_metadata: Option<SourceTransformUserMetadata>,
     /// System metadata for the message.
-    system_metadata: Option<SystemMetadata>,
+    system_metadata: Option<SourceTransformSystemMetadata>,
 }
 
 #[napi(namespace = "sourceTransform")]
@@ -160,8 +160,8 @@ impl SourceTransformDatum {
         watermark: DateTime<Utc>,
         eventtime: DateTime<Utc>,
         headers: HashMap<String, String>,
-        user_metadata: Option<&UserMetadata>,
-        system_metadata: Option<&SystemMetadata>,
+        user_metadata: Option<&SourceTransformUserMetadata>,
+        system_metadata: Option<&SourceTransformSystemMetadata>,
     ) -> Self {
         Self {
             keys,
@@ -169,8 +169,10 @@ impl SourceTransformDatum {
             watermark,
             eventtime,
             headers,
-            user_metadata: user_metadata.map(|metadata| UserMetadata(metadata.0.clone())),
-            system_metadata: system_metadata.map(|metadata| SystemMetadata(metadata.0.clone())),
+            user_metadata: user_metadata
+                .map(|metadata| SourceTransformUserMetadata(metadata.0.clone())),
+            system_metadata: system_metadata
+                .map(|metadata| SourceTransformSystemMetadata(metadata.0.clone())),
         }
     }
 
@@ -199,18 +201,18 @@ impl SourceTransformDatum {
     }
 
     #[napi(getter)]
-    pub fn user_metadata(&self) -> Option<UserMetadata> {
+    pub fn user_metadata(&self) -> Option<SourceTransformUserMetadata> {
         self.user_metadata.clone()
     }
 
     #[napi(getter)]
-    pub fn system_metadata(&self) -> Option<SystemMetadata> {
+    pub fn system_metadata(&self) -> Option<SourceTransformSystemMetadata> {
         self.system_metadata.clone()
     }
 
     #[napi(setter)]
-    pub fn set_user_metadata(&mut self, user_metadata: &UserMetadata) {
-        self.user_metadata = Some(UserMetadata(user_metadata.0.clone()));
+    pub fn set_user_metadata(&mut self, user_metadata: &SourceTransformUserMetadata) {
+        self.user_metadata = Some(SourceTransformUserMetadata(user_metadata.0.clone()));
     }
 }
 
@@ -222,8 +224,8 @@ impl From<sourcetransform::SourceTransformRequest> for SourceTransformDatum {
             watermark: value.watermark,
             eventtime: value.eventtime,
             headers: value.headers,
-            user_metadata: Some(UserMetadata(value.user_metadata)),
-            system_metadata: Some(SystemMetadata(value.system_metadata)),
+            user_metadata: Some(SourceTransformUserMetadata(value.user_metadata)),
+            system_metadata: Some(SourceTransformSystemMetadata(value.system_metadata)),
         }
     }
 }
