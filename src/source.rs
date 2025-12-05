@@ -86,14 +86,6 @@ pub struct ReadRequest {
 
 #[napi(namespace = "source")]
 impl ReadRequest {
-    /// Create a new [ReadRequest] with the given num_records and timeout_ms.
-    fn new(num_records: u32, timeout_ms: u32) -> Self {
-        Self {
-            num_records,
-            timeout_ms,
-        }
-    }
-
     /// Get the number of records to read.
     #[napi(getter)]
     pub fn num_records(&self) -> u32 {

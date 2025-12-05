@@ -4,6 +4,8 @@ import binding from './binding'
 
 const DROP = 'U+005C__DROP__'
 
+export import sideInput = binding.sideInput
+
 export namespace sourceTransform {
     type NativeDatum = binding.sourceTransform.SourceTransformDatum
     type NativeMessage = binding.sourceTransform.SourceTransformMessage

@@ -332,6 +332,14 @@ export declare namespace sessionReduce {
     }
 }
 
+export declare namespace sideInput {
+    export class SideInputAsyncServer {
+        constructor(sideInputFn: () => Promise<Buffer | null>)
+        start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
+        stop(): void
+    }
+}
+
 export declare namespace sink {
     /**
      * SinkAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the

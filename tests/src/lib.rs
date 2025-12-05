@@ -4,6 +4,7 @@ mod map;
 mod reduce;
 mod reducestream;
 mod session_reduce;
+mod sideinput;
 mod sink;
 mod source;
 mod source_transform;

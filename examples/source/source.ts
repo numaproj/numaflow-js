@@ -1,12 +1,4 @@
-import { test, expect } from 'vitest'
-import { spawn } from 'child_process'
-import { promisify } from 'util'
-
-import { source } from '../../index.js'
-
-const sleep = promisify(setTimeout)
-const sockPath = '/tmp/var/run/numaflow/source.sock'
-const infoPath = '/tmp/var/run/numaflow/source-info.sock'
+import { source } from '../../index'
 
 class Sourcer implements source.Sourcer {
     counter = 0
@@ -56,44 +48,17 @@ class Sourcer implements source.Sourcer {
     }
 }
 
-test('source integration test', async () => {
+async function main() {
     const server = new source.SourceAsyncServer(new Sourcer())
 
-    try {
-        // Start the server (non-blocking)
-        server.start(sockPath, infoPath)
-
-        // Give the server time to initialize
-        await sleep(500)
-
-        // Run the cargo command
-        const cargoProcess = spawn('cargo', ['run', '-p', 'tests', '--bin', 'source', '--', sockPath], {
-            stdio: 'pipe',
-        })
-
-        // Capture stdout and stderr
-        let stdout = ''
-        let stderr = ''
-        cargoProcess.stdout?.on('data', (data) => {
-            stdout += data.toString()
-        })
-        cargoProcess.stderr?.on('data', (data) => {
-            stderr += data.toString()
-        })
-
-        // Wait for the cargo command to complete
-        const exitCode = await new Promise<number>((resolve) => {
-            cargoProcess.on('close', (code) => {
-                resolve(code ?? 1)
-            })
-        })
-
-        // Verify the command exited successfully
-        if (exitCode !== 0) {
-            expect.fail(`Cargo command failed with exit code ${exitCode}\n\nStdout:\n${stdout}\n\nStderr:\n${stderr}`)
-        }
-    } finally {
-        // Ensure the server is stopped
+    const shutdown = () => {
         server.stop()
     }
-}, 120000)
+    process.on('SIGTERM', shutdown)
+    process.on('SIGINT', shutdown)
+
+    console.log('Starting source async server')
+    await server.start()
+}
+
+main().catch(console.error)

@@ -1,4 +1,5 @@
 import binding from './binding';
+export import sideInput = binding.sideInput;
 export declare namespace sourceTransform {
     type NativeDatum = binding.sourceTransform.SourceTransformDatum;
     export type UserMetadata = binding.sourceTransform.SourceTransformUserMetadata;
