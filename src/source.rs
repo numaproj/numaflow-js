@@ -22,17 +22,29 @@ pub struct Message {
     pub keys: Vec<String>,
     /// Headers of the message.
     pub headers: HashMap<String, String>,
+    /// User metadata for the message.
+    pub user_metadata: Option<HashMap<String, HashMap<String, Buffer>>>,
 }
 
 impl From<Message> for numaflow::source::Message {
     fn from(value: Message) -> Self {
+        let mut user_metadata = None;
+        if let Some(user_metadata_map) = value.user_metadata {
+            let mut metadata = source::UserMetadata::new();
+            for (group, keys) in user_metadata_map.iter() {
+                for (key, value) in keys.iter() {
+                    metadata.add_kv(group.clone(), key.clone(), value.to_vec());
+                }
+            }
+            user_metadata = Some(metadata);
+        }
         Self {
             value: value.payload.into(),
             offset: value.offset.into(),
             event_time: value.event_time,
             keys: value.keys,
             headers: value.headers,
-            user_metadata: None,
+            user_metadata,
         }
     }
 }
