@@ -8,7 +8,7 @@ export import sideInput = binding.sideInput
 
 export namespace sourceTransform {
     type NativeDatum = binding.sourceTransform.SourceTransformDatum
-    type NativeMessage = binding.sourceTransform.SourceTransformMessage
+    export type NativeMessage = binding.sourceTransform.SourceTransformMessage
     export type UserMetadata = binding.sourceTransform.SourceTransformUserMetadata
     export const UserMetadata = binding.sourceTransform.SourceTransformUserMetadata
     export type SystemMetadata = binding.sourceTransform.SourceTransformSystemMetadata
@@ -182,7 +182,7 @@ export namespace accumulator {
 
 export namespace map {
     export type Datum = binding.map.Datum
-    type NativeMessage = binding.map.Message
+    export type NativeMessage = binding.map.Message
     export const UserMetadata = binding.map.UserMetadata
     export type UserMetadata = binding.map.UserMetadata
 
@@ -225,7 +225,7 @@ export namespace map {
         private readonly nativeServer: binding.map.MapAsyncServer
 
         constructor(mapFn: (message: Datum) => Promise<Message[]>) {
-            const wrappedCallback = async (datum: Datum) => {
+            const wrappedCallback = async (datum: Datum): Promise<NativeMessage[]> => {
                 let messages = await mapFn(datum)
                 let nativeMessages = messages.map((message) => {
                     return {
@@ -635,7 +635,9 @@ export namespace reduceStream {
 
 export namespace source {
     export type ReadRequest = binding.source.ReadRequest
-    export type Message = binding.source.Message
+    export type NativeMessage = binding.source.Message
+    export type UserMetadata = binding.source.SourceUserMetadata
+    export const UserMetadata = binding.source.SourceUserMetadata
     export type Offset = binding.source.Offset
     export interface Sourcer {
         read: (request: ReadRequest) => AsyncIterable<Message>
@@ -645,19 +647,63 @@ export namespace source {
         partitions: () => Promise<number[] | null>
     }
 
+    export class Message {
+        payload: Buffer
+        offset: Offset
+        eventTime: Date
+        keys: string[]
+        headers: Record<string, string>
+        userMetadata?: UserMetadata
+
+        constructor(
+            payload: Buffer,
+            offset: Offset,
+            eventTime: Date,
+            keys: string[],
+            headers: Record<string, string>,
+            userMetadata?: UserMetadata,
+        ) {
+            this.payload = payload
+            this.offset = offset
+            this.eventTime = eventTime
+            this.keys = keys
+            this.headers = headers
+            this.userMetadata = userMetadata
+        }
+    }
+
+    function toNativeMetadata(metadata: UserMetadata): Record<string, Record<string, Buffer>> {
+        let nativeMetadata: Record<string, Record<string, Buffer>> = {}
+        for (const group of metadata.getGroups()) {
+            nativeMetadata[group] = {}
+            for (const key of metadata.getKeys(group)) {
+                nativeMetadata[group][key] = metadata.getValue(group, key)
+            }
+        }
+        return nativeMetadata
+    }
+
     export class SourceAsyncServer {
         private readonly nativeServer: binding.source.SourceAsyncServer
 
         constructor(sourcer: Sourcer) {
-            const wrapperReadFn = (request: ReadRequest) => {
-                const iterator = sourcer.read(request)[Symbol.asyncIterator]()
+            const wrapperReadFn = (request: ReadRequest): (() => Promise<NativeMessage | null>) => {
+                const iterator: AsyncIterator<Message> = sourcer.read(request)[Symbol.asyncIterator]()
 
-                return async () => {
-                    const result = await iterator.next()
+                return async (): Promise<NativeMessage | null> => {
+                    const result: IteratorResult<Message> = await iterator.next()
                     if (result.done) {
                         return null
                     }
-                    return result.value
+                    let message: Message = result.value
+                    return {
+                        payload: message.payload,
+                        offset: message.offset,
+                        eventTime: message.eventTime,
+                        keys: message.keys,
+                        headers: message.headers,
+                        userMetadata: message.userMetadata ? toNativeMetadata(message.userMetadata) : undefined,
+                    } satisfies NativeMessage
                 }
             }
 

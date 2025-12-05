@@ -430,6 +430,16 @@ export declare namespace source {
         /** Stop the SourceAsyncServer server */
         stop(): void
     }
+    export class SourceUserMetadata {
+        constructor()
+        getGroups(): Array<string>
+        getKeys(group: string): Array<string>
+        getValue(group: string, key: string): Buffer
+        createGroup(group: string): void
+        addKv(group: string, key: string, value: Buffer): void
+        removeKey(group: string, key: string): void
+        removeGroup(group: string): void
+    }
     export interface Message {
         /** The payload of the message. */
         payload: Buffer
