@@ -38,13 +38,13 @@ class Sourcer implements source.Sourcer {
     async ack(offsets: source.Offset[]): Promise<void> {
         console.log('ack')
         for (const offset of offsets)
-            console.log('Offset: ' + offset.offset.toString() + ' Partition ID: ' + offset.partitionId)
+            console.log(`Offset: ${offset.offset.toString()}, Partition ID: ${offset.partitionId}`)
     }
 
     async nack(offsets: source.Offset[]): Promise<void> {
         console.log('nack')
         for (const offset of offsets)
-            console.log('Offset: ' + offset.offset.toString() + ' Partition ID: ' + offset.partitionId)
+            console.log(`Offset: ${offset.offset.toString()}, Partition ID: ${offset.partitionId}`)
     }
 
     async pending(): Promise<number | null> {
