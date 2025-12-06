@@ -105,5 +105,4 @@ let sinker = new Sink()
 const server = new sink.SinkAsyncServer(sinker.sinkFn.bind(sinker));
 ```
 
-If any of the examples are failing to build or if they need further clarification, please create an issue in the
-[Numaflow-JS GitHub repository](https://github.com/numaproj/numaflow-js/issues/new/choose) to fix the same.
+If any of the examples are failing to build or if they need further clarification, please create an [issue](https://github.com/numaproj/numaflow-js/issues/new/choose) to fix the same.
