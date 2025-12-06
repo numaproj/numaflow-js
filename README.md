@@ -17,7 +17,7 @@ Currently, these include:
 - [Source Transform](https://numaflow.numaproj.io/user-guide/sources/transformer/overview/)
 - [Side Input](https://numaflow.numaproj.io/user-guide/reference/side-inputs/)
 
-The SDK leverages Rust FFIs provided by [napi.rs](https://napi.rs/) to interact with Numaflow.
+This SDK is powered by [Numaflow Rust SDK](https://github.com/numaproj/numaflow-rs) through [napi.rs](https://napi.rs/) to interact with Numaflow.
 
 ## Installation
 
@@ -105,5 +105,4 @@ let sinker = new Sink()
 const server = new sink.SinkAsyncServer(sinker.sinkFn.bind(sinker));
 ```
 
-If any of the examples are failing to build or if they need further clarification, please create an issue in the
-[Numaflow-JS GitHub repository](https://github.com/numaproj/numaflow-js/issues/new/choose) to fix the same.
+If any of the examples are failing to build or if they need further clarification, please create an [issue](https://github.com/numaproj/numaflow-js/issues/new/choose) to fix the same.
