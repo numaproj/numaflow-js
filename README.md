@@ -17,7 +17,7 @@ Currently, these include:
 - [Source Transform](https://numaflow.numaproj.io/user-guide/sources/transformer/overview/)
 - [Side Input](https://numaflow.numaproj.io/user-guide/reference/side-inputs/)
 
-The SDK leverages Rust FFIs provided by [napi.rs](https://napi.rs/) to interact with Numaflow.
+This SDK is powered by [Numaflow Rust SDK](https://github.com/numaproj/numaflow-rs) through [napi.rs](https://napi.rs/) to interact with Numaflow.
 
 ## Installation
 
