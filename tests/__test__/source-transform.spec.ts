@@ -9,7 +9,7 @@ const sockPath = '/tmp/var/run/numaflow/source-transform.sock'
 const infoPath = '/tmp/var/run/numaflow/source-transform-info.sock'
 
 test('source transform integration test', async () => {
-    const server = new sourceTransform.SourceTransformAsyncServer(async (datum) => {
+    const server = new sourceTransform.SourceTransformAsyncServer(async (datum): Promise<sourceTransform.Message[]> => {
         return [
             {
                 keys: datum.keys,

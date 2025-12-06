@@ -1,6 +1,44 @@
 import binding from './binding';
-export import sourceTransform = binding.sourceTransform;
 export import sideInput = binding.sideInput;
+export declare namespace sourceTransform {
+    type NativeDatum = binding.sourceTransform.SourceTransformDatum;
+    export type NativeMessage = binding.sourceTransform.SourceTransformMessage;
+    export type UserMetadata = binding.sourceTransform.SourceTransformUserMetadata;
+    export const UserMetadata: typeof binding.sourceTransform.SourceTransformUserMetadata;
+    export type SystemMetadata = binding.sourceTransform.SourceTransformSystemMetadata;
+    export const SystemMetadata: typeof binding.sourceTransform.SourceTransformSystemMetadata;
+    export class Datum {
+        keys: string[];
+        value: Buffer;
+        watermark: Date;
+        eventtime: Date;
+        headers: Record<string, string>;
+        userMetadata: UserMetadata | null;
+        systemMetadata: SystemMetadata | null;
+        constructor(sourceTransformDatum: NativeDatum);
+    }
+    export interface MessageOptions {
+        keys?: string[];
+        tags?: string[];
+        userMetadata?: UserMetadata;
+    }
+    export class Message {
+        value: Buffer;
+        eventtime: Date;
+        keys?: string[];
+        tags?: string[];
+        userMetadata?: UserMetadata;
+        constructor(value: Buffer, eventtime: Date, options?: MessageOptions);
+        static toDrop(eventtime: Date): Message;
+    }
+    export class SourceTransformAsyncServer {
+        private readonly nativeServer;
+        constructor(sourceTransformFn: (message: Datum) => Promise<Message[]>);
+        start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
+        stop(): void;
+    }
+    export {};
+}
 export declare namespace accumulator {
     type Datum = binding.accumulator.Datum;
     type Message = binding.accumulator.Message;
@@ -208,7 +246,8 @@ export declare namespace reduceStream {
 }
 export declare namespace source {
     type ReadRequest = binding.source.ReadRequest;
-    type Message = binding.source.Message;
+    type UserMetadata = binding.source.SourceUserMetadata;
+    const UserMetadata: typeof binding.source.SourceUserMetadata;
     type Offset = binding.source.Offset;
     interface Sourcer {
         read: (request: ReadRequest) => AsyncIterable<Message>;
@@ -216,6 +255,15 @@ export declare namespace source {
         nack: (offsets: Offset[]) => Promise<void>;
         pending: () => Promise<number | null>;
         partitions: () => Promise<number[] | null>;
+    }
+    class Message {
+        payload: Buffer;
+        offset: Offset;
+        eventTime: Date;
+        keys: string[];
+        headers: Record<string, string>;
+        userMetadata?: UserMetadata;
+        constructor(payload: Buffer, offset: Offset, eventTime: Date, keys: string[], headers: Record<string, string>, userMetadata?: UserMetadata);
     }
     class SourceAsyncServer {
         private readonly nativeServer;

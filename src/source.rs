@@ -9,10 +9,56 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
 
+#[derive(Clone, Default)]
+#[napi(namespace = "source")]
+pub struct SourceUserMetadata(source::UserMetadata);
+
+#[napi(namespace = "source")]
+impl SourceUserMetadata {
+    #[napi(constructor)]
+    pub fn new() -> Self {
+        Self(source::UserMetadata::default())
+    }
+
+    #[napi]
+    pub fn get_groups(&self) -> Vec<String> {
+        self.0.groups()
+    }
+
+    #[napi]
+    pub fn get_keys(&self, group: String) -> Vec<String> {
+        self.0.keys(group.as_str())
+    }
+
+    #[napi]
+    pub fn get_value(&self, group: String, key: String) -> Buffer {
+        Buffer::from(self.0.value(group.as_str(), key.as_str()))
+    }
+
+    #[napi]
+    pub fn create_group(&mut self, group: String) {
+        self.0.create_group(group);
+    }
+
+    #[napi]
+    pub fn add_kv(&mut self, group: String, key: String, value: Buffer) {
+        self.0.add_kv(group, key, value.into())
+    }
+
+    #[napi]
+    pub fn remove_key(&mut self, group: String, key: String) {
+        self.0.remove_key(group.as_str(), key.as_str());
+    }
+
+    #[napi]
+    pub fn remove_group(&mut self, group: String) {
+        self.0.remove_group(group.as_str());
+    }
+}
+
 #[napi(object, namespace = "source")]
 pub struct Message {
     /// The payload of the message.
-    #[napi(getter)]
     pub payload: Buffer,
     /// The offset of the message
     pub offset: Offset,
@@ -22,17 +68,29 @@ pub struct Message {
     pub keys: Vec<String>,
     /// Headers of the message.
     pub headers: HashMap<String, String>,
+    /// User metadata for the message.
+    pub user_metadata: Option<HashMap<String, HashMap<String, Buffer>>>,
 }
 
 impl From<Message> for numaflow::source::Message {
     fn from(value: Message) -> Self {
+        let mut user_metadata = None;
+        if let Some(user_metadata_map) = value.user_metadata {
+            let mut metadata = source::UserMetadata::new();
+            for (group, keys) in user_metadata_map.iter() {
+                for (key, value) in keys.iter() {
+                    metadata.add_kv(group.clone(), key.clone(), value.to_vec());
+                }
+            }
+            user_metadata = Some(metadata);
+        }
         Self {
             value: value.payload.into(),
             offset: value.offset.into(),
             event_time: value.event_time,
             keys: value.keys,
             headers: value.headers,
-            user_metadata: None,
+            user_metadata,
         }
     }
 }

@@ -9,64 +9,76 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone, Default)]
-#[napi(object, namespace = "sourceTransform")]
-pub struct UserMetadata {
-    pub data: HashMap<String, HashMap<String, Vec<u8>>>,
-}
+#[napi(namespace = "sourceTransform")]
+pub struct SourceTransformUserMetadata(sourcetransform::UserMetadata);
 
-impl From<UserMetadata> for sourcetransform::UserMetadata {
-    fn from(value: UserMetadata) -> Self {
-        let mut user_metadata = sourcetransform::UserMetadata::default();
-
-        for (group, kv) in value.data {
-            user_metadata.create_group(group.clone());
-            for (key, value) in kv {
-                user_metadata.add_kv(group.clone(), key, value);
-            }
-        }
-
-        user_metadata
+#[napi(namespace = "sourceTransform")]
+impl SourceTransformUserMetadata {
+    #[napi(constructor)]
+    pub fn new() -> Self {
+        Self(sourcetransform::UserMetadata::default())
     }
-}
 
-impl From<sourcetransform::UserMetadata> for UserMetadata {
-    fn from(from_user_metadata: sourcetransform::UserMetadata) -> Self {
-        let mut user_metadata = UserMetadata::default();
+    #[napi]
+    pub fn get_groups(&self) -> Vec<String> {
+        self.0.groups()
+    }
 
-        for group in from_user_metadata.groups() {
-            let mut kv = HashMap::new();
-            for key in from_user_metadata.keys(group.as_str()) {
-                let value = from_user_metadata.value(group.as_str(), key.as_str());
-                kv.insert(key.clone(), value);
-            }
-            user_metadata.data.insert(group.clone(), kv);
-        }
+    #[napi]
+    pub fn get_keys(&self, group: String) -> Vec<String> {
+        self.0.keys(group.as_str())
+    }
 
-        user_metadata
+    #[napi]
+    pub fn get_value(&self, group: String, key: String) -> Buffer {
+        Buffer::from(self.0.value(group.as_str(), key.as_str()))
+    }
+
+    #[napi]
+    pub fn create_group(&mut self, group: String) {
+        self.0.create_group(group);
+    }
+
+    #[napi]
+    pub fn add_kv(&mut self, group: String, key: String, value: Buffer) {
+        self.0.add_kv(group, key, value.into())
+    }
+
+    #[napi]
+    pub fn remove_key(&mut self, group: String, key: String) {
+        self.0.remove_key(group.as_str(), key.as_str());
+    }
+
+    #[napi]
+    pub fn remove_group(&mut self, group: String) {
+        self.0.remove_group(group.as_str());
     }
 }
 
 #[derive(Clone, Default)]
-#[napi(object, namespace = "sourceTransform")]
-pub struct SystemMetadata {
-    pub data: HashMap<String, HashMap<String, Vec<u8>>>,
-}
+#[napi(namespace = "sourceTransform")]
+pub struct SourceTransformSystemMetadata(sourcetransform::SystemMetadata);
 
-impl From<sourcetransform::SystemMetadata> for SystemMetadata {
-    fn from(from_system_metadata: sourcetransform::SystemMetadata) -> Self {
-        let mut system_metadata = SystemMetadata::default();
+#[napi(namespace = "sourceTransform")]
+impl SourceTransformSystemMetadata {
+    #[napi(constructor)]
+    pub fn new() -> Self {
+        Self(sourcetransform::SystemMetadata::default())
+    }
 
-        for group in from_system_metadata.groups() {
-            for keys in from_system_metadata.keys(group.as_str()) {
-                let value = from_system_metadata.value(group.as_str(), keys.as_str());
-                system_metadata.data.insert(
-                    group.clone(),
-                    HashMap::from([(keys.clone(), value.clone())]),
-                );
-            }
-        }
+    #[napi]
+    pub fn get_groups(&self) -> Vec<String> {
+        self.0.groups()
+    }
 
-        system_metadata
+    #[napi]
+    pub fn get_keys(&self, group: String) -> Vec<String> {
+        self.0.keys(group.as_str())
+    }
+
+    #[napi]
+    pub fn get_value(&self, group: String, key: String) -> Buffer {
+        Buffer::from(self.0.value(group.as_str(), key.as_str()))
     }
 }
 
@@ -84,7 +96,7 @@ pub struct SourceTransformMessage {
     /// Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/).
     pub tags: Option<Vec<String>>,
     /// User metadata for the message.
-    pub user_metadata: Option<UserMetadata>,
+    pub user_metadata: Option<HashMap<String, HashMap<String, Buffer>>>,
 }
 
 #[napi(namespace = "sourceTransform")]
@@ -100,46 +112,107 @@ pub fn message_to_drop(eventtime: DateTime<Utc>) -> SourceTransformMessage {
 
 impl From<SourceTransformMessage> for sourcetransform::Message {
     fn from(value: SourceTransformMessage) -> Self {
+        let mut user_metadata = None;
+        if let Some(user_metadata_map) = value.user_metadata {
+            let mut metadata = sourcetransform::UserMetadata::new();
+            for (group, keys) in user_metadata_map.iter() {
+                for (key, value) in keys.iter() {
+                    metadata.add_kv(group.clone(), key.clone(), value.to_vec());
+                }
+            }
+            user_metadata = Some(metadata);
+        }
         Self {
             keys: value.keys,
             value: value.value.into(),
             event_time: value.eventtime,
             tags: value.tags,
-            user_metadata: value.user_metadata.map(|um| um.into()),
+            user_metadata,
         }
     }
 }
 
-#[napi(object, namespace = "sourceTransform")]
+#[napi(namespace = "sourceTransform")]
 pub struct SourceTransformDatum {
     /// Set of keys in the (key, value) terminology of map/reduce paradigm.
     pub keys: Vec<String>,
     /// The value in the (key, value) terminology of map/reduce paradigm.
-    pub value: Buffer,
+    value: Buffer,
     /// [watermark](https://numaflow.numaproj.io/core-concepts/watermarks/) represented by time is a
     /// guarantee that we will not see an element older than this time.
-    pub watermark: DateTime<Utc>,
+    watermark: DateTime<Utc>,
     /// Time of the element as seen at source or aligned after a reduce operation.
-    pub eventtime: DateTime<Utc>,
+    eventtime: DateTime<Utc>,
     /// Headers for the message.
-    pub headers: HashMap<String, String>,
+    headers: HashMap<String, String>,
     /// User metadata for the message.
-    pub user_metadata: UserMetadata,
+    user_metadata: Option<SourceTransformUserMetadata>,
     /// System metadata for the message.
-    pub system_metadata: SystemMetadata,
+    system_metadata: Option<SourceTransformSystemMetadata>,
 }
 
-impl Clone for SourceTransformDatum {
-    fn clone(&self) -> Self {
+#[napi(namespace = "sourceTransform")]
+impl SourceTransformDatum {
+    #[napi(constructor)]
+    pub fn new(
+        keys: Vec<String>,
+        value: Buffer,
+        watermark: DateTime<Utc>,
+        eventtime: DateTime<Utc>,
+        headers: HashMap<String, String>,
+        user_metadata: Option<&SourceTransformUserMetadata>,
+        system_metadata: Option<&SourceTransformSystemMetadata>,
+    ) -> Self {
         Self {
-            keys: self.keys.clone(),
-            value: Buffer::from(self.value.to_vec()),
-            watermark: self.watermark,
-            eventtime: self.eventtime,
-            headers: self.headers.clone(),
-            user_metadata: self.user_metadata.clone(),
-            system_metadata: self.system_metadata.clone(),
+            keys,
+            value,
+            watermark,
+            eventtime,
+            headers,
+            user_metadata: user_metadata
+                .map(|metadata| SourceTransformUserMetadata(metadata.0.clone())),
+            system_metadata: system_metadata
+                .map(|metadata| SourceTransformSystemMetadata(metadata.0.clone())),
         }
+    }
+
+    #[napi(getter)]
+    pub fn get_value(&self) -> Buffer {
+        self.value
+            .iter()
+            .map(|b| b.clone())
+            .collect::<Vec<u8>>()
+            .into()
+    }
+
+    #[napi(getter)]
+    pub fn get_watermark(&self) -> DateTime<Utc> {
+        self.watermark
+    }
+
+    #[napi(getter)]
+    pub fn get_eventtime(&self) -> DateTime<Utc> {
+        self.eventtime
+    }
+
+    #[napi(getter)]
+    pub fn get_headers(&self) -> HashMap<String, String> {
+        self.headers.clone()
+    }
+
+    #[napi(getter)]
+    pub fn user_metadata(&self) -> Option<SourceTransformUserMetadata> {
+        self.user_metadata.clone()
+    }
+
+    #[napi(getter)]
+    pub fn system_metadata(&self) -> Option<SourceTransformSystemMetadata> {
+        self.system_metadata.clone()
+    }
+
+    #[napi(setter)]
+    pub fn set_user_metadata(&mut self, user_metadata: &SourceTransformUserMetadata) {
+        self.user_metadata = Some(SourceTransformUserMetadata(user_metadata.0.clone()));
     }
 }
 
@@ -151,8 +224,8 @@ impl From<sourcetransform::SourceTransformRequest> for SourceTransformDatum {
             watermark: value.watermark,
             eventtime: value.eventtime,
             headers: value.headers,
-            user_metadata: value.user_metadata.into(),
-            system_metadata: value.system_metadata.into(),
+            user_metadata: Some(SourceTransformUserMetadata(value.user_metadata)),
+            system_metadata: Some(SourceTransformSystemMetadata(value.system_metadata)),
         }
     }
 }
