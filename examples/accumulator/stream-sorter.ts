@@ -96,7 +96,7 @@ class StreamSorter {
 async function main() {
     const streamSorter = new StreamSorter()
     // bind streamSorter to streamSorter.streamSorter
-    const server = new accumulator.AccumulatorAsyncServer(streamSorter.streamSorter.bind(streamSorter))
+    const server = new accumulator.AsyncServer(streamSorter.streamSorter.bind(streamSorter))
 
     const shutdown = () => {
         server.stop()

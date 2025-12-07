@@ -16,7 +16,7 @@ async function sinkFn(datums: AsyncIterableIterator<sink.Datum>): Promise<sink.R
 }
 
 async function main() {
-    const sinker = new sink.SinkAsyncServer(sinkFn)
+    const sinker = new sink.AsyncServer(sinkFn)
 
     const shutdown = () => {
         console.log('Received shutdown signal')

@@ -49,7 +49,7 @@ class Sourcer implements source.Sourcer {
 }
 
 async function main() {
-    const server = new source.SourceAsyncServer(new Sourcer())
+    const server = new source.AsyncServer(new Sourcer())
 
     const shutdown = () => {
         server.stop()

@@ -9,7 +9,7 @@ const sockPath = '/tmp/var/run/numaflow/reduce.sock'
 const infoPath = '/tmp/var/run/numaflow/reduce-info.sock'
 
 test('reduce integration test', async () => {
-    const server = new reduce.ReduceAsyncServer(async (keys, datums, md) => {
+    const server = new reduce.AsyncServer(async (keys, datums, md) => {
         let counter = 0
         for await (const _ of datums) {
             counter += 1

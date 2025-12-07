@@ -5,13 +5,13 @@ Numaflow-JS is an SDK for [Numaflow](https://numaflow.numaproj.io/) that provide
 Currently, these include:
 
 - [Map UDF](https://numaflow.numaproj.io/user-guide/user-defined-functions/map/map/)
-  - [Streaming mode](https://numaflow.numaproj.io/user-guide/user-defined-functions/map/map/#streaming-mode)
-  - [BatchMap mode](https://numaflow.numaproj.io/user-guide/user-defined-functions/map/map/#batch-map-mode)
+    - [Streaming mode](https://numaflow.numaproj.io/user-guide/user-defined-functions/map/map/#streaming-mode)
+    - [BatchMap mode](https://numaflow.numaproj.io/user-guide/user-defined-functions/map/map/#batch-map-mode)
 - [Reduce UDF](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/reduce/)
-  - [Accumulator](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/accumulator/)
-  - [Session](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/session/)
-  - [Fixed](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/fixed/)
-  - [Sliding](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/sliding/)
+    - [Accumulator](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/accumulator/)
+    - [Session](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/session/)
+    - [Fixed](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/fixed/)
+    - [Sliding](https://numaflow.numaproj.io/user-guide/user-defined-functions/reduce/windowing/sliding/)
 - [UD Sink](https://numaflow.numaproj.io/user-guide/sinks/user-defined-sinks/)
 - [UD Source](https://numaflow.numaproj.io/user-guide/sources/user-defined-sources/)
 - [Source Transform](https://numaflow.numaproj.io/user-guide/sources/transformer/overview/)
@@ -35,6 +35,7 @@ Numaflow-JS.
 Each example focuses implementing and building one specific component of Numaflow.
 
 Most of the examples follow a similar structure:
+
 - `Dockerfile`: Contains the instructions to build the Docker image for the example.
 - `Makefile`: Contains helper commands to build the Docker image
 - `README.md`: Provides details on implementing the concerned type of component and instructions to run the specific example.
@@ -45,6 +46,7 @@ In the implementation part of all the examples presented, i.e. in `<example-name
 We need to instantiate and start an async server for the respective component being implemented.
 
 Eg: Implementing UD sink component:
+
 - To implement a UD sink need to use `sink.SinkAsyncServer`.
 - To instantiate the server, we need to provide a function `sinkFn` with a signature satisfying `SinkAsyncServer` constructor.
 - Start the server using `start` method of `SinkAsyncServer`.
@@ -57,52 +59,56 @@ satisfying the constructor of the async server.
 Following are the different ways to implement a function with a signature satisfying the constructor of the async server:
 
 1. Using an arrow function <br>
-If the function is small and simple, we can use an arrow function.
+   If the function is small and simple, we can use an arrow function.
+
 ```typescript
 const sinkFn = (message: Message) => {
-    console.log(message);
-};
+    console.log(message)
+}
 
-const server = new sink.SinkAsyncServer(sinkFn);
+const server = new sink.SinkAsyncServer(sinkFn)
 ```
 
 Still works if defined as part of a class.
+
 ```typescript
 class Sink {
-    counter = 0;
+    counter = 0
     sinkFn = (message: Message) => {
-        this.counter++;
-        console.log(this.counter, message);
+        this.counter++
+        console.log(this.counter, message)
     }
 }
 
 let sinker = new Sink()
-const server = new sink.SinkAsyncServer(sinker.sinkFn);
+const server = new sink.SinkAsyncServer(sinker.sinkFn)
 ```
 
 2. Using a named function <br>
 
 Simple named functions work the same way.
+
 ```typescript
 function sinkFn(message: Message) {
-    console.log(message);
+    console.log(message)
 }
 
-const server = new sink.SinkAsyncServer(sinkFn);
+const server = new sink.SinkAsyncServer(sinkFn)
 ```
 
 Named functions defined as part of a class may need to be bound to the instance of the class.
+
 ```typescript
 class Sink {
-    counter = 0;
+    counter = 0
     sinkFn(message: Message) {
-        this.counter++;
-        console.log(this.counter, message);
+        this.counter++
+        console.log(this.counter, message)
     }
 }
 
 let sinker = new Sink()
-const server = new sink.SinkAsyncServer(sinker.sinkFn.bind(sinker));
+const server = new sink.SinkAsyncServer(sinker.sinkFn.bind(sinker))
 ```
 
 If any of the examples are failing to build or if they need further clarification, please create an [issue](https://github.com/numaproj/numaflow-js/issues/new/choose) to fix the same.

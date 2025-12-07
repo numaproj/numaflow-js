@@ -9,7 +9,7 @@ const sockPath = '/tmp/var/run/numaflow/batchmap.sock'
 const infoPath = '/tmp/var/run/numaflow/batchmap-info.sock'
 
 test('batchmap integration test', async () => {
-    const server = new batchmap.BatchMapAsyncServer(async (datums): Promise<batchmap.Response[]> => {
+    const server = new batchmap.AsyncServer(async (datums): Promise<batchmap.Response[]> => {
         let responses: batchmap.Response[] = []
         for await (const datum of datums) {
             let response = new batchmap.Response(datum.id)

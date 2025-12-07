@@ -14,7 +14,7 @@ async function batchMapFn(datums: batchmap.DatumIterator): Promise<batchmap.Resp
 }
 
 async function main() {
-    const batchMapper = new batchmap.BatchMapAsyncServer(batchMapFn)
+    const batchMapper = new batchmap.AsyncServer(batchMapFn)
 
     const shutdown = () => {
         batchMapper.stop()

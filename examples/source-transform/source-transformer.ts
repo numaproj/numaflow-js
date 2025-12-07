@@ -12,7 +12,7 @@ async function sourceTransformFn(datum: sourceTransform.Datum): Promise<sourceTr
 }
 
 async function main() {
-    const server = new sourceTransform.SourceTransformAsyncServer(sourceTransformFn)
+    const server = new sourceTransform.AsyncServer(sourceTransformFn)
 
     const shutdown = () => {
         server.stop()

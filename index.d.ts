@@ -31,7 +31,7 @@ export declare namespace sourceTransform {
         constructor(value: Buffer, eventtime: Date, options?: MessageOptions);
         static toDrop(eventtime: Date): Message;
     }
-    export class SourceTransformAsyncServer {
+    export class AsyncServer {
         private readonly nativeServer;
         constructor(sourceTransformFn: (message: Datum) => Promise<Message[]>);
         start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
@@ -60,21 +60,21 @@ export declare namespace accumulator {
         [Symbol.asyncIterator](): AsyncIterableIterator<Datum>;
     }
     /**
-     * AccumulatorAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * AsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
      * data received by the Sink.
      */
-    class AccumulatorAsyncServer {
+    class AsyncServer {
         private readonly nativeServer;
         /**
          * Create a new Sink with the given callback.
          */
         constructor(accumulatorFn: (datum: DatumIterator) => AsyncIterable<Message>);
         /**
-         * Start the AccumulatorAsyncServer server with the given callback
+         * Start the AsyncServer server with the given callback
          */
         start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
         /**
-         * Stop the AccumulatorAsyncServer server
+         * Stop the AsyncServer server
          */
         stop(): void;
     }
@@ -97,7 +97,7 @@ export declare namespace map {
         constructor(value: Buffer, options?: MessageOptions);
         static toDrop(): Message;
     }
-    class MapServer {
+    class AsyncServer {
         private readonly nativeServer;
         constructor(mapFn: (message: Datum) => Promise<Message[]>);
         start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
@@ -119,8 +119,8 @@ export declare namespace sink {
     export type Responses = binding.sink.SinkResponses;
     export const Message: typeof binding.sink.SinkMessage;
     export type Message = binding.sink.SinkMessage;
-    export const SinkAsyncServer: typeof SinkAsyncServerImpl;
-    export type SinkAsyncServer = SinkAsyncServerImpl;
+    export const AsyncServer: typeof SinkAsyncServerImpl;
+    export type AsyncServer = SinkAsyncServerImpl;
     export {};
 }
 export declare namespace batchmap {
@@ -150,8 +150,8 @@ export declare namespace batchmap {
     export const messageToDrop: typeof binding.batchmap.messageToDrop;
     export const DatumIterator: typeof BatchDatumIteratorImpl;
     export type DatumIterator = BatchDatumIteratorImpl;
-    export const BatchMapAsyncServer: typeof BatchMapAsyncServerImpl;
-    export type BatchMapAsyncServer = BatchMapAsyncServerImpl;
+    export const AsyncServer: typeof BatchMapAsyncServerImpl;
+    export type AsyncServer = BatchMapAsyncServerImpl;
     export {};
 }
 export declare namespace mapstream {
@@ -159,7 +159,7 @@ export declare namespace mapstream {
     export type Message = binding.mapstream.Message;
     type MapStreamCallback = (datum: Datum) => AsyncIterable<Message>;
     export const messageToDrop: typeof binding.mapstream.messageToDrop;
-    export class MapStreamAsyncServer {
+    export class AsyncServer {
         private readonly mapper;
         constructor(mapFn: MapStreamCallback);
         start(sockFile?: string | null, infoFile?: string | null): Promise<void>;
@@ -180,8 +180,8 @@ export declare namespace reduce {
     export type IntervalWindow = binding.reduce.IntervalWindow;
     export type Message = binding.reduce.Message;
     export type DatumIteratorResult = binding.reduce.ReduceDatumIteratorResult;
-    export const ReduceAsyncServer: typeof ReduceAsyncServerImpl;
-    export type ReduceAsyncServer = ReduceAsyncServerImpl;
+    export const AsyncServer: typeof ReduceAsyncServerImpl;
+    export type AsyncServer = ReduceAsyncServerImpl;
     export {};
 }
 export declare namespace sessionReduce {
@@ -197,21 +197,21 @@ export declare namespace sessionReduce {
         mergeAccumulatorFn: MergeAccumulatorFnCallback;
     }
     /**
-     * SessionReduceAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * AsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
      * data received by the SessionReduce.
      */
-    export class SessionReduceAsyncServer {
+    export class AsyncServer {
         private readonly nativeServer;
         /**
-         * Create a new SessionReduceAsyncServer with the given callback.
+         * Create a new AsyncServer with the given callback.
          */
         constructor(sessionReducerImpl: SessionReducer);
         /**
-         * Start the SessionReduceAsyncServer server with the given callback
+         * Start the AsyncServer server with the given callback
          */
         start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
         /**
-         * Stop the SessionReduceAsyncServer server
+         * Stop the AsyncServer server
          */
         stop(): void;
     }
@@ -224,21 +224,21 @@ export declare namespace reduceStream {
     export const messageToDrop: typeof binding.reduce.messageToDrop;
     type CallbackFn = (keys: string[], iterator: AsyncIterableIterator<Datum>, metadata: Metadata) => AsyncIterable<Message>;
     /**
-     * SessionReduceAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * AsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
      * data received by the SessionReduce.
      */
-    export class ReduceStreamAsyncServer {
+    export class AsyncServer {
         private readonly nativeServer;
         /**
-         * Create a new ReduceStreamAsyncServer with the given callback.
+         * Create a new AsyncServer with the given callback.
          */
         constructor(callbackFn: CallbackFn);
         /**
-         * Start the ReduceStreamAsyncServer server with the given callback
+         * Start the AsyncServer server with the given callback
          */
         start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
         /**
-         * Stop the ReduceStreamAsyncServer server
+         * Stop the AsyncServer server
          */
         stop(): void;
     }
@@ -246,6 +246,7 @@ export declare namespace reduceStream {
 }
 export declare namespace source {
     type ReadRequest = binding.source.ReadRequest;
+    type NativeMessage = binding.source.Message;
     type UserMetadata = binding.source.SourceUserMetadata;
     const UserMetadata: typeof binding.source.SourceUserMetadata;
     type Offset = binding.source.Offset;
@@ -265,7 +266,7 @@ export declare namespace source {
         userMetadata?: UserMetadata;
         constructor(payload: Buffer, offset: Offset, eventTime: Date, keys: string[], headers: Record<string, string>, userMetadata?: UserMetadata);
     }
-    class SourceAsyncServer {
+    class AsyncServer {
         private readonly nativeServer;
         constructor(sourcer: Sourcer);
         start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;

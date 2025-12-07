@@ -71,7 +71,7 @@ export namespace sourceTransform {
         return nativeMetadata
     }
 
-    export class SourceTransformAsyncServer {
+    export class AsyncServer {
         private readonly nativeServer: binding.sourceTransform.SourceTransformAsyncServer
 
         constructor(sourceTransformFn: (message: Datum) => Promise<Message[]>) {
@@ -137,10 +137,10 @@ export namespace accumulator {
     }
 
     /**
-     * AccumulatorAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * AsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
      * data received by the Sink.
      */
-    export class AccumulatorAsyncServer {
+    export class AsyncServer {
         private readonly nativeServer: binding.accumulator.AccumulatorAsyncServer
         /**
          * Create a new Sink with the given callback.
@@ -165,14 +165,14 @@ export namespace accumulator {
         }
 
         /**
-         * Start the AccumulatorAsyncServer server with the given callback
+         * Start the AsyncServer server with the given callback
          */
         async start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void> {
             return await this.nativeServer.start(socketPath, serverInfoPath)
         }
 
         /**
-         * Stop the AccumulatorAsyncServer server
+         * Stop the AsyncServer server
          */
         stop() {
             return this.nativeServer.stop()
@@ -221,7 +221,7 @@ export namespace map {
         return nativeMetadata
     }
 
-    export class MapServer {
+    export class AsyncServer {
         private readonly nativeServer: binding.map.MapAsyncServer
 
         constructor(mapFn: (message: Datum) => Promise<Message[]>) {
@@ -298,8 +298,8 @@ export namespace sink {
     export type Responses = binding.sink.SinkResponses
     export const Message = binding.sink.SinkMessage
     export type Message = binding.sink.SinkMessage
-    export const SinkAsyncServer = SinkAsyncServerImpl
-    export type SinkAsyncServer = SinkAsyncServerImpl
+    export const AsyncServer = SinkAsyncServerImpl
+    export type AsyncServer = SinkAsyncServerImpl
 }
 
 export namespace batchmap {
@@ -355,8 +355,8 @@ export namespace batchmap {
     export const messageToDrop = binding.batchmap.messageToDrop
     export const DatumIterator = BatchDatumIteratorImpl
     export type DatumIterator = BatchDatumIteratorImpl
-    export const BatchMapAsyncServer = BatchMapAsyncServerImpl
-    export type BatchMapAsyncServer = BatchMapAsyncServerImpl
+    export const AsyncServer = BatchMapAsyncServerImpl
+    export type AsyncServer = BatchMapAsyncServerImpl
 }
 
 export namespace mapstream {
@@ -366,7 +366,7 @@ export namespace mapstream {
 
     export const messageToDrop = binding.mapstream.messageToDrop
 
-    export class MapStreamAsyncServer {
+    export class AsyncServer {
         private readonly mapper: binding.mapstream.MapStreamAsyncServer
 
         constructor(mapFn: MapStreamCallback) {
@@ -446,8 +446,8 @@ export namespace reduce {
     export type IntervalWindow = binding.reduce.IntervalWindow
     export type Message = binding.reduce.Message
     export type DatumIteratorResult = binding.reduce.ReduceDatumIteratorResult
-    export const ReduceAsyncServer = ReduceAsyncServerImpl
-    export type ReduceAsyncServer = ReduceAsyncServerImpl
+    export const AsyncServer = ReduceAsyncServerImpl
+    export type AsyncServer = ReduceAsyncServerImpl
 }
 
 export namespace sessionReduce {
@@ -496,13 +496,13 @@ export namespace sessionReduce {
     }
 
     /**
-     * SessionReduceAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * AsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
      * data received by the SessionReduce.
      */
-    export class SessionReduceAsyncServer {
+    export class AsyncServer {
         private readonly nativeServer: binding.sessionReduce.SessionReduceAsyncServer
         /**
-         * Create a new SessionReduceAsyncServer with the given callback.
+         * Create a new AsyncServer with the given callback.
          */
         constructor(sessionReducerImpl: SessionReducer) {
             const wrapperSessionReduceFnCallback = (callbackArgs: SessionReduceCallbackArgs) => {
@@ -530,14 +530,14 @@ export namespace sessionReduce {
         }
 
         /**
-         * Start the SessionReduceAsyncServer server with the given callback
+         * Start the AsyncServer server with the given callback
          */
         async start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void> {
             return await this.nativeServer.start(socketPath, serverInfoPath)
         }
 
         /**
-         * Stop the SessionReduceAsyncServer server
+         * Stop the AsyncServer server
          */
         stop() {
             return this.nativeServer.stop()
@@ -588,13 +588,13 @@ export namespace reduceStream {
     }
 
     /**
-     * SessionReduceAsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
+     * AsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
      * data received by the SessionReduce.
      */
-    export class ReduceStreamAsyncServer {
+    export class AsyncServer {
         private readonly nativeServer: binding.reduceStream.ReduceStreamAsyncServer
         /**
-         * Create a new ReduceStreamAsyncServer with the given callback.
+         * Create a new AsyncServer with the given callback.
          */
         constructor(callbackFn: CallbackFn) {
             const wrapperCallbackFn = (callbackArgs: CallbackArgs) => {
@@ -618,14 +618,14 @@ export namespace reduceStream {
         }
 
         /**
-         * Start the ReduceStreamAsyncServer server with the given callback
+         * Start the AsyncServer server with the given callback
          */
         async start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void> {
             return await this.nativeServer.start(socketPath, serverInfoPath)
         }
 
         /**
-         * Stop the ReduceStreamAsyncServer server
+         * Stop the AsyncServer server
          */
         stop() {
             return this.nativeServer.stop()
@@ -683,7 +683,7 @@ export namespace source {
         return nativeMetadata
     }
 
-    export class SourceAsyncServer {
+    export class AsyncServer {
         private readonly nativeServer: binding.source.SourceAsyncServer
 
         constructor(sourcer: Sourcer) {

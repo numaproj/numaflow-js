@@ -16,7 +16,7 @@ async function* reduceStreamFn(
 }
 
 async function main() {
-    const server = new reduceStream.ReduceStreamAsyncServer(reduceStreamFn)
+    const server = new reduceStream.AsyncServer(reduceStreamFn)
 
     const shutdown = () => {
         server.stop()

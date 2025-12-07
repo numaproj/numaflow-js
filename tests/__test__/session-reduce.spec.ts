@@ -36,7 +36,7 @@ class SessionReduceCounter implements sessionReduce.SessionReducer {
 
 test('session reduce integration test', async () => {
     let sessionReduceCounter = new SessionReduceCounter()
-    const server = new sessionReduce.SessionReduceAsyncServer(sessionReduceCounter)
+    const server = new sessionReduce.AsyncServer(sessionReduceCounter)
 
     try {
         // Start the server (non-blocking)
