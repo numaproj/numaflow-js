@@ -91,7 +91,7 @@ pub struct Datum {
     /// guarantee that we will not see an element older than this time.
     watermark: DateTime<Utc>,
     /// Time of the element as seen at source or aligned after a reduce operation.
-    eventtime: DateTime<Utc>,
+    event_time: DateTime<Utc>,
     /// Headers for the message.
     headers: HashMap<String, String>,
     /// User metadata for the message.
@@ -107,7 +107,7 @@ impl Datum {
         keys: Vec<String>,
         value: Vec<u8>,
         watermark: DateTime<Utc>,
-        eventtime: DateTime<Utc>,
+        event_time: DateTime<Utc>,
         headers: HashMap<String, String>,
         user_metadata: Option<&UserMetadata>,
         system_metadata: Option<&SystemMetadata>,
@@ -116,7 +116,7 @@ impl Datum {
             keys,
             value,
             watermark,
-            eventtime,
+            event_time,
             headers,
             user_metadata: user_metadata.map(|metadata| UserMetadata(metadata.0.clone())),
             system_metadata: system_metadata.map(|metadata| SystemMetadata(metadata.0.clone())),
@@ -134,8 +134,8 @@ impl Datum {
     }
 
     #[napi(getter)]
-    pub fn get_eventtime(&self) -> DateTime<Utc> {
-        self.eventtime
+    pub fn get_event_time(&self) -> DateTime<Utc> {
+        self.event_time
     }
 
     #[napi(getter)]
@@ -165,7 +165,7 @@ impl From<map::MapRequest> for Datum {
             keys: value.keys,
             value: value.value.into(),
             watermark: value.watermark,
-            eventtime: value.eventtime,
+            event_time: value.eventtime,
             headers: value.headers,
             user_metadata: Some(UserMetadata(value.user_metadata)),
             system_metadata: Some(SystemMetadata(value.system_metadata)),

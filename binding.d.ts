@@ -111,7 +111,7 @@ export declare namespace batchmap {
          */
         watermark: Date
         /** Time of the element as seen at source or aligned after a reduce operation. */
-        eventtime: Date
+        eventTime: Date
         /** ID is the unique id of the message */
         id: string
         /** Headers for the message. */
@@ -132,14 +132,14 @@ export declare namespace map {
             keys: Array<string>,
             value: Array<number>,
             watermark: Date,
-            eventtime: Date,
+            eventTime: Date,
             headers: Record<string, string>,
             userMetadata?: UserMetadata | undefined | null,
             systemMetadata?: SystemMetadata | undefined | null,
         )
         get value(): Buffer
         get watermark(): Date
-        get eventtime(): Date
+        get eventTime(): Date
         get headers(): Record<string, string>
         get userMetadata(): UserMetadata | null
         get systemMetadata(): SystemMetadata | null
@@ -198,7 +198,7 @@ export declare namespace mapstream {
          */
         watermark: Date
         /** Time of the element as seen at source or aligned after a reduce operation. */
-        eventtime: Date
+        eventTime: Date
         /** Headers associated with the message. */
         headers: Record<string, string>
     }
@@ -313,7 +313,7 @@ export declare namespace sessionReduce {
         keys: Array<string>
         value: Array<number>
         watermark: Date
-        eventtime: Date
+        eventTime: Date
         headers: Record<string, string>
     }
     export interface Message {
@@ -475,14 +475,14 @@ export declare namespace sourceTransform {
             keys: Array<string>,
             value: Buffer,
             watermark: Date,
-            eventtime: Date,
+            eventTime: Date,
             headers: Record<string, string>,
             userMetadata?: SourceTransformUserMetadata | undefined | null,
             systemMetadata?: SourceTransformSystemMetadata | undefined | null,
         )
         get value(): Buffer
         get watermark(): Date
-        get eventtime(): Date
+        get eventTime(): Date
         get headers(): Record<string, string>
         get userMetadata(): SourceTransformUserMetadata | null
         get systemMetadata(): SourceTransformSystemMetadata | null
@@ -504,7 +504,7 @@ export declare namespace sourceTransform {
         removeKey(group: string, key: string): void
         removeGroup(group: string): void
     }
-    export function messageToDrop(eventtime: Date): SourceTransformMessage
+    export function messageToDrop(eventTime: Date): SourceTransformMessage
     export interface SourceTransformMessage {
         /**
          * Keys are a collection of strings which will be passed on to the next vertex as is. It can
@@ -517,7 +517,7 @@ export declare namespace sourceTransform {
          * Time for the given event. This will be used for tracking watermarks. If cannot be derived, set it to the incoming
          * event_time from the [`SourceTransformRequest`].
          */
-        eventtime: Date
+        eventTime: Date
         /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
         tags?: Array<string>
         /** User metadata for the message. */

@@ -45,7 +45,7 @@ pub struct Datum {
     pub keys: Vec<String>,
     pub value: Vec<u8>,
     pub watermark: DateTime<Utc>,
-    pub eventtime: DateTime<Utc>,
+    pub event_time: DateTime<Utc>,
     pub headers: HashMap<String, String>,
 }
 
@@ -54,14 +54,14 @@ impl Datum {
         keys: Vec<String>,
         value: Vec<u8>,
         watermark: DateTime<Utc>,
-        eventtime: DateTime<Utc>,
+        event_time: DateTime<Utc>,
         headers: HashMap<String, String>,
     ) -> Self {
         Self {
             keys,
             value,
             watermark,
-            eventtime,
+            event_time,
             headers,
         }
     }

@@ -18,7 +18,7 @@ export namespace sourceTransform {
         keys: string[]
         value: Buffer
         watermark: Date
-        eventtime: Date
+        eventTime: Date
         headers: Record<string, string>
         userMetadata: UserMetadata | null
         systemMetadata: SystemMetadata | null
@@ -27,7 +27,7 @@ export namespace sourceTransform {
             this.keys = sourceTransformDatum.keys
             this.value = sourceTransformDatum.value
             this.watermark = sourceTransformDatum.watermark
-            this.eventtime = sourceTransformDatum.eventtime
+            this.eventTime = sourceTransformDatum.eventTime
             this.headers = sourceTransformDatum.headers
             this.userMetadata = sourceTransformDatum.userMetadata
             this.systemMetadata = sourceTransformDatum.systemMetadata
@@ -42,21 +42,21 @@ export namespace sourceTransform {
 
     export class Message {
         value: Buffer
-        eventtime: Date
+        eventTime: Date
         keys?: string[]
         tags?: string[]
         userMetadata?: UserMetadata
 
-        constructor(value: Buffer, eventtime: Date, options?: MessageOptions) {
+        constructor(value: Buffer, eventTime: Date, options?: MessageOptions) {
             this.value = value
-            this.eventtime = eventtime
+            this.eventTime = eventTime
             this.keys = options?.keys
             this.tags = options?.tags
             this.userMetadata = options?.userMetadata
         }
 
-        public static toDrop(eventtime: Date): Message {
-            return new Message(Buffer.from([]), eventtime, { tags: [DROP] })
+        public static toDrop(eventTime: Date): Message {
+            return new Message(Buffer.from([]), eventTime, { tags: [DROP] })
         }
     }
 
@@ -82,7 +82,7 @@ export namespace sourceTransform {
                         value: message.value,
                         keys: message.keys,
                         tags: message.tags,
-                        eventtime: message.eventtime,
+                        eventTime: message.eventTime,
                         userMetadata: message.userMetadata ? toNativeMetadata(message.userMetadata) : undefined,
                     } satisfies NativeMessage
                 })

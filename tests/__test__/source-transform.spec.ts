@@ -14,7 +14,7 @@ test('source transform integration test', async () => {
             {
                 keys: datum.keys,
                 value: datum.value,
-                eventtime: datum.eventtime,
+                eventTime: datum.eventTime,
                 tags: [],
             },
         ]

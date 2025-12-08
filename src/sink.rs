@@ -259,7 +259,7 @@ pub struct SinkDatum {
     /// Watermark represented by time (Unix timestamp in milliseconds).
     watermark: DateTime<Utc>,
     /// Event time (Unix timestamp in milliseconds).
-    eventtime: DateTime<Utc>,
+    event_time: DateTime<Utc>,
     /// ID is the unique id of the message to be sent to the Sink.
     pub id: String,
     /// Headers for the message.
@@ -274,7 +274,7 @@ impl From<sink::SinkRequest> for SinkDatum {
             keys: value.keys,
             value: value.value,
             watermark: value.watermark,
-            eventtime: value.event_time,
+            event_time: value.event_time,
             id: value.id,
             headers: value.headers,
             user_metadata: SinkUserMetadata(value.user_metadata),
@@ -297,7 +297,7 @@ impl SinkDatum {
 
     #[napi]
     pub fn get_eventtime(&self) -> DateTime<Utc> {
-        self.eventtime
+        self.event_time
     }
 
     #[napi]

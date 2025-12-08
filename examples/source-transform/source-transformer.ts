@@ -5,7 +5,7 @@ async function sourceTransformFn(datum: sourceTransform.Datum): Promise<sourceTr
         {
             keys: datum.keys,
             value: datum.value,
-            eventtime: datum.eventtime,
+            eventTime: datum.eventTime,
             tags: [],
         },
     ]

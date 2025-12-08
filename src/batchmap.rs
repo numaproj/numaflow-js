@@ -73,7 +73,7 @@ pub struct BatchDatum {
     /// guarantee that we will not see an element older than this time.
     pub watermark: DateTime<Utc>,
     /// Time of the element as seen at source or aligned after a reduce operation.
-    pub eventtime: DateTime<Utc>,
+    pub event_time: DateTime<Utc>,
     /// ID is the unique id of the message
     pub id: String,
     /// Headers for the message.
@@ -86,7 +86,7 @@ impl Clone for BatchDatum {
             keys: self.keys.clone(),
             value: Buffer::from(self.value.to_vec()),
             watermark: self.watermark,
-            eventtime: self.eventtime,
+            event_time: self.event_time,
             id: self.id.clone(),
             headers: self.headers.clone(),
         }
@@ -99,7 +99,7 @@ impl From<batchmap::Datum> for BatchDatum {
             keys: value.keys,
             value: value.value.into(),
             watermark: value.watermark,
-            eventtime: value.event_time,
+            event_time: value.event_time,
             id: value.id,
             headers: value.headers,
         }

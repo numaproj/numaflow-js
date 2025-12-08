@@ -11,7 +11,7 @@ export declare namespace sourceTransform {
         keys: string[];
         value: Buffer;
         watermark: Date;
-        eventtime: Date;
+        eventTime: Date;
         headers: Record<string, string>;
         userMetadata: UserMetadata | null;
         systemMetadata: SystemMetadata | null;
@@ -24,12 +24,12 @@ export declare namespace sourceTransform {
     }
     export class Message {
         value: Buffer;
-        eventtime: Date;
+        eventTime: Date;
         keys?: string[];
         tags?: string[];
         userMetadata?: UserMetadata;
-        constructor(value: Buffer, eventtime: Date, options?: MessageOptions);
-        static toDrop(eventtime: Date): Message;
+        constructor(value: Buffer, eventTime: Date, options?: MessageOptions);
+        static toDrop(eventTime: Date): Message;
     }
     export class AsyncServer {
         private readonly nativeServer;
