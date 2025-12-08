@@ -105,7 +105,7 @@ impl Datum {
     #[napi(constructor)]
     pub fn new(
         keys: Vec<String>,
-        value: Vec<u8>,
+        value: Buffer,
         watermark: DateTime<Utc>,
         event_time: DateTime<Utc>,
         headers: HashMap<String, String>,
@@ -114,7 +114,7 @@ impl Datum {
     ) -> Self {
         Self {
             keys,
-            value,
+            value: value.into(),
             watermark,
             event_time,
             headers,

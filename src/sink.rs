@@ -178,12 +178,12 @@ impl SinkResponse {
     }
 
     #[napi]
-    pub fn serve(id: String, payload: Vec<u8>) -> Self {
+    pub fn serve(id: String, payload: Buffer) -> Self {
         Self {
             id,
             response_type: ResponseType::Serve,
             err: None,
-            serve_response: Some(payload),
+            serve_response: Some(payload.into()),
             on_success_msg: None,
         }
     }

@@ -77,7 +77,7 @@ export namespace sourceTransform {
         constructor(sourceTransformFn: (message: Datum) => Promise<Message[]>) {
             const wrappedCallback = async (datum: NativeDatum) => {
                 let messages = await sourceTransformFn(new Datum(datum))
-                let nativeMessages = messages.map((message: Message): NativeMessage => {
+                return messages.map((message: Message): NativeMessage => {
                     return {
                         value: message.value,
                         keys: message.keys,
@@ -86,7 +86,6 @@ export namespace sourceTransform {
                         userMetadata: message.userMetadata ? toNativeMetadata(message.userMetadata) : undefined,
                     } satisfies NativeMessage
                 })
-                return nativeMessages
             }
             this.nativeServer = new binding.sourceTransform.SourceTransformAsyncServer(wrappedCallback)
         }
@@ -226,7 +225,7 @@ export namespace map {
         constructor(mapFn: (message: Datum) => Promise<Message[]>) {
             const wrappedCallback = async (datum: Datum): Promise<NativeMessage[]> => {
                 let messages = await mapFn(datum)
-                let nativeMessages = messages.map((message) => {
+                return messages.map((message): NativeMessage => {
                     return {
                         value: message.value,
                         keys: message.keys,
@@ -234,7 +233,6 @@ export namespace map {
                         userMetadata: message.userMetadata ? toNativeMetadata(message.userMetadata) : undefined,
                     } satisfies NativeMessage
                 })
-                return nativeMessages
             }
             this.nativeServer = new binding.map.MapAsyncServer(wrappedCallback)
         }

@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use napi::bindgen_prelude::Promise;
+use napi::bindgen_prelude::{Buffer, Promise};
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi::{Error, Status};
 use napi_derive::napi;
@@ -10,14 +10,14 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::{Receiver, Sender};
 
 /// A message to be sent to the next vertex from an accumulator handler.
-#[derive(Clone, Debug)]
+//#[derive(Clone, Debug)]
 #[napi(object, namespace = "accumulator")]
 pub struct Message {
     /// Keys are a collection of strings which will be passed on to the next vertex as is. It can
     /// be an empty collection.
     pub keys: Option<Vec<String>>,
     /// Value is the value passed to the next vertex.
-    pub value: Vec<u8>,
+    pub value: Buffer,
     /// Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/).
     pub tags: Option<Vec<String>>,
     /// ID is used for deduplication. Read-only, set from the input datum.
@@ -35,7 +35,7 @@ pub struct Message {
 fn message_to_drop() -> Message {
     Message {
         keys: None,
-        value: vec![],
+        value: vec![].into(),
         tags: Some(vec![numaflow::shared::DROP.to_string()]),
         id: String::new(),
         headers: HashMap::new(),
@@ -48,13 +48,13 @@ fn message_to_drop() -> Message {
 #[napi(namespace = "accumulator")]
 fn from_datum(
     datum: Datum,
-    value: Option<Vec<u8>>,
+    value: Option<Buffer>,
     keys: Option<Vec<String>>,
     tags: Option<Vec<String>>,
 ) -> Message {
     Message {
         keys: keys.or_else(|| Some(datum.keys.clone())),
-        value: value.unwrap_or_else(|| datum.value.clone()),
+        value: value.unwrap_or_else(|| datum.value),
         tags,
         id: datum.id.clone(),
         headers: datum.headers.clone(),
@@ -65,34 +65,22 @@ fn from_datum(
 
 impl From<Message> for accumulator::Message {
     fn from(value: Message) -> Self {
-        // Create an AccumulatorRequest with all the fields from the Message
-        let request = accumulator::AccumulatorRequest {
-            keys: value.keys.clone().unwrap_or_default(),
-            value: value.value.clone(),
-            watermark: value.watermark,
+        Self {
+            keys: value.keys,
+            value: value.value.into(),
+            tags: value.tags,
+            id: value.id,
+            headers: value.headers,
             event_time: value.event_time,
-            headers: value.headers.clone(),
-            id: value.id.clone(),
-        };
-
-        let mut msg = Self::from_accumulator_request(request);
-
-        // Update with optional fields
-        if let Some(keys) = value.keys {
-            msg = msg.with_keys(keys);
+            watermark: value.watermark,
         }
-        msg = msg.with_value(value.value);
-        if let Some(tags) = value.tags {
-            msg = msg.with_tags(tags);
-        }
-        msg
     }
 }
 
 #[napi(object, namespace = "accumulator")]
 pub struct Datum {
     pub keys: Vec<String>,
-    pub value: Vec<u8>,
+    pub value: Buffer,
     pub watermark: DateTime<Utc>,
     pub event_time: DateTime<Utc>,
     pub headers: HashMap<String, String>,
@@ -110,7 +98,7 @@ impl Datum {
     ) -> Self {
         Self {
             keys,
-            value,
+            value: value.into(),
             watermark,
             event_time,
             headers,

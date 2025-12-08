@@ -43,7 +43,7 @@ fn message_to_drop() -> Message {
 #[napi(object, namespace = "sessionReduce")]
 pub struct Datum {
     pub keys: Vec<String>,
-    pub value: Vec<u8>,
+    pub value: Buffer,
     pub watermark: DateTime<Utc>,
     pub event_time: DateTime<Utc>,
     pub headers: HashMap<String, String>,
@@ -59,7 +59,7 @@ impl Datum {
     ) -> Self {
         Self {
             keys,
-            value,
+            value: value.into(),
             watermark,
             event_time,
             headers,

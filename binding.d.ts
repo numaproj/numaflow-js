@@ -18,7 +18,7 @@ export declare namespace accumulator {
     }
     export interface Datum {
         keys: Array<string>
-        value: Array<number>
+        value: Buffer
         watermark: Date
         eventTime: Date
         headers: Record<string, string>
@@ -31,7 +31,7 @@ export declare namespace accumulator {
     /** Create a Message from a Datum, preserving all metadata. */
     export function fromDatum(
         datum: Datum,
-        value?: Array<number> | undefined | null,
+        value?: Buffer | undefined | null,
         keys?: Array<string> | undefined | null,
         tags?: Array<string> | undefined | null,
     ): Message
@@ -43,7 +43,7 @@ export declare namespace accumulator {
          */
         keys?: Array<string>
         /** Value is the value passed to the next vertex. */
-        value: Array<number>
+        value: Buffer
         /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
         tags?: Array<string>
         /** ID is used for deduplication. Read-only, set from the input datum. */
@@ -130,7 +130,7 @@ export declare namespace map {
         keys: Array<string>
         constructor(
             keys: Array<string>,
-            value: Array<number>,
+            value: Buffer,
             watermark: Date,
             eventTime: Date,
             headers: Record<string, string>,
@@ -311,7 +311,7 @@ export declare namespace sessionReduce {
     }
     export interface Datum {
         keys: Array<string>
-        value: Array<number>
+        value: Buffer
         watermark: Date
         eventTime: Date
         headers: Record<string, string>
@@ -386,7 +386,7 @@ export declare namespace sink {
         static failure(id: string, err: string): SinkResponse
         static ok(id: string): SinkResponse
         static fallback(id: string): SinkResponse
-        static serve(id: string, payload: Array<number>): SinkResponse
+        static serve(id: string, payload: Buffer): SinkResponse
         static onSuccess(id: string, payload?: SinkMessage | undefined | null): SinkResponse
     }
     export class SinkResponses {
