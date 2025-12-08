@@ -41,8 +41,23 @@ export declare namespace sourceTransform {
 }
 export declare namespace accumulator {
     type Datum = binding.accumulator.Datum;
-    type Message = binding.accumulator.Message;
+    type NativeMessage = binding.accumulator.Message;
     const messageToDrop: typeof binding.accumulator.messageToDrop;
+    interface MessageOptions {
+        keys?: string[];
+        tags?: string[];
+    }
+    class Message implements NativeMessage {
+        keys?: Array<string>;
+        value: Buffer;
+        tags?: Array<string>;
+        id: string;
+        headers: Record<string, string>;
+        eventTime: Date;
+        watermark: Date;
+        constructor(value: Buffer, id: string, eventTime: Date, watermark: Date, headers: Record<string, string>, options?: MessageOptions);
+        static toDrop(): Message;
+    }
     /**
      * AsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
      * data received by the Sink.
@@ -128,9 +143,20 @@ export declare namespace batchmap {
 }
 export declare namespace mapstream {
     export type Datum = binding.mapstream.Datum;
-    export type Message = binding.mapstream.Message;
+    export type NativeMessage = binding.mapstream.Message;
     type MapStreamCallback = (datum: Datum) => AsyncIterable<Message>;
     export const messageToDrop: typeof binding.mapstream.messageToDrop;
+    export interface MessageOptions {
+        keys?: string[];
+        tags?: string[];
+    }
+    export class Message implements NativeMessage {
+        value: Buffer;
+        keys?: string[];
+        tags?: string[];
+        constructor(value: Buffer, options?: MessageOptions);
+        static toDrop(): Message;
+    }
     export class AsyncServer {
         private readonly mapper;
         constructor(mapFn: MapStreamCallback);
@@ -141,24 +167,47 @@ export declare namespace mapstream {
 }
 export declare namespace reduce {
     export type Datum = binding.reduce.Datum;
-    type Callback = (keys: string[], iterator: AsyncIterableIterator<Datum>, metadata: Metadata) => Promise<binding.reduce.Message[]>;
+    export type NativeMessage = binding.reduce.Message;
+    export type Metadata = binding.reduce.Metadata;
+    export type IntervalWindow = binding.reduce.IntervalWindow;
+    export const messageToDrop: typeof binding.reduce.messageToDrop;
+    export interface MessageOptions {
+        keys?: string[];
+        tags?: string[];
+    }
+    export class Message implements NativeMessage {
+        value: Buffer;
+        keys?: string[];
+        tags?: string[];
+        constructor(value: Buffer, options?: MessageOptions);
+        static toDrop(): Message;
+    }
+    type Callback = (keys: string[], iterator: AsyncIterableIterator<Datum>, metadata: Metadata) => Promise<Message[]>;
     class ReduceAsyncServerImpl {
         private readonly nativeServer;
         constructor(reduceFn: Callback);
         start(socketPath?: string | null, serverInfoPath?: string | null): Promise<void>;
         stop(): void;
     }
-    export type Metadata = binding.reduce.Metadata;
-    export type IntervalWindow = binding.reduce.IntervalWindow;
-    export type Message = binding.reduce.Message;
     export const AsyncServer: typeof ReduceAsyncServerImpl;
     export type AsyncServer = ReduceAsyncServerImpl;
     export {};
 }
 export declare namespace sessionReduce {
     export type Datum = binding.sessionReduce.Datum;
-    export type Message = binding.sessionReduce.Message;
+    export type NativeMessage = binding.sessionReduce.Message;
     export const messageToDrop: typeof binding.sessionReduce.messageToDrop;
+    export interface MessageOptions {
+        keys?: string[];
+        tags?: string[];
+    }
+    export class Message implements NativeMessage {
+        value: Buffer;
+        keys?: string[];
+        tags?: string[];
+        constructor(value: Buffer, options?: MessageOptions);
+        static toDrop(): Message;
+    }
     type SessionReduceFnCallback = (keys: string[], iterator: AsyncIterableIterator<Datum>) => AsyncIterable<Message>;
     type AccumulatorFnCallback = () => Promise<Buffer>;
     type MergeAccumulatorFnCallback = (accumulator: Buffer) => Promise<void>;
@@ -190,9 +239,20 @@ export declare namespace sessionReduce {
 }
 export declare namespace reduceStream {
     export type Datum = binding.reduce.Datum;
-    export type Message = binding.reduce.Message;
+    export type NativeMessage = binding.reduce.Message;
     export type Metadata = binding.reduce.Metadata;
     export const messageToDrop: typeof binding.reduce.messageToDrop;
+    export interface MessageOptions {
+        keys?: string[];
+        tags?: string[];
+    }
+    export class Message implements NativeMessage {
+        value: Buffer;
+        keys?: string[];
+        tags?: string[];
+        constructor(value: Buffer, options?: MessageOptions);
+        static toDrop(): Message;
+    }
     type CallbackFn = (keys: string[], iterator: AsyncIterableIterator<Datum>, metadata: Metadata) => AsyncIterable<Message>;
     /**
      * AsyncServer is a wrapper around a JavaScript callable that will be passed by the user to process the
