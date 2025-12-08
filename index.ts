@@ -305,6 +305,7 @@ export namespace sink {
 export namespace batchmap {
     export type Datum = binding.batchmap.BatchDatum
     export const Response = binding.batchmap.BatchResponse
+    // Response contains a list of processed messages
     export type Response = binding.batchmap.BatchResponse
     export const Responses = binding.batchmap.BatchResponses
     export type Responses = binding.batchmap.BatchResponses
