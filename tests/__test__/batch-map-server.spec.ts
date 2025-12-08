@@ -20,7 +20,10 @@ test('batchmap integration test', async () => {
                 if (value.toString() === 'bad') {
                     response.append(batchmap.messageToDrop())
                 } else {
-                    response.append(new batchmap.Message(value).withKeys([key]))
+                    response.append({
+                        value: value,
+                        keys: [key],
+                    })
                 }
 
                 responses.push(response)

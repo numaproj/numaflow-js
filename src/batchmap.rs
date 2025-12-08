@@ -8,14 +8,14 @@ use numaflow::shared::ServerExtras;
 use std::sync::Arc;
 use std::{collections::HashMap, sync::Mutex};
 
-#[derive(Clone, Default, Debug)]
-#[napi(namespace = "batchmap")]
+#[derive(Default)]
+#[napi(object, namespace = "batchmap")]
 pub struct BatchMessage {
     /// Keys are a collection of strings which will be passed on to the next vertex as is. It can
     /// be an empty collection.
     pub keys: Option<Vec<String>>,
     /// Value is the value passed to the next vertex.
-    pub value: Vec<u8>,
+    pub value: Buffer,
     /// Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/).
     pub tags: Option<Vec<String>>,
 }
@@ -24,32 +24,8 @@ pub struct BatchMessage {
 pub fn message_to_drop() -> BatchMessage {
     BatchMessage {
         keys: None,
-        value: vec![],
+        value: vec![].into(),
         tags: Some(vec![numaflow::shared::DROP.to_string()]),
-    }
-}
-
-#[napi(namespace = "batchmap")]
-impl BatchMessage {
-    #[napi(constructor)]
-    pub fn new(value: Buffer) -> Self {
-        Self {
-            keys: None,
-            value: value.into(),
-            tags: None,
-        }
-    }
-
-    #[napi]
-    pub fn with_keys(&mut self, keys: Vec<String>) -> Self {
-        self.keys = Some(keys);
-        self.clone()
-    }
-
-    #[napi]
-    pub fn with_tags(&mut self, tags: Vec<String>) -> Self {
-        self.tags = Some(tags);
-        self.clone()
     }
 }
 
@@ -57,8 +33,18 @@ impl From<BatchMessage> for batchmap::Message {
     fn from(value: BatchMessage) -> Self {
         Self {
             keys: value.keys,
-            value: value.value,
+            value: value.value.into(),
             tags: value.tags,
+        }
+    }
+}
+
+impl From<&BatchMessage> for batchmap::Message {
+    fn from(value: &BatchMessage) -> Self {
+        Self {
+            keys: value.keys.clone(),
+            value: value.value.iter().map(|b| b.clone()).collect(),
+            tags: value.tags.clone(),
         }
     }
 }
@@ -106,11 +92,11 @@ impl From<batchmap::Datum> for BatchDatum {
     }
 }
 
-#[derive(Clone, Default, Debug)]
+#[derive(Default)]
 #[napi(namespace = "batchmap")]
 pub struct BatchResponse {
     id: String,
-    messages: Vec<&'static BatchMessage>,
+    messages: Vec<BatchMessage>,
 }
 
 #[napi(namespace = "batchmap")]
@@ -132,7 +118,7 @@ impl BatchResponse {
     }
 
     #[napi]
-    pub fn append(&mut self, message: &'static BatchMessage) {
+    pub fn append(&mut self, message: BatchMessage) {
         self.messages.push(message);
     }
 }
@@ -141,14 +127,24 @@ impl From<BatchResponse> for batchmap::BatchResponse {
     fn from(value: BatchResponse) -> Self {
         let mut resp = batchmap::BatchResponse::from_id(value.id);
         for m in value.messages.into_iter() {
-            resp.append(m.clone().into());
+            resp.append(m.into());
+        }
+        resp
+    }
+}
+
+impl From<&BatchResponse> for batchmap::BatchResponse {
+    fn from(value: &BatchResponse) -> Self {
+        let mut resp = batchmap::BatchResponse::from_id(value.id.clone());
+        for m in value.messages.iter() {
+            resp.append(m.into());
         }
         resp
     }
 }
 
 /// A collection of BatchResponse objects for a batch.
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Default)]
 #[napi(namespace = "batchmap")]
 pub struct BatchResponses {
     pub(crate) responses: Vec<&'static BatchResponse>,
@@ -276,10 +272,7 @@ impl batchmap::BatchMapper for BatchMapper {
         // Call the JavaScript callback
         match self.batchmap_fn.call_async(requests).await {
             Ok(promise) => match promise.await {
-                Ok(responses) => responses
-                    .into_iter()
-                    .map(|resp| resp.clone().into())
-                    .collect(),
+                Ok(responses) => responses.into_iter().map(|resp| resp.into()).collect(),
                 Err(e) => {
                     eprintln!("Error executing JS batchmap function: {:?}", e);
                     vec![]

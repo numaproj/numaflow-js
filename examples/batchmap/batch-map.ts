@@ -4,7 +4,10 @@ async function batchMapFn(datums: AsyncIterableIterator<batchmap.Datum>): Promis
     let responses: Array<batchmap.Response> = []
     for await (let datum of datums) {
         console.log('Datum id received ' + datum.id + ' keys ' + datum.keys + ' value ' + datum.value)
-        let message = new batchmap.Message(datum.value).withKeys(datum.keys)
+        let message = {
+            value: datum.value,
+            keys: datum.keys,
+        }
         let response = new batchmap.Response(datum.id)
         response.append(message)
         responses.push(response)

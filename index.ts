@@ -307,7 +307,6 @@ export namespace batchmap {
     export type Response = binding.batchmap.BatchResponse
     export const Responses = binding.batchmap.BatchResponses
     export type Responses = binding.batchmap.BatchResponses
-    export const Message = binding.batchmap.BatchMessage
     export type Message = binding.batchmap.BatchMessage
     export const messageToDrop = binding.batchmap.messageToDrop
 

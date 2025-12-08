@@ -113,7 +113,6 @@ export declare namespace batchmap {
     export type Response = binding.batchmap.BatchResponse;
     export const Responses: typeof binding.batchmap.BatchResponses;
     export type Responses = binding.batchmap.BatchResponses;
-    export const Message: typeof binding.batchmap.BatchMessage;
     export type Message = binding.batchmap.BatchMessage;
     export const messageToDrop: typeof binding.batchmap.messageToDrop;
     type BatchMapCallback = (iterator: AsyncIterableIterator<Datum>) => Promise<Response[]>;

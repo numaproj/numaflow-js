@@ -75,20 +75,6 @@ export declare namespace batchmap {
         start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
         stop(): void
     }
-    export class BatchMessage {
-        /**
-         * Keys are a collection of strings which will be passed on to the next vertex as is. It can
-         * be an empty collection.
-         */
-        keys?: Array<string>
-        /** Value is the value passed to the next vertex. */
-        value: Array<number>
-        /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
-        tags?: Array<string>
-        constructor(value: Buffer)
-        withKeys(keys: Array<string>): BatchMessage
-        withTags(tags: Array<string>): BatchMessage
-    }
     export class BatchResponse {
         constructor(id: string)
         static fromId(id: string): BatchResponse
@@ -120,6 +106,17 @@ export declare namespace batchmap {
     export interface BatchDatumIteratorResult {
         value?: BatchDatum
         done: boolean
+    }
+    export interface BatchMessage {
+        /**
+         * Keys are a collection of strings which will be passed on to the next vertex as is. It can
+         * be an empty collection.
+         */
+        keys?: Array<string>
+        /** Value is the value passed to the next vertex. */
+        value: Buffer
+        /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
+        tags?: Array<string>
     }
     export function messageToDrop(): BatchMessage
 }
