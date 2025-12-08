@@ -45,12 +45,14 @@ Most of the examples follow a similar structure:
 In the implementation part of all the examples presented, i.e. in `<example-name>.ts`, the pattern is mostly similar.
 We need to instantiate and start an async server for the respective component being implemented.
 
+## Implementation details with examples
+
 Eg: Implementing UD sink component:
 
-- To implement a UD sink need to use `sink.SinkAsyncServer`.
-- To instantiate the server, we need to provide a function `sinkFn` with a signature satisfying `SinkAsyncServer` constructor.
-- Start the server using `start` method of `SinkAsyncServer`.
-- Stop the server using `stop` method of `SinkAsyncServer`.
+- To implement a UD sink need to use `sink.AsyncServer`.
+- To instantiate the server, we need to provide a function `sinkFn` with a signature satisfying `AsyncServer` constructor.
+- Start the server using `start` method of `AsyncServer`.
+- Stop the server using `stop` method of `AsyncServer`.
 
 Currently, `source` and `session-reduce` components require implementing all methods of an interface and passing an instance
 of the same to their respective async server constructors. Rest of the components only require implementing a function with a signature
@@ -66,7 +68,7 @@ const sinkFn = (message: Message) => {
     console.log(message)
 }
 
-const server = new sink.SinkAsyncServer(sinkFn)
+const server = new sink.AsyncServer(sinkFn)
 ```
 
 Still works if defined as part of a class.
@@ -81,7 +83,7 @@ class Sink {
 }
 
 let sinker = new Sink()
-const server = new sink.SinkAsyncServer(sinker.sinkFn)
+const server = new sink.AsyncServer(sinker.sinkFn)
 ```
 
 2. Using a named function <br>
@@ -93,7 +95,7 @@ function sinkFn(message: Message) {
     console.log(message)
 }
 
-const server = new sink.SinkAsyncServer(sinkFn)
+const server = new sink.AsyncServer(sinkFn)
 ```
 
 Named functions defined as part of a class may need to be bound to the instance of the class.
@@ -108,7 +110,7 @@ class Sink {
 }
 
 let sinker = new Sink()
-const server = new sink.SinkAsyncServer(sinker.sinkFn.bind(sinker))
+const server = new sink.AsyncServer(sinker.sinkFn.bind(sinker))
 ```
 
 If any of the examples are failing to build or if they need further clarification, please create an [issue](https://github.com/numaproj/numaflow-js/issues/new/choose) to fix the same.
