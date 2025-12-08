@@ -9,23 +9,25 @@ const sockPath = '/tmp/var/run/numaflow/batchmap.sock'
 const infoPath = '/tmp/var/run/numaflow/batchmap-info.sock'
 
 test('batchmap integration test', async () => {
-    const server = new batchmap.AsyncServer(async (datums): Promise<batchmap.Response[]> => {
-        let responses: batchmap.Response[] = []
-        for await (const datum of datums) {
-            let response = new batchmap.Response(datum.id)
+    const server = new batchmap.AsyncServer(
+        async (datums: AsyncIterableIterator<batchmap.Datum>): Promise<batchmap.Response[]> => {
+            let responses: batchmap.Response[] = []
+            for await (const datum of datums) {
+                let response = new batchmap.Response(datum.id)
 
-            const key = datum.keys[0] ?? 'default-key'
-            const value = datum.value ?? Buffer.from('default-value')
-            if (value.toString() === 'bad') {
-                response.append(batchmap.messageToDrop())
-            } else {
-                response.append(new batchmap.Message(value).withKeys([key]))
+                const key = datum.keys[0] ?? 'default-key'
+                const value = datum.value ?? Buffer.from('default-value')
+                if (value.toString() === 'bad') {
+                    response.append(batchmap.messageToDrop())
+                } else {
+                    response.append(new batchmap.Message(value).withKeys([key]))
+                }
+
+                responses.push(response)
             }
-
-            responses.push(response)
-        }
-        return responses
-    })
+            return responses
+        },
+    )
 
     try {
         // Start the server (non-blocking)

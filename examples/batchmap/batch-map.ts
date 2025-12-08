@@ -1,6 +1,6 @@
 import { batchmap } from '../../index'
 
-async function batchMapFn(datums: batchmap.DatumIterator): Promise<batchmap.Response[]> {
+async function batchMapFn(datums: AsyncIterableIterator<batchmap.Datum>): Promise<batchmap.Response[]> {
     let responses: Array<batchmap.Response> = []
     for await (let datum of datums) {
         console.log('Datum id received ' + datum.id + ' keys ' + datum.keys + ' value ' + datum.value)

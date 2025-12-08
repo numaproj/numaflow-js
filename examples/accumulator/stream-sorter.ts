@@ -3,7 +3,7 @@ import { accumulator } from '../../index'
 class StreamSorter {
     latest_wm: Date = new Date(-1)
     sorted_buffer: accumulator.Datum[] = []
-    async *streamSorter(datums: accumulator.DatumIterator): AsyncIterable<accumulator.Message> {
+    async *streamSorter(datums: AsyncIterableIterator<accumulator.Datum>): AsyncIterable<accumulator.Message> {
         let datum_count = 0
         for await (let datum of datums) {
             datum_count += 1

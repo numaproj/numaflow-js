@@ -137,6 +137,16 @@ impl BatchResponse {
     }
 }
 
+impl From<BatchResponse> for batchmap::BatchResponse {
+    fn from(value: BatchResponse) -> Self {
+        let mut resp = batchmap::BatchResponse::from_id(value.id);
+        for m in value.messages.into_iter() {
+            resp.append(m.clone().into());
+        }
+        resp
+    }
+}
+
 /// A collection of BatchResponse objects for a batch.
 #[derive(Clone, Default, Debug)]
 #[napi(namespace = "batchmap")]
@@ -155,16 +165,6 @@ impl BatchResponses {
     #[napi]
     pub fn append(&mut self, response: &'static BatchResponse) {
         self.responses.push(response);
-    }
-}
-
-impl From<BatchResponse> for batchmap::BatchResponse {
-    fn from(value: BatchResponse) -> Self {
-        let mut resp = batchmap::BatchResponse::from_id(value.id);
-        for m in value.messages.into_iter() {
-            resp.append(m.clone().into());
-        }
-        resp
     }
 }
 

@@ -105,12 +105,11 @@ export namespace accumulator {
     export type Datum = binding.accumulator.Datum
     export type Message = binding.accumulator.Message
     export const messageToDrop = binding.accumulator.messageToDrop
-    export type DatumIteratorResult = binding.accumulator.DatumIteratorResult
 
     /**
      * DatumIterator with added async iterator support
      */
-    export class DatumIterator implements AsyncIterableIterator<Datum> {
+    class DatumIterator implements AsyncIterableIterator<Datum> {
         private readonly nativeDatumIterator: binding.accumulator.DatumIterator
 
         constructor(nativeDatumIterator: binding.accumulator.DatumIterator) {
@@ -145,7 +144,7 @@ export namespace accumulator {
         /**
          * Create a new Sink with the given callback.
          */
-        constructor(accumulatorFn: (datum: DatumIterator) => AsyncIterable<Message>) {
+        constructor(accumulatorFn: (datum: AsyncIterableIterator<Datum>) => AsyncIterable<Message>) {
             const wrapperMapFn = (nativeDatumIterator: binding.accumulator.DatumIterator) => {
                 const iterator = new DatumIterator(nativeDatumIterator)
                 const wrappedIterator = accumulatorFn(iterator)[Symbol.asyncIterator]()
@@ -252,8 +251,15 @@ export namespace map {
 
 export namespace sink {
     export type Datum = binding.sink.SinkDatum
+    export const Response = binding.sink.SinkResponse
+    export type Response = binding.sink.SinkResponse
+    export const Responses = binding.sink.SinkResponses
+    export type Responses = binding.sink.SinkResponses
+    export const Message = binding.sink.SinkMessage
+    export type Message = binding.sink.SinkMessage
+
     type SinkDatumIteratorNative = binding.sink.SinkDatumIterator
-    type SinkCallback = (iterator: AsyncIterableIterator<Datum>) => Promise<binding.sink.SinkResponse[]>
+    type SinkCallback = (iterator: AsyncIterableIterator<Datum>) => Promise<Response[]>
 
     class SinkDatumIteratorImpl implements AsyncIterableIterator<Datum> {
         constructor(private readonly nativeIterator: SinkDatumIteratorNative) {}
@@ -292,33 +298,35 @@ export namespace sink {
         }
     }
 
-    export const Response = binding.sink.SinkResponse
-    export type Response = binding.sink.SinkResponse
-    export const Responses = binding.sink.SinkResponses
-    export type Responses = binding.sink.SinkResponses
-    export const Message = binding.sink.SinkMessage
-    export type Message = binding.sink.SinkMessage
     export const AsyncServer = SinkAsyncServerImpl
     export type AsyncServer = SinkAsyncServerImpl
 }
 
 export namespace batchmap {
-    type BatchDatum = binding.batchmap.BatchDatum
-    type BatchDatumIteratorNative = binding.batchmap.BatchDatumIterator
-    type BatchMapCallback = (iterator: BatchDatumIteratorImpl) => Promise<binding.batchmap.BatchResponse[]>
+    export type Datum = binding.batchmap.BatchDatum
+    export const Response = binding.batchmap.BatchResponse
+    export type Response = binding.batchmap.BatchResponse
+    export const Responses = binding.batchmap.BatchResponses
+    export type Responses = binding.batchmap.BatchResponses
+    export const Message = binding.batchmap.BatchMessage
+    export type Message = binding.batchmap.BatchMessage
+    export const messageToDrop = binding.batchmap.messageToDrop
 
-    class BatchDatumIteratorImpl implements AsyncIterableIterator<BatchDatum> {
+    type BatchDatumIteratorNative = binding.batchmap.BatchDatumIterator
+    type BatchMapCallback = (iterator: AsyncIterableIterator<Datum>) => Promise<Response[]>
+
+    class BatchDatumIteratorImpl implements AsyncIterableIterator<Datum> {
         constructor(private readonly nativeIterator: BatchDatumIteratorNative) {}
 
-        async next(): Promise<IteratorResult<BatchDatum>> {
+        async next(): Promise<IteratorResult<Datum>> {
             const result = await this.nativeIterator.next()
             if (result.done) {
                 return { done: true, value: undefined }
             }
-            return { done: false, value: result.value as BatchDatum }
+            return { done: false, value: result.value as Datum }
         }
 
-        [Symbol.asyncIterator](): AsyncIterableIterator<BatchDatum> {
+        [Symbol.asyncIterator](): AsyncIterableIterator<Datum> {
             return this
         }
     }
@@ -327,7 +335,9 @@ export namespace batchmap {
         private readonly nativeServer: binding.batchmap.BatchMapAsyncServer
 
         constructor(batchmapFn: BatchMapCallback) {
-            const wrappedCallback = async (nativeIterator: BatchDatumIteratorNative) => {
+            const wrappedCallback: (nativeIterator: BatchDatumIteratorNative) => Promise<Response[]> = async (
+                nativeIterator: BatchDatumIteratorNative,
+            ): Promise<Response[]> => {
                 const iterator = new BatchDatumIteratorImpl(nativeIterator)
                 return batchmapFn(iterator)
             }
@@ -344,17 +354,6 @@ export namespace batchmap {
         }
     }
 
-    export type Datum = binding.batchmap.BatchDatum
-    export type DatumIteratorResult = binding.batchmap.BatchDatumIteratorResult
-    export const Response = binding.batchmap.BatchResponse
-    export type Response = binding.batchmap.BatchResponse
-    export const Responses = binding.batchmap.BatchResponses
-    export type Responses = binding.batchmap.BatchResponses
-    export const Message = binding.batchmap.BatchMessage
-    export type Message = binding.batchmap.BatchMessage
-    export const messageToDrop = binding.batchmap.messageToDrop
-    export const DatumIterator = BatchDatumIteratorImpl
-    export type DatumIterator = BatchDatumIteratorImpl
     export const AsyncServer = BatchMapAsyncServerImpl
     export type AsyncServer = BatchMapAsyncServerImpl
 }
@@ -445,7 +444,6 @@ export namespace reduce {
     export type Metadata = binding.reduce.Metadata
     export type IntervalWindow = binding.reduce.IntervalWindow
     export type Message = binding.reduce.Message
-    export type DatumIteratorResult = binding.reduce.ReduceDatumIteratorResult
     export const AsyncServer = ReduceAsyncServerImpl
     export type AsyncServer = ReduceAsyncServerImpl
 }

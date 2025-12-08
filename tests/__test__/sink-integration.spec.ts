@@ -10,7 +10,7 @@ const sockPath = '/tmp/sink.sock'
 const infoPath = '/tmp/sink-info.sock'
 
 // Start the JavaScript sink server
-const sinker = new sink.AsyncServer(async (datums) => {
+const sinker = new sink.AsyncServer(async (datums: AsyncIterableIterator<sink.Datum>) => {
     const responses: sink.Response[] = []
     for await (const datum of datums) {
         responses.push(sink.Response.ok(datum.id))
