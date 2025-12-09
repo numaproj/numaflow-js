@@ -18,7 +18,7 @@ export declare namespace accumulator {
     }
     export interface Datum {
         keys: Array<string>
-        value: Array<number>
+        value: Buffer
         watermark: Date
         eventTime: Date
         headers: Record<string, string>
@@ -31,7 +31,7 @@ export declare namespace accumulator {
     /** Create a Message from a Datum, preserving all metadata. */
     export function fromDatum(
         datum: Datum,
-        value?: Array<number> | undefined | null,
+        value?: Buffer | undefined | null,
         keys?: Array<string> | undefined | null,
         tags?: Array<string> | undefined | null,
     ): Message
@@ -43,7 +43,7 @@ export declare namespace accumulator {
          */
         keys?: Array<string>
         /** Value is the value passed to the next vertex. */
-        value: Array<number>
+        value: Buffer
         /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
         tags?: Array<string>
         /** ID is used for deduplication. Read-only, set from the input datum. */
@@ -75,20 +75,6 @@ export declare namespace batchmap {
         start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
         stop(): void
     }
-    export class BatchMessage {
-        /**
-         * Keys are a collection of strings which will be passed on to the next vertex as is. It can
-         * be an empty collection.
-         */
-        keys?: Array<string>
-        /** Value is the value passed to the next vertex. */
-        value: Array<number>
-        /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
-        tags?: Array<string>
-        constructor(value: Buffer)
-        withKeys(keys: Array<string>): BatchMessage
-        withTags(tags: Array<string>): BatchMessage
-    }
     export class BatchResponse {
         constructor(id: string)
         static fromId(id: string): BatchResponse
@@ -111,7 +97,7 @@ export declare namespace batchmap {
          */
         watermark: Date
         /** Time of the element as seen at source or aligned after a reduce operation. */
-        eventtime: Date
+        eventTime: Date
         /** ID is the unique id of the message */
         id: string
         /** Headers for the message. */
@@ -120,6 +106,17 @@ export declare namespace batchmap {
     export interface BatchDatumIteratorResult {
         value?: BatchDatum
         done: boolean
+    }
+    export interface BatchMessage {
+        /**
+         * Keys are a collection of strings which will be passed on to the next vertex as is. It can
+         * be an empty collection.
+         */
+        keys?: Array<string>
+        /** Value is the value passed to the next vertex. */
+        value: Buffer
+        /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
+        tags?: Array<string>
     }
     export function messageToDrop(): BatchMessage
 }
@@ -130,16 +127,16 @@ export declare namespace map {
         keys: Array<string>
         constructor(
             keys: Array<string>,
-            value: Array<number>,
+            value: Buffer,
             watermark: Date,
-            eventtime: Date,
+            eventTime: Date,
             headers: Record<string, string>,
             userMetadata?: UserMetadata | undefined | null,
             systemMetadata?: SystemMetadata | undefined | null,
         )
         get value(): Buffer
         get watermark(): Date
-        get eventtime(): Date
+        get eventTime(): Date
         get headers(): Record<string, string>
         get userMetadata(): UserMetadata | null
         get systemMetadata(): SystemMetadata | null
@@ -198,7 +195,7 @@ export declare namespace mapstream {
          */
         watermark: Date
         /** Time of the element as seen at source or aligned after a reduce operation. */
-        eventtime: Date
+        eventTime: Date
         /** Headers associated with the message. */
         headers: Record<string, string>
     }
@@ -311,9 +308,9 @@ export declare namespace sessionReduce {
     }
     export interface Datum {
         keys: Array<string>
-        value: Array<number>
+        value: Buffer
         watermark: Date
-        eventtime: Date
+        eventTime: Date
         headers: Record<string, string>
     }
     export interface Message {
@@ -386,7 +383,7 @@ export declare namespace sink {
         static failure(id: string, err: string): SinkResponse
         static ok(id: string): SinkResponse
         static fallback(id: string): SinkResponse
-        static serve(id: string, payload: Array<number>): SinkResponse
+        static serve(id: string, payload: Buffer): SinkResponse
         static onSuccess(id: string, payload?: SinkMessage | undefined | null): SinkResponse
     }
     export class SinkResponses {
@@ -475,14 +472,14 @@ export declare namespace sourceTransform {
             keys: Array<string>,
             value: Buffer,
             watermark: Date,
-            eventtime: Date,
+            eventTime: Date,
             headers: Record<string, string>,
             userMetadata?: SourceTransformUserMetadata | undefined | null,
             systemMetadata?: SourceTransformSystemMetadata | undefined | null,
         )
         get value(): Buffer
         get watermark(): Date
-        get eventtime(): Date
+        get eventTime(): Date
         get headers(): Record<string, string>
         get userMetadata(): SourceTransformUserMetadata | null
         get systemMetadata(): SourceTransformSystemMetadata | null
@@ -504,7 +501,7 @@ export declare namespace sourceTransform {
         removeKey(group: string, key: string): void
         removeGroup(group: string): void
     }
-    export function messageToDrop(eventtime: Date): SourceTransformMessage
+    export function messageToDrop(eventTime: Date): SourceTransformMessage
     export interface SourceTransformMessage {
         /**
          * Keys are a collection of strings which will be passed on to the next vertex as is. It can
@@ -517,7 +514,7 @@ export declare namespace sourceTransform {
          * Time for the given event. This will be used for tracking watermarks. If cannot be derived, set it to the incoming
          * event_time from the [`SourceTransformRequest`].
          */
-        eventtime: Date
+        eventTime: Date
         /** Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/). */
         tags?: Array<string>
         /** User metadata for the message. */

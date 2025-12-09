@@ -57,7 +57,7 @@ class Sourcer implements source.Sourcer {
 }
 
 test('source integration test', async () => {
-    const server = new source.SourceAsyncServer(new Sourcer())
+    const server = new source.AsyncServer(new Sourcer())
 
     try {
         // Start the server (non-blocking)

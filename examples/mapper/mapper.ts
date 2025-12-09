@@ -1,5 +1,5 @@
 import { map } from '../../index.js'
-const { MapServer, Message } = map
+const { Message } = map
 
 async function mapFn(datum: map.Datum): Promise<map.Message[]> {
     console.log(`mapFn: ${JSON.stringify(datum)}`)
@@ -27,7 +27,7 @@ async function mapFn(datum: map.Datum): Promise<map.Message[]> {
 
 async function main() {
     console.log('Starting mapper')
-    const server = new MapServer(mapFn)
+    const server = new map.AsyncServer(mapFn)
 
     const shutdown = () => {
         server.stop()

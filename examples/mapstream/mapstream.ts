@@ -12,7 +12,7 @@ async function* streamMapFn(datum: mapstream.Datum) {
 }
 
 async function main() {
-    const server = new mapstream.MapStreamAsyncServer(streamMapFn)
+    const server = new mapstream.AsyncServer(streamMapFn)
 
     const shutdown = () => {
         server.stop()

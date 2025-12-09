@@ -9,12 +9,12 @@ const sockPath = '/tmp/var/run/numaflow/source-transform.sock'
 const infoPath = '/tmp/var/run/numaflow/source-transform-info.sock'
 
 test('source transform integration test', async () => {
-    const server = new sourceTransform.SourceTransformAsyncServer(async (datum): Promise<sourceTransform.Message[]> => {
+    const server = new sourceTransform.AsyncServer(async (datum): Promise<sourceTransform.Message[]> => {
         return [
             {
                 keys: datum.keys,
                 value: datum.value,
-                eventtime: datum.eventtime,
+                eventTime: datum.eventTime,
                 tags: [],
             },
         ]

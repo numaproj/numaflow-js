@@ -24,7 +24,7 @@ async function* reduceStreamFn(
 }
 
 test('reduce stream integration test', async () => {
-    const server = new reduceStream.ReduceStreamAsyncServer(reduceStreamFn)
+    const server = new reduceStream.AsyncServer(reduceStreamFn)
 
     try {
         // Start the server (non-blocking)

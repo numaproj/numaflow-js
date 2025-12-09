@@ -18,7 +18,7 @@ test('mapstream server functionlity', async () => {
         }
     }
 
-    const server = new mapstream.MapStreamAsyncServer(mapFn)
+    const server = new mapstream.AsyncServer(mapFn)
 
     const socketPath = '/tmp/mapstream.sock'
     const serverInfoPath = '/tmp/mapstream.info'

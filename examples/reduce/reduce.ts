@@ -15,7 +15,7 @@ async function reduceFn(
 }
 
 async function main() {
-    const server = new reduce.ReduceAsyncServer(reduceFn)
+    const server = new reduce.AsyncServer(reduceFn)
 
     const shutdown = () => {
         server.stop()

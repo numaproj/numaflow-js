@@ -5,14 +5,14 @@ async function sourceTransformFn(datum: sourceTransform.Datum): Promise<sourceTr
         {
             keys: datum.keys,
             value: datum.value,
-            eventtime: datum.eventtime,
+            eventTime: datum.eventTime,
             tags: [],
         },
     ]
 }
 
 async function main() {
-    const server = new sourceTransform.SourceTransformAsyncServer(sourceTransformFn)
+    const server = new sourceTransform.AsyncServer(sourceTransformFn)
 
     const shutdown = () => {
         server.stop()

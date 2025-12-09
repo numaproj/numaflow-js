@@ -40,7 +40,7 @@ pub struct Datum {
     /// guarantee that we will not see an element older than this time.
     pub watermark: DateTime<Utc>,
     /// Time of the element as seen at source or aligned after a reduce operation.
-    pub eventtime: DateTime<Utc>,
+    pub event_time: DateTime<Utc>,
     /// Headers associated with the message.
     pub headers: HashMap<String, String>,
 }
@@ -51,7 +51,7 @@ impl Clone for Datum {
             keys: self.keys.clone(),
             value: Buffer::from(self.value.to_vec()),
             watermark: self.watermark,
-            eventtime: self.eventtime,
+            event_time: self.event_time,
             headers: self.headers.clone(),
         }
     }
@@ -63,7 +63,7 @@ impl From<numaflow::mapstream::MapStreamRequest> for Datum {
             keys: value.keys,
             value: value.value.into(),
             watermark: value.watermark,
-            eventtime: value.eventtime,
+            event_time: value.eventtime,
             headers: value.headers,
         }
     }
@@ -151,7 +151,7 @@ impl mapstream::MapStreamer for JsMapper {
             keys: input.keys,
             value: Buffer::from(input.value.to_vec()),
             watermark: input.watermark,
-            eventtime: input.eventtime,
+            event_time: input.eventtime,
             headers: input.headers,
         };
         match self.map_fn.call_async(datum).await {

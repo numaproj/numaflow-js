@@ -27,7 +27,7 @@ class SessionReduceCounter implements sessionReduce.SessionReducer {
 }
 
 async function main() {
-    const server = new sessionReduce.SessionReduceAsyncServer(new SessionReduceCounter())
+    const server = new sessionReduce.AsyncServer(new SessionReduceCounter())
 
     const shutdown = () => {
         server.stop()

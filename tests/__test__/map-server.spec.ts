@@ -3,7 +3,7 @@ import { spawn } from 'child_process'
 import { promisify } from 'util'
 
 import { map } from '../../index.js'
-const { MapServer, Message, UserMetadata } = map
+const { AsyncServer, Message, UserMetadata } = map
 
 const sleep = promisify(setTimeout)
 
@@ -35,7 +35,7 @@ test('mapper integration test', async () => {
         return [{ keys: [key], value, userMetadata }]
     }
 
-    const server = new MapServer(mapFn)
+    const server = new AsyncServer(mapFn)
     const sockFile = '/tmp/map.sock'
     const infoFile = '/tmp/map.info'
 

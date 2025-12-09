@@ -79,7 +79,7 @@ impl SinkMessage {
     #[napi(constructor)]
     pub fn new(value: Buffer, keys: Option<Vec<String>>) -> Self {
         Self {
-            keys: keys,
+            keys,
             value: value.into(),
         }
     }
@@ -178,12 +178,12 @@ impl SinkResponse {
     }
 
     #[napi]
-    pub fn serve(id: String, payload: Vec<u8>) -> Self {
+    pub fn serve(id: String, payload: Buffer) -> Self {
         Self {
             id,
             response_type: ResponseType::Serve,
             err: None,
-            serve_response: Some(payload),
+            serve_response: Some(payload.into()),
             on_success_msg: None,
         }
     }
@@ -259,7 +259,7 @@ pub struct SinkDatum {
     /// Watermark represented by time (Unix timestamp in milliseconds).
     watermark: DateTime<Utc>,
     /// Event time (Unix timestamp in milliseconds).
-    eventtime: DateTime<Utc>,
+    event_time: DateTime<Utc>,
     /// ID is the unique id of the message to be sent to the Sink.
     pub id: String,
     /// Headers for the message.
@@ -274,7 +274,7 @@ impl From<sink::SinkRequest> for SinkDatum {
             keys: value.keys,
             value: value.value,
             watermark: value.watermark,
-            eventtime: value.event_time,
+            event_time: value.event_time,
             id: value.id,
             headers: value.headers,
             user_metadata: SinkUserMetadata(value.user_metadata),
@@ -297,7 +297,7 @@ impl SinkDatum {
 
     #[napi]
     pub fn get_eventtime(&self) -> DateTime<Utc> {
-        self.eventtime
+        self.event_time
     }
 
     #[napi]
