@@ -40,7 +40,7 @@ importers:
         specifier: ^4.0.10
         version: 4.0.10(vitest@4.0.10(@types/node@24.10.1)(tsx@4.20.6)(yaml@2.8.1))
       async-mutex:
-        specifier: 0.5.0
+        specifier: ^0.5.0
         version: 0.5.0
       chalk:
         specifier: ^5.6.2
@@ -1116,7 +1116,7 @@ packages:
     resolution: {integrity: sha512-szgSZqUxI5T8mLKvS7WTjF9is+MVbOeLADU73IseOcrqhxr/VAvy6wfoVE39KnKzA7JRhjF5eUagNlHwvZPlKQ==}
 
   async-mutex@0.5.0:
-    resolution: {integrity: sha512-1A94B18jkJ3DYq284ohPxoXbfTA5HsQ7/Mf4DEhcyLx3Bz27Rh59iScbB6EPiP+B+joue6YCxcMXSbFC1tZKwA==, tarball: https://registry.npmjs.intuit.com:443/artifactory/api/npm/npm-intuit/async-mutex/-/async-mutex-0.5.0.tgz}
+    resolution: {integrity: sha512-1A94B18jkJ3DYq284ohPxoXbfTA5HsQ7/Mf4DEhcyLx3Bz27Rh59iScbB6EPiP+B+joue6YCxcMXSbFC1tZKwA==, tarball: https://registry.npmjs.intuit.com/artifactory/api/npm/npm-intuit/async-mutex/-/async-mutex-0.5.0.tgz}
 
   before-after-hook@4.0.0:
     resolution: {integrity: sha512-q6tR3RPqIB1pMiTRMFcZwuG5T8vwp+vUvEG0vuI6B+Rikh5BfPp2fQ82c925FOs+b0lcFQ8CFrL+KbilfZFhOQ==}
