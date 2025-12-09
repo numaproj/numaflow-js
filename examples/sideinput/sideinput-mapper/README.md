@@ -1,3 +1,5 @@
+An example mapper that reads data from the side-input and forwards it to the sink as a value.
+
 ## HOWTO build Image
 
 Use the Makefile:
