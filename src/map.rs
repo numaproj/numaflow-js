@@ -163,7 +163,7 @@ impl From<map::MapRequest> for Datum {
     fn from(value: map::MapRequest) -> Self {
         Self {
             keys: value.keys,
-            value: value.value.into(),
+            value: value.value,
             watermark: value.watermark,
             event_time: value.eventtime,
             headers: value.headers,
@@ -202,7 +202,7 @@ impl From<Message> for map::Message {
             keys: value.keys,
             value: value.value.into(),
             tags: value.tags,
-            user_metadata: user_metadata,
+            user_metadata,
         }
     }
 }

@@ -10,7 +10,6 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::{Receiver, Sender};
 
 /// A message to be sent to the next vertex from an accumulator handler.
-//#[derive(Clone, Debug)]
 #[napi(object, namespace = "accumulator")]
 pub struct Message {
     /// Keys are a collection of strings which will be passed on to the next vertex as is. It can
@@ -54,7 +53,7 @@ fn from_datum(
 ) -> Message {
     Message {
         keys: keys.or_else(|| Some(datum.keys.clone())),
-        value: value.unwrap_or_else(|| datum.value),
+        value: value.unwrap_or(datum.value),
         tags,
         id: datum.id.clone(),
         headers: datum.headers.clone(),

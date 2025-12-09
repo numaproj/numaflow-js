@@ -79,7 +79,7 @@ impl SinkMessage {
     #[napi(constructor)]
     pub fn new(value: Buffer, keys: Option<Vec<String>>) -> Self {
         Self {
-            keys: keys,
+            keys,
             value: value.into(),
         }
     }

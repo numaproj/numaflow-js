@@ -43,7 +43,7 @@ impl From<&BatchMessage> for batchmap::Message {
     fn from(value: &BatchMessage) -> Self {
         Self {
             keys: value.keys.clone(),
-            value: value.value.iter().map(|b| b.clone()).collect(),
+            value: value.value.iter().copied().collect(),
             tags: value.tags.clone(),
         }
     }

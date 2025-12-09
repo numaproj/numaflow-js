@@ -180,7 +180,7 @@ impl SourceTransformDatum {
     pub fn get_value(&self) -> Buffer {
         self.value
             .iter()
-            .map(|b| b.clone())
+            .copied()
             .collect::<Vec<u8>>()
             .into()
     }
