@@ -178,11 +178,7 @@ impl SourceTransformDatum {
 
     #[napi(getter)]
     pub fn get_value(&self) -> Buffer {
-        self.value
-            .iter()
-            .copied()
-            .collect::<Vec<u8>>()
-            .into()
+        self.value.iter().copied().collect::<Vec<u8>>().into()
     }
 
     #[napi(getter)]
