@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc};
 use napi::Status;
 use napi::bindgen_prelude::{Buffer, Promise};
@@ -5,8 +8,6 @@ use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
 use numaflow::shared::ServerExtras;
 use numaflow::sourcetransform;
-use std::collections::HashMap;
-use std::sync::Arc;
 use tokio::sync::oneshot;
 use tokio_util::sync::CancellationToken;
 
@@ -240,7 +241,7 @@ pub struct SourceTransformAsyncServer {
             true,
         >,
     >,
-    server_shutdown: CancellationToken,
+    shutdown_token: CancellationToken,
 }
 
 #[napi(namespace = "sourceTransform")]
@@ -260,7 +261,7 @@ impl SourceTransformAsyncServer {
     ) -> Self {
         Self {
             source_transform_fn,
-            server_shutdown: CancellationToken::new(),
+            shutdown_token: CancellationToken::new(),
         }
     }
 
@@ -271,14 +272,14 @@ impl SourceTransformAsyncServer {
         info_file: Option<String>,
     ) -> napi::Result<()> {
         let (tx, rx) = oneshot::channel();
-        let server_shutdown = self.server_shutdown.clone();
+        let shutdown_token = self.shutdown_token.clone();
         tokio::spawn(async move {
-            server_shutdown.cancelled().await;
+            shutdown_token.cancelled().await;
             let _ = tx.send(());
         });
         let js_mapper = SourceTransformer::new(
             Arc::clone(&self.source_transform_fn),
-            self.server_shutdown.clone(),
+            self.shutdown_token.clone(),
         );
 
         let mut server = sourcetransform::Server::new(js_mapper);
@@ -298,7 +299,7 @@ impl SourceTransformAsyncServer {
 
     #[napi]
     pub fn stop(&self) -> napi::Result<()> {
-        self.server_shutdown.cancel();
+        self.shutdown_token.cancel();
         Ok(())
     }
 }

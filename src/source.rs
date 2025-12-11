@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc};
 use napi::bindgen_prelude::{Buffer, Promise};
 use napi::threadsafe_function::ThreadsafeFunction;
@@ -5,9 +8,9 @@ use napi::{Error, Status};
 use napi_derive::napi;
 use numaflow::shared::ServerExtras;
 use numaflow::source;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
+use tokio::sync::oneshot;
+use tokio_util::sync::CancellationToken;
 
 #[derive(Clone, Default)]
 #[napi(namespace = "source")]
@@ -170,7 +173,7 @@ pub struct SourceAsyncServer {
     nack_fn: Arc<NackFn>,
     pending_fn: Arc<PendingFn>,
     partition_fn: Arc<PartitionFn>,
-    shutdown_tx: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
+    shutdown_token: CancellationToken,
 }
 
 #[napi(namespace = "source")]
@@ -196,7 +199,7 @@ impl SourceAsyncServer {
             nack_fn: Arc::new(nack_fn),
             pending_fn: Arc::new(pending_fn),
             partition_fn: Arc::new(partition_fn),
-            shutdown_tx: Mutex::new(None),
+            shutdown_token: CancellationToken::new(),
         }
     }
 
@@ -213,6 +216,7 @@ impl SourceAsyncServer {
             self.nack_fn.clone(),
             self.pending_fn.clone(),
             self.partition_fn.clone(),
+            self.shutdown_token.clone(),
         );
         let mut server = source::Server::new(sourcer);
         if let Some(sock_file) = socket_path {
@@ -221,31 +225,29 @@ impl SourceAsyncServer {
         if let Some(info_file) = server_info_path {
             server = server.with_server_info_file(info_file);
         }
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        {
-            self.shutdown_tx.lock().unwrap().replace(tx);
-        }
-        println!(
-            "Starting SourceAsyncServer server at {:?}",
-            server.socket_file()
-        );
+        let (tx, rx) = oneshot::channel();
+        tokio::spawn({
+            let shutdown_token = self.shutdown_token.clone();
+            async move {
+                shutdown_token.cancelled().await;
+                let _ = tx.send(());
+            }
+        });
+
         server.start_with_shutdown(rx).await.map_err(|e| {
             Error::new(
                 Status::GenericFailure,
-                format!("Error running ReduceAsyncServer: {e:?}"),
+                format!("Error running Source server: {e:?}"),
             )
         })?;
-        println!("ReduceAsyncServer has shutdown...");
+        println!("SourceAsyncServer has shutdown...");
         Ok(())
     }
 
     /// Stop the SourceAsyncServer server
     #[napi]
     pub fn stop(&self) -> napi::Result<()> {
-        let tx = { self.shutdown_tx.lock().unwrap().take() };
-        if let Some(tx) = tx {
-            let _ = tx.send(());
-        }
+        self.shutdown_token.cancel();
         Ok(())
     }
 }
@@ -256,6 +258,7 @@ struct Sourcer {
     nack_fn: Arc<NackFn>,
     pending_fn: Arc<PendingFn>,
     partition_fn: Arc<PartitionFn>,
+    shutdown_token: CancellationToken,
 }
 
 impl Sourcer {
@@ -265,6 +268,7 @@ impl Sourcer {
         nack_fn: Arc<NackFn>,
         pending_fn: Arc<PendingFn>,
         partition_fn: Arc<PartitionFn>,
+        shutdown_token: CancellationToken,
     ) -> Self {
         Self {
             read_fn,
@@ -272,6 +276,7 @@ impl Sourcer {
             nack_fn,
             pending_fn,
             partition_fn,
+            shutdown_token,
         }
     }
 }
@@ -286,23 +291,28 @@ impl source::Sourcer for Sourcer {
                         Ok(Some(message)) => {
                             if let Err(e) = transmitter.send(message.into()).await {
                                 eprintln!("Error sending source message: {:?}", e);
-                                break;
+                                self.shutdown_token.cancel();
+                                panic!("Error sending source message: {:?}", e);
                             }
                         }
                         Ok(None) => break,
                         Err(e) => {
                             eprintln!("Error awaiting for source message: {:?}", e);
-                            break;
+                            self.shutdown_token.cancel();
+                            panic!("Error awaiting for source message: {:?}", e);
                         }
                     },
                     Err(e) => {
-                        eprintln!("Error calling JS source iterator: {:?}", e);
-                        break;
+                        eprintln!("Error awaiting for source message: {:?}", e);
+                        self.shutdown_token.cancel();
+                        panic!("Error calling JS source iterator: {:?}", e);
                     }
                 }
             },
             Err(e) => {
                 eprintln!("Error calling JS source function: {:?}", e);
+                self.shutdown_token.cancel();
+                panic!("Error calling JS source function: {:?}", e);
             }
         }
     }
