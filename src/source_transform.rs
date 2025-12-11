@@ -6,7 +6,9 @@ use napi_derive::napi;
 use numaflow::shared::ServerExtras;
 use numaflow::sourcetransform;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::oneshot;
+use tokio_util::sync::CancellationToken;
 
 #[derive(Clone, Default)]
 #[napi(namespace = "sourceTransform")]
@@ -238,7 +240,7 @@ pub struct SourceTransformAsyncServer {
             true,
         >,
     >,
-    shutdown_tx: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
+    server_shutdown: CancellationToken,
 }
 
 #[napi(namespace = "sourceTransform")]
@@ -258,7 +260,7 @@ impl SourceTransformAsyncServer {
     ) -> Self {
         Self {
             source_transform_fn,
-            shutdown_tx: Mutex::new(None),
+            server_shutdown: CancellationToken::new(),
         }
     }
 
@@ -268,7 +270,16 @@ impl SourceTransformAsyncServer {
         sock_file: Option<String>,
         info_file: Option<String>,
     ) -> napi::Result<()> {
-        let js_mapper = SourceTransformer::new(Arc::clone(&self.source_transform_fn));
+        let (tx, rx) = oneshot::channel();
+        let server_shutdown = self.server_shutdown.clone();
+        tokio::spawn(async move {
+            server_shutdown.cancelled().await;
+            let _ = tx.send(());
+        });
+        let js_mapper = SourceTransformer::new(
+            Arc::clone(&self.source_transform_fn),
+            self.server_shutdown.clone(),
+        );
 
         let mut server = sourcetransform::Server::new(js_mapper);
         if let Some(sock_file) = sock_file {
@@ -278,8 +289,6 @@ impl SourceTransformAsyncServer {
             server = server.with_server_info_file(info_file);
         }
 
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.shutdown_tx.lock().unwrap().replace(tx);
         if let Err(e) = server.start_with_shutdown(rx).await {
             println!("Error running SourceTransformAsyncServer: {e:?}");
         }
@@ -289,10 +298,7 @@ impl SourceTransformAsyncServer {
 
     #[napi]
     pub fn stop(&self) -> napi::Result<()> {
-        let tx = { self.shutdown_tx.lock().unwrap().take() };
-        if let Some(tx) = tx {
-            let _ = tx.send(());
-        }
+        self.server_shutdown.cancel();
         Ok(())
     }
 }
@@ -308,6 +314,7 @@ struct SourceTransformer {
             true,
         >,
     >,
+    cancellation_token: CancellationToken,
 }
 
 impl SourceTransformer {
@@ -322,9 +329,11 @@ impl SourceTransformer {
                 true,
             >,
         >,
+        cancellation_token: CancellationToken,
     ) -> Self {
         Self {
             source_transform_fn,
+            cancellation_token,
         }
     }
 }
@@ -339,13 +348,18 @@ impl sourcetransform::SourceTransformer for SourceTransformer {
             Ok(promise) => match promise.await {
                 Ok(messages) => messages.into_iter().map(|message| message.into()).collect(),
                 Err(e) => {
-                    eprintln!("Error executing JS source transform function: {:?}", e);
-                    vec![]
+                    eprintln!(
+                        "Error awaiting Javascript promise returned by transform function: {:?}",
+                        e
+                    );
+                    self.cancellation_token.cancel();
+                    panic!("Error awaiting Javascript promise returned by transform function");
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS source transform function: {:?}", e);
-                vec![]
+                eprintln!("Error calling source transform function: {:?}", e);
+                self.cancellation_token.cancel();
+                panic!("Error calling source transform function");
             }
         }
     }
