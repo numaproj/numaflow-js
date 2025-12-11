@@ -6,7 +6,9 @@ use napi_derive::napi;
 use numaflow::shared::ServerExtras;
 use numaflow::sourcetransform;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::oneshot;
+use tokio_util::sync::CancellationToken;
 
 #[derive(Clone, Default)]
 #[napi(namespace = "sourceTransform")]
@@ -92,7 +94,7 @@ pub struct SourceTransformMessage {
     pub value: Buffer,
     /// Time for the given event. This will be used for tracking watermarks. If cannot be derived, set it to the incoming
     /// event_time from the [`SourceTransformRequest`].
-    pub event_time: DateTime<Utc>,
+    pub eventtime: DateTime<Utc>,
     /// Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/).
     pub tags: Option<Vec<String>>,
     /// User metadata for the message.
@@ -100,11 +102,11 @@ pub struct SourceTransformMessage {
 }
 
 #[napi(namespace = "sourceTransform")]
-pub fn message_to_drop(event_time: DateTime<Utc>) -> SourceTransformMessage {
+pub fn message_to_drop(eventtime: DateTime<Utc>) -> SourceTransformMessage {
     SourceTransformMessage {
         keys: None,
         value: vec![].into(),
-        event_time,
+        eventtime,
         tags: Some(vec![numaflow::shared::DROP.to_string()]),
         user_metadata: None,
     }
@@ -125,7 +127,7 @@ impl From<SourceTransformMessage> for sourcetransform::Message {
         Self {
             keys: value.keys,
             value: value.value.into(),
-            event_time: value.event_time,
+            event_time: value.eventtime,
             tags: value.tags,
             user_metadata,
         }
@@ -142,7 +144,7 @@ pub struct SourceTransformDatum {
     /// guarantee that we will not see an element older than this time.
     watermark: DateTime<Utc>,
     /// Time of the element as seen at source or aligned after a reduce operation.
-    event_time: DateTime<Utc>,
+    eventtime: DateTime<Utc>,
     /// Headers for the message.
     headers: HashMap<String, String>,
     /// User metadata for the message.
@@ -158,7 +160,7 @@ impl SourceTransformDatum {
         keys: Vec<String>,
         value: Buffer,
         watermark: DateTime<Utc>,
-        event_time: DateTime<Utc>,
+        eventtime: DateTime<Utc>,
         headers: HashMap<String, String>,
         user_metadata: Option<&SourceTransformUserMetadata>,
         system_metadata: Option<&SourceTransformSystemMetadata>,
@@ -167,7 +169,7 @@ impl SourceTransformDatum {
             keys,
             value,
             watermark,
-            event_time,
+            eventtime,
             headers,
             user_metadata: user_metadata
                 .map(|metadata| SourceTransformUserMetadata(metadata.0.clone())),
@@ -178,7 +180,7 @@ impl SourceTransformDatum {
 
     #[napi(getter)]
     pub fn get_value(&self) -> Buffer {
-        self.value.iter().copied().collect::<Vec<u8>>().into()
+        self.value.iter().cloned().collect::<Vec<u8>>().into()
     }
 
     #[napi(getter)]
@@ -187,8 +189,8 @@ impl SourceTransformDatum {
     }
 
     #[napi(getter)]
-    pub fn get_event_time(&self) -> DateTime<Utc> {
-        self.event_time
+    pub fn get_eventtime(&self) -> DateTime<Utc> {
+        self.eventtime
     }
 
     #[napi(getter)]
@@ -218,7 +220,7 @@ impl From<sourcetransform::SourceTransformRequest> for SourceTransformDatum {
             keys: value.keys,
             value: value.value.into(),
             watermark: value.watermark,
-            event_time: value.eventtime,
+            eventtime: value.eventtime,
             headers: value.headers,
             user_metadata: Some(SourceTransformUserMetadata(value.user_metadata)),
             system_metadata: Some(SourceTransformSystemMetadata(value.system_metadata)),
@@ -238,7 +240,7 @@ pub struct SourceTransformAsyncServer {
             true,
         >,
     >,
-    shutdown_tx: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
+    server_shutdown: CancellationToken,
 }
 
 #[napi(namespace = "sourceTransform")]
@@ -258,7 +260,7 @@ impl SourceTransformAsyncServer {
     ) -> Self {
         Self {
             source_transform_fn,
-            shutdown_tx: Mutex::new(None),
+            server_shutdown: CancellationToken::new(),
         }
     }
 
@@ -268,7 +270,16 @@ impl SourceTransformAsyncServer {
         sock_file: Option<String>,
         info_file: Option<String>,
     ) -> napi::Result<()> {
-        let js_mapper = SourceTransformer::new(Arc::clone(&self.source_transform_fn));
+        let (tx, rx) = oneshot::channel();
+        let server_shutdown = self.server_shutdown.clone();
+        tokio::spawn(async move {
+            server_shutdown.cancelled().await;
+            let _ = tx.send(());
+        });
+        let js_mapper = SourceTransformer::new(
+            Arc::clone(&self.source_transform_fn),
+            self.server_shutdown.clone(),
+        );
 
         let mut server = sourcetransform::Server::new(js_mapper);
         if let Some(sock_file) = sock_file {
@@ -278,8 +289,6 @@ impl SourceTransformAsyncServer {
             server = server.with_server_info_file(info_file);
         }
 
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        self.shutdown_tx.lock().unwrap().replace(tx);
         if let Err(e) = server.start_with_shutdown(rx).await {
             println!("Error running SourceTransformAsyncServer: {e:?}");
         }
@@ -289,10 +298,7 @@ impl SourceTransformAsyncServer {
 
     #[napi]
     pub fn stop(&self) -> napi::Result<()> {
-        let tx = { self.shutdown_tx.lock().unwrap().take() };
-        if let Some(tx) = tx {
-            let _ = tx.send(());
-        }
+        self.server_shutdown.cancel();
         Ok(())
     }
 }
@@ -308,6 +314,7 @@ struct SourceTransformer {
             true,
         >,
     >,
+    cancellation_token: CancellationToken,
 }
 
 impl SourceTransformer {
@@ -322,9 +329,11 @@ impl SourceTransformer {
                 true,
             >,
         >,
+        cancellation_token: CancellationToken,
     ) -> Self {
         Self {
             source_transform_fn,
+            cancellation_token,
         }
     }
 }
@@ -339,13 +348,18 @@ impl sourcetransform::SourceTransformer for SourceTransformer {
             Ok(promise) => match promise.await {
                 Ok(messages) => messages.into_iter().map(|message| message.into()).collect(),
                 Err(e) => {
-                    eprintln!("Error executing JS source transform function: {:?}", e);
-                    vec![]
+                    eprintln!(
+                        "Error awaiting Javascript promise returned by transform function: {:?}",
+                        e
+                    );
+                    self.cancellation_token.cancel();
+                    panic!("Error awaiting Javascript promise returned by transform function");
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS source transform function: {:?}", e);
-                vec![]
+                eprintln!("Error calling source transform function: {:?}", e);
+                self.cancellation_token.cancel();
+                panic!("Error calling source transform function");
             }
         }
     }
