@@ -94,7 +94,7 @@ pub struct SourceTransformMessage {
     pub value: Buffer,
     /// Time for the given event. This will be used for tracking watermarks. If cannot be derived, set it to the incoming
     /// event_time from the [`SourceTransformRequest`].
-    pub eventtime: DateTime<Utc>,
+    pub event_time: DateTime<Utc>,
     /// Tags are used for [conditional forwarding](https://numaflow.numaproj.io/user-guide/reference/conditional-forwarding/).
     pub tags: Option<Vec<String>>,
     /// User metadata for the message.
@@ -102,11 +102,11 @@ pub struct SourceTransformMessage {
 }
 
 #[napi(namespace = "sourceTransform")]
-pub fn message_to_drop(eventtime: DateTime<Utc>) -> SourceTransformMessage {
+pub fn message_to_drop(event_time: DateTime<Utc>) -> SourceTransformMessage {
     SourceTransformMessage {
         keys: None,
         value: vec![].into(),
-        eventtime,
+        event_time,
         tags: Some(vec![numaflow::shared::DROP.to_string()]),
         user_metadata: None,
     }
@@ -127,7 +127,7 @@ impl From<SourceTransformMessage> for sourcetransform::Message {
         Self {
             keys: value.keys,
             value: value.value.into(),
-            event_time: value.eventtime,
+            event_time: value.event_time,
             tags: value.tags,
             user_metadata,
         }
@@ -144,7 +144,7 @@ pub struct SourceTransformDatum {
     /// guarantee that we will not see an element older than this time.
     watermark: DateTime<Utc>,
     /// Time of the element as seen at source or aligned after a reduce operation.
-    eventtime: DateTime<Utc>,
+    event_time: DateTime<Utc>,
     /// Headers for the message.
     headers: HashMap<String, String>,
     /// User metadata for the message.
@@ -160,7 +160,7 @@ impl SourceTransformDatum {
         keys: Vec<String>,
         value: Buffer,
         watermark: DateTime<Utc>,
-        eventtime: DateTime<Utc>,
+        event_time: DateTime<Utc>,
         headers: HashMap<String, String>,
         user_metadata: Option<&SourceTransformUserMetadata>,
         system_metadata: Option<&SourceTransformSystemMetadata>,
@@ -169,7 +169,7 @@ impl SourceTransformDatum {
             keys,
             value,
             watermark,
-            eventtime,
+            event_time,
             headers,
             user_metadata: user_metadata
                 .map(|metadata| SourceTransformUserMetadata(metadata.0.clone())),
@@ -180,7 +180,7 @@ impl SourceTransformDatum {
 
     #[napi(getter)]
     pub fn get_value(&self) -> Buffer {
-        self.value.iter().cloned().collect::<Vec<u8>>().into()
+        self.value.iter().copied().collect::<Vec<u8>>().into()
     }
 
     #[napi(getter)]
@@ -189,8 +189,8 @@ impl SourceTransformDatum {
     }
 
     #[napi(getter)]
-    pub fn get_eventtime(&self) -> DateTime<Utc> {
-        self.eventtime
+    pub fn get_event_time(&self) -> DateTime<Utc> {
+        self.event_time
     }
 
     #[napi(getter)]
@@ -220,7 +220,7 @@ impl From<sourcetransform::SourceTransformRequest> for SourceTransformDatum {
             keys: value.keys,
             value: value.value.into(),
             watermark: value.watermark,
-            eventtime: value.eventtime,
+            event_time: value.eventtime,
             headers: value.headers,
             user_metadata: Some(SourceTransformUserMetadata(value.user_metadata)),
             system_metadata: Some(SourceTransformSystemMetadata(value.system_metadata)),
