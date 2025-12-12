@@ -43,7 +43,7 @@
   },
   "scripts": {
     "artifacts": "napi artifacts",
-    "build:ts": "pnpm tsc -p tsconfig.index.json",
+    "build:ts": "pnpm install && pnpm tsc -p tsconfig.index.json",
     "build:rs": "napi build --platform --js binding.js --dts binding.d.ts",
     "build": "pnpm run build:rs --release && pnpm run build:ts && pnpm format",
     "build:debug": "pnpm run build:rs && pnpm run build:ts && pnpm format",
@@ -75,7 +75,8 @@
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.10"
+    "vitest": "^4.0.10",
+    "async-mutex": "^0.5.0"
   },
   "prettier": {
     "printWidth": 120,

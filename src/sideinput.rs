@@ -8,6 +8,9 @@ use std::sync::{Arc, Mutex};
 type SideInputFn = ThreadsafeFunction<(), Promise<Option<Buffer>>, (), Status, false, true>;
 
 #[napi(namespace = "sideInput")]
+pub const DIR_PATH: &str = sideinput::DIR_PATH;
+
+#[napi(namespace = "sideInput")]
 pub struct SideInputAsyncServer {
     side_input_fn: Arc<SideInputFn>,
     shutdown_tx: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
