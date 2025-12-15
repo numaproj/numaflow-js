@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use chrono::{DateTime, Utc};
 use napi::bindgen_prelude::{Buffer, Promise};
@@ -9,8 +9,6 @@ use napi_derive::napi;
 use numaflow::shared::ServerExtras;
 use numaflow::source;
 use tokio::sync::mpsc::Sender;
-use tokio::sync::oneshot;
-use tokio_util::sync::CancellationToken;
 
 #[derive(Clone, Default)]
 #[napi(namespace = "source")]
@@ -173,7 +171,7 @@ pub struct SourceAsyncServer {
     nack_fn: Arc<NackFn>,
     pending_fn: Arc<PendingFn>,
     partition_fn: Arc<PartitionFn>,
-    shutdown_token: CancellationToken,
+    shutdown_tx: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
 }
 
 #[napi(namespace = "source")]
@@ -199,7 +197,7 @@ impl SourceAsyncServer {
             nack_fn: Arc::new(nack_fn),
             pending_fn: Arc::new(pending_fn),
             partition_fn: Arc::new(partition_fn),
-            shutdown_token: CancellationToken::new(),
+            shutdown_tx: Mutex::new(None),
         }
     }
 
@@ -216,7 +214,6 @@ impl SourceAsyncServer {
             self.nack_fn.clone(),
             self.pending_fn.clone(),
             self.partition_fn.clone(),
-            self.shutdown_token.clone(),
         );
         let mut server = source::Server::new(sourcer);
         if let Some(sock_file) = socket_path {
@@ -225,29 +222,31 @@ impl SourceAsyncServer {
         if let Some(info_file) = server_info_path {
             server = server.with_server_info_file(info_file);
         }
-        let (tx, rx) = oneshot::channel();
-        tokio::spawn({
-            let shutdown_token = self.shutdown_token.clone();
-            async move {
-                shutdown_token.cancelled().await;
-                let _ = tx.send(());
-            }
-        });
-
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        {
+            self.shutdown_tx.lock().unwrap().replace(tx);
+        }
+        println!(
+            "Starting SourceAsyncServer server at {:?}",
+            server.socket_file()
+        );
         server.start_with_shutdown(rx).await.map_err(|e| {
             Error::new(
                 Status::GenericFailure,
-                format!("Error running Source server: {e:?}"),
+                format!("Error running ReduceAsyncServer: {e:?}"),
             )
         })?;
-        println!("SourceAsyncServer has shutdown...");
+        println!("ReduceAsyncServer has shutdown...");
         Ok(())
     }
 
     /// Stop the SourceAsyncServer server
     #[napi]
     pub fn stop(&self) -> napi::Result<()> {
-        self.shutdown_token.cancel();
+        let tx = { self.shutdown_tx.lock().unwrap().take() };
+        if let Some(tx) = tx {
+            let _ = tx.send(());
+        }
         Ok(())
     }
 }
@@ -258,7 +257,6 @@ struct Sourcer {
     nack_fn: Arc<NackFn>,
     pending_fn: Arc<PendingFn>,
     partition_fn: Arc<PartitionFn>,
-    shutdown_token: CancellationToken,
 }
 
 impl Sourcer {
@@ -268,7 +266,6 @@ impl Sourcer {
         nack_fn: Arc<NackFn>,
         pending_fn: Arc<PendingFn>,
         partition_fn: Arc<PartitionFn>,
-        shutdown_token: CancellationToken,
     ) -> Self {
         Self {
             read_fn,
@@ -276,7 +273,6 @@ impl Sourcer {
             nack_fn,
             pending_fn,
             partition_fn,
-            shutdown_token,
         }
     }
 }
@@ -290,29 +286,25 @@ impl source::Sourcer for Sourcer {
                     Ok(promise) => match promise.await {
                         Ok(Some(message)) => {
                             if let Err(e) = transmitter.send(message.into()).await {
-                                eprintln!("Error sending source message: {:?}", e);
-                                self.shutdown_token.cancel();
-                                panic!("Error sending source message: {:?}", e);
+                                eprintln!("[ERROR] Sending message to numa: {:?}", e);
+                                panic!("Sending message to numa: {:?}", e);
                             }
                         }
                         Ok(None) => break,
                         Err(e) => {
-                            eprintln!("Error awaiting for source message: {:?}", e);
-                            self.shutdown_token.cancel();
-                            panic!("Error awaiting for source message: {:?}", e);
+                            eprintln!("[ERROR] User-defined function returned an error: {:?}", e);
+                            panic!("User-defined function returned an error: {:?}", e);
                         }
                     },
                     Err(e) => {
-                        eprintln!("Error awaiting for source message: {:?}", e);
-                        self.shutdown_token.cancel();
-                        panic!("Error calling JS source iterator: {:?}", e);
+                        eprintln!("[ERROR] Executing user-defined map function: {:?}", e);
+                        panic!("Error executing user-defined map function: {:?}", e);
                     }
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS source function: {:?}", e);
-                self.shutdown_token.cancel();
-                panic!("Error calling JS source function: {:?}", e);
+                eprintln!("[ERROR] Executing user-defined read function: {:?}", e);
+                panic!("Error executing user-defined read function: {:?}", e);
             }
         }
     }
@@ -326,11 +318,16 @@ impl source::Sourcer for Sourcer {
             Ok(promise) => match promise.await {
                 Ok(_) => {}
                 Err(e) => {
-                    eprintln!("Error awaiting for JS ack fn response: {:?}", e);
+                    eprintln!(
+                        "[ERROR] User-defined ack function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined ack function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS ack function: {:?}", e);
+                eprintln!("[ERROR] Executing user-defined ack function: {:?}", e);
+                panic!("Error executing user-defined ack function: {:?}", e);
             }
         }
     }
@@ -344,11 +341,16 @@ impl source::Sourcer for Sourcer {
             Ok(promise) => match promise.await {
                 Ok(_) => {}
                 Err(e) => {
-                    eprintln!("Error awaiting for JS nack fn response: {:?}", e);
+                    eprintln!(
+                        "[ERROR] User-defined nack function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined nack function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS nack function: {:?}", e);
+                eprintln!("[ERROR] Executing user-defined nack function: {:?}", e);
+                panic!("Error executing user-defined nack function: {:?}", e);
             }
         }
     }
@@ -359,13 +361,16 @@ impl source::Sourcer for Sourcer {
                 Ok(Some(pending)) => Some(pending as usize),
                 Ok(None) => None,
                 Err(e) => {
-                    eprintln!("Error awaiting for JS pending fn response: {:?}", e);
-                    None
+                    eprintln!(
+                        "[ERROR] User-defined pending function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined pending function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS pending function: {:?}", e);
-                None
+                eprintln!("[ERROR] Executing user-defined pending function: {:?}", e);
+                panic!("Error executing user-defined pending function: {:?}", e);
             }
         }
     }
@@ -376,13 +381,22 @@ impl source::Sourcer for Sourcer {
                 Ok(Some(partitions)) => Some(partitions),
                 Ok(None) => None,
                 Err(e) => {
-                    eprintln!("Error awaiting for JS partitions fn response: {:?}", e);
-                    None
+                    eprintln!(
+                        "[ERROR] User-defined partitions function returned an error: {:?}",
+                        e
+                    );
+                    panic!(
+                        "User-defined partitions function returned an error: {:?}",
+                        e
+                    );
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS partitions function: {:?}", e);
-                None
+                eprintln!(
+                    "[ERROR] Executing user-defined partitions function: {:?}",
+                    e
+                );
+                panic!("Error executing user-defined partitions function: {:?}", e);
             }
         }
     }
