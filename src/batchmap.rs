@@ -4,7 +4,7 @@ use std::{collections::HashMap, sync::Mutex};
 use chrono::{DateTime, Utc};
 use napi::bindgen_prelude::{Buffer, Promise};
 use napi::threadsafe_function::ThreadsafeFunction;
-use napi::{Result, Status, Error};
+use napi::{Error, Result, Status};
 use napi_derive::napi;
 use numaflow::batchmap;
 use numaflow::shared::ServerExtras;
@@ -216,7 +216,10 @@ impl BatchMapAsyncServer {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.shutdown_tx.lock().unwrap().replace(tx);
         if let Err(e) = server.start_with_shutdown(rx).await {
-            return Err(Error::new(Status::GenericFailure, format!("Error running BatchMapAsyncServer: {e:?}")));
+            return Err(Error::new(
+                Status::GenericFailure,
+                format!("Error running BatchMapAsyncServer: {e:?}"),
+            ));
         }
         println!("BatchMapAsyncServer has shutdown...");
         Ok(())

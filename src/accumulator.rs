@@ -228,10 +228,7 @@ impl accumulator::Accumulator for Accumulator {
                     Ok(promise) => match promise.await {
                         Ok(Some(message)) => {
                             if let Err(e) = tx.send(message.into()).await {
-                                eprintln!(
-                                    "[ERROR] Sending accumulator message to numa: {:?}",
-                                    e
-                                );
+                                eprintln!("[ERROR] Sending accumulator message to numa: {:?}", e);
                                 panic!("Error sending accumulator message to numa: {:?}", e);
                             }
                         }
@@ -241,11 +238,17 @@ impl accumulator::Accumulator for Accumulator {
                                 "[ERROR] User-defined accumulator function returned an error: {:?}",
                                 e
                             );
-                            panic!("User-defined accumulator function returned an error: {:?}", e);
+                            panic!(
+                                "User-defined accumulator function returned an error: {:?}",
+                                e
+                            );
                         }
                     },
                     Err(e) => {
-                        eprintln!("[ERROR] Executing user-defined accumulator function: {:?}", e);
+                        eprintln!(
+                            "[ERROR] Executing user-defined accumulator function: {:?}",
+                            e
+                        );
                         panic!("Error executing user-defined accumulator function: {:?}", e);
                     }
                 }
