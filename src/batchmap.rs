@@ -1,12 +1,13 @@
+use std::sync::Arc;
+use std::{collections::HashMap, sync::Mutex};
+
 use chrono::{DateTime, Utc};
 use napi::bindgen_prelude::{Buffer, Promise};
 use napi::threadsafe_function::ThreadsafeFunction;
-use napi::{Result, Status};
+use napi::{Result, Status, Error};
 use napi_derive::napi;
 use numaflow::batchmap;
 use numaflow::shared::ServerExtras;
-use std::sync::Arc;
-use std::{collections::HashMap, sync::Mutex};
 
 #[derive(Default)]
 #[napi(object, namespace = "batchmap")]
@@ -215,7 +216,7 @@ impl BatchMapAsyncServer {
         let (tx, rx) = tokio::sync::oneshot::channel();
         self.shutdown_tx.lock().unwrap().replace(tx);
         if let Err(e) = server.start_with_shutdown(rx).await {
-            println!("Error running BatchMapAsyncServer: {e:?}");
+            return Err(Error::new(Status::GenericFailure, format!("Error running BatchMapAsyncServer: {e:?}")));
         }
         println!("BatchMapAsyncServer has shutdown...");
         Ok(())
@@ -274,13 +275,16 @@ impl batchmap::BatchMapper for BatchMapper {
             Ok(promise) => match promise.await {
                 Ok(responses) => responses.into_iter().map(|resp| resp.into()).collect(),
                 Err(e) => {
-                    eprintln!("Error executing JS batchmap function: {:?}", e);
-                    vec![]
+                    eprintln!(
+                        "[ERROR] User-defined batchmap function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined batchmap function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS batchmap function: {:?}", e);
-                vec![]
+                eprintln!("[ERROR] Executing user-defined batchmap function: {:?}", e);
+                panic!("Error executing user-defined batchmap function: {:?}", e);
             }
         }
     }
