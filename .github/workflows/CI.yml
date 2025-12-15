@@ -286,6 +286,8 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
+      - name: Build TypeScript files
+        run: pnpm build:ts
       - name: Download all artifacts
         uses: actions/download-artifact@v6
         with:
