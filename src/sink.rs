@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::Mutex;
 
 use chrono::{DateTime, Utc};
 use napi::bindgen_prelude::{Buffer, Promise};
@@ -8,7 +9,6 @@ use napi::{Error, Status};
 use napi_derive::napi;
 use numaflow::shared::ServerExtras;
 use numaflow::sink;
-use tokio_util::sync::CancellationToken;
 
 #[derive(Clone, Default)]
 #[napi(namespace = "sink")]
@@ -333,7 +333,7 @@ pub struct SinkAsyncServer {
             true,
         >,
     >,
-    shutdown_token: CancellationToken,
+    shutdown_tx: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
 }
 
 #[napi(namespace = "sink")]
@@ -352,7 +352,7 @@ impl SinkAsyncServer {
     ) -> napi::Result<Self> {
         Ok(Self {
             sink_fn: Arc::new(sink_fn),
-            shutdown_token: CancellationToken::new(),
+            shutdown_tx: Mutex::new(None),
         })
     }
 
@@ -364,18 +364,14 @@ impl SinkAsyncServer {
         server_info_path: Option<String>,
     ) -> napi::Result<()> {
         let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
-        tokio::spawn({
-            let shutdown_token = self.shutdown_token.clone();
-            async move {
-                shutdown_token.cancelled().await;
-                let _ = shutdown_tx.send(());
-            }
-        });
+        self.shutdown_tx
+            .lock()
+            .map_err(|_| Error::new(Status::GenericFailure, "Failed to start the server"))?
+            .replace(shutdown_tx);
 
         // Create the actual sink implementation with Arc clone
         let sinker = SinkImpl {
             sink_fn: Arc::clone(&self.sink_fn),
-            shutdown_token: self.shutdown_token.clone(),
         };
 
         // Use socket_file and server_info_file if both are provided, else use default
@@ -398,7 +394,10 @@ impl SinkAsyncServer {
     /// Stop the sink server
     #[napi]
     pub fn stop(&self) -> napi::Result<()> {
-        self.shutdown_token.cancel();
+        let tx = { self.shutdown_tx.lock().unwrap().take() };
+        if let Some(tx) = tx {
+            let _ = tx.send(());
+        }
         Ok(())
     }
 }
@@ -415,7 +414,6 @@ struct SinkImpl {
             true,
         >,
     >,
-    shutdown_token: CancellationToken,
 }
 
 #[tonic::async_trait]
@@ -430,15 +428,16 @@ impl sink::Sinker for SinkImpl {
             Ok(promise) => match promise.await {
                 Ok(responses) => responses.into_iter().map(|r| r.clone().into()).collect(),
                 Err(e) => {
-                    eprintln!("Error executing sink function: {:?}", e);
-                    self.shutdown_token.cancel();
-                    panic!("Error executing sink function: {:?}", e);
+                    eprintln!(
+                        "[ERROR] User-defined sink function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined sink function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS sink function: {:?}", e);
-                self.shutdown_token.cancel();
-                panic!("Error calling JS sink function: {:?}", e);
+                eprintln!("[ERROR] Executing user-defined sink function: {:?}", e);
+                panic!("Error executing user-defined sink function: {:?}", e);
             }
         }
     }
