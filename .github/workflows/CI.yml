@@ -271,8 +271,10 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
-    # Only publish on tag pushes (e.g. v1.2.3 or v1.2.3-alpha.1), never on PRs/branch pushes.
+    # Publish on tag pushes (e.g. v1.2.3 or v1.2.3-alpha.1).
     if: startsWith(github.ref, 'refs/tags/')
+    # For PRs, allow test publishes only when the PR comes from the same repository (not forks).
+    # if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     needs:
       - lint
       - test-macOS-windows-binding
@@ -307,6 +309,14 @@ jobs:
       - name: Publish
         run: |
           set -euo pipefail
+
+          # Comment out this section to publish from a PR branch
+          # if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+          #   npm config set provenance true
+          #   echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+          #   npm publish --tag test --access public
+          #   exit 0
+          # fi
 
           # Tag is like "v0.1.0" or "v0.1.0-alpha.1"
           VERSION="${GITHUB_REF_NAME#v}"
