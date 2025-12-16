@@ -303,25 +303,49 @@ impl session_reduce::SessionReducer for SessionReducer {
                     Ok(promise) => match promise.await {
                         Ok(Some(message)) => {
                             if let Err(e) = response_stream.send(message.into()).await {
-                                eprintln!("[ERROR] Failed to send session reduce message to grpc client: {:?}", e);
-                                panic!("Failed to send session reduce message to grpc client: {:?}", e);
+                                eprintln!(
+                                    "[ERROR] Failed to send session reduce message to grpc client: {:?}",
+                                    e
+                                );
+                                panic!(
+                                    "Failed to send session reduce message to grpc client: {:?}",
+                                    e
+                                );
                             }
                         }
                         Ok(None) => break,
                         Err(e) => {
-                            eprintln!("[ERROR] Error executing iterator returned by user-defined session reduce function: {:?}", e);
-                            panic!("Error executing iterator returned by user-defined session reduce function: {:?}", e);
+                            eprintln!(
+                                "[ERROR] Error executing iterator returned by user-defined session reduce function: {:?}",
+                                e
+                            );
+                            panic!(
+                                "Error executing iterator returned by user-defined session reduce function: {:?}",
+                                e
+                            );
                         }
                     },
                     Err(e) => {
-                        eprintln!("[ERROR] User-defined session reduce function returned an error: {:?}", e);
-                        panic!("User-defined session reduce function returned an error: {:?}", e);
+                        eprintln!(
+                            "[ERROR] User-defined session reduce function returned an error: {:?}",
+                            e
+                        );
+                        panic!(
+                            "User-defined session reduce function returned an error: {:?}",
+                            e
+                        );
                     }
                 }
             },
             Err(e) => {
-                eprintln!("[ERROR] Failed to call user-defined session reduce function: {:?}", e);
-                panic!("Failed to call user-defined session reduce function: {:?}", e);
+                eprintln!(
+                    "[ERROR] Failed to call user-defined session reduce function: {:?}",
+                    e
+                );
+                panic!(
+                    "Failed to call user-defined session reduce function: {:?}",
+                    e
+                );
             }
         }
     }

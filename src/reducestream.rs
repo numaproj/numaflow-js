@@ -138,14 +138,26 @@ impl reducestream::ReduceStreamer for ReduceStreamer {
                     Ok(promise) => match promise.await {
                         Ok(Some(message)) => {
                             if let Err(e) = output.send(message.into()).await {
-                                eprintln!("[ERROR] Failed to send reduce-stream message to grpc client: {:?}", e);
-                                panic!("Failed to send reduce-stream message to grpc client: {:?}", e);
+                                eprintln!(
+                                    "[ERROR] Failed to send reduce-stream message to grpc client: {:?}",
+                                    e
+                                );
+                                panic!(
+                                    "Failed to send reduce-stream message to grpc client: {:?}",
+                                    e
+                                );
                             }
                         }
                         Ok(None) => break,
                         Err(e) => {
-                            eprintln!("[ERROR] Error executing iterator returned by user-defined reduce-stream function: {:?}", e);
-                            panic!("Error executing iterator returned by user-defined reduce-stream function: {:?}", e);
+                            eprintln!(
+                                "[ERROR] Error executing iterator returned by user-defined reduce-stream function: {:?}",
+                                e
+                            );
+                            panic!(
+                                "Error executing iterator returned by user-defined reduce-stream function: {:?}",
+                                e
+                            );
                         }
                     },
                     Err(e) => {
@@ -153,13 +165,22 @@ impl reducestream::ReduceStreamer for ReduceStreamer {
                             "[ERROR] User-defined reduce-stream function returned an error: {:?}",
                             e
                         );
-                        panic!("User-defined reduce-stream function returned an error: {:?}", e);
+                        panic!(
+                            "User-defined reduce-stream function returned an error: {:?}",
+                            e
+                        );
                     }
                 }
             },
             Err(e) => {
-                eprintln!("[ERROR] Executing user-defined reduce-stream function: {:?}", e);
-                panic!("Error executing user-defined reduce-stream function: {:?}", e);
+                eprintln!(
+                    "[ERROR] Executing user-defined reduce-stream function: {:?}",
+                    e
+                );
+                panic!(
+                    "Error executing user-defined reduce-stream function: {:?}",
+                    e
+                );
             }
         }
     }
