@@ -303,24 +303,25 @@ impl session_reduce::SessionReducer for SessionReducer {
                     Ok(promise) => match promise.await {
                         Ok(Some(message)) => {
                             if let Err(e) = response_stream.send(message.into()).await {
-                                eprintln!("Error sending session reduce message: {:?}", e);
-                                break;
+                                eprintln!("[ERROR] Failed to send session reduce message to grpc client: {:?}", e);
+                                panic!("Failed to send session reduce message to grpc client: {:?}", e);
                             }
                         }
                         Ok(None) => break,
                         Err(e) => {
-                            eprintln!("Error executing JS session reduce iterator: {:?}", e);
-                            break;
+                            eprintln!("[ERROR] Error executing iterator returned by user-defined session reduce function: {:?}", e);
+                            panic!("Error executing iterator returned by user-defined session reduce function: {:?}", e);
                         }
                     },
                     Err(e) => {
-                        eprintln!("Error calling JS session reduce iterator: {:?}", e);
-                        break;
+                        eprintln!("[ERROR] User-defined session reduce function returned an error: {:?}", e);
+                        panic!("User-defined session reduce function returned an error: {:?}", e);
                     }
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS session reduce function: {:?}", e);
+                eprintln!("[ERROR] Failed to call user-defined session reduce function: {:?}", e);
+                panic!("Failed to call user-defined session reduce function: {:?}", e);
             }
         }
     }
@@ -331,18 +332,12 @@ impl session_reduce::SessionReducer for SessionReducer {
                 .await
                 .map(|buffer| buffer.into())
                 .unwrap_or_else(|e| {
-                    eprintln!(
-                        "Error unwrapping response from session reduce's accumulator method: {:?}",
-                        e
-                    );
-                    Vec::new()
+                    eprintln!("[ERROR] Unable to unwrap response from session reduce's accumulator method: {:?}", e);
+                    panic!("Unable to unwrap response from session reduce's accumulator method: {:?}", e);
                 }),
             Err(e) => {
-                eprintln!(
-                    "Error calling JS session reduce's accumulator method: {:?}",
-                    e
-                );
-                Vec::new()
+                eprintln!("[ERROR] Failed to call user-defined session reduce's accumulator method: {:?}", e);
+                panic!("Failed to call user-defined session reduce's accumulator method: {:?}", e);
             }
         }
     }
@@ -350,10 +345,12 @@ impl session_reduce::SessionReducer for SessionReducer {
     async fn merge_accumulator(&self, accumulator: Vec<u8>) {
         match self.merge_accumulator_fn.call_async(accumulator.into()).await {
             Ok(promise) => promise.await.unwrap_or_else(|e| {
-                eprintln!("Error unwrapping response from session reduce's merge accumulator method: {:?}", e);
+                eprintln!("[ERROR] Unable to unwrap response from session reduce's merge accumulator method: {:?}", e);
+                panic!("Unable to unwrap response from session reduce's merge accumulator method: {:?}", e);
             }),
             Err(e) => {
-                eprintln!("Error calling JS session reduce's merge accumulator method: {:?}", e);
+                eprintln!("[ERROR] Failed to call user-defined session reduce's merge accumulator method: {:?}", e);
+                panic!("Failed to call user-defined session reduce's merge accumulator method: {:?}", e);
             }
         }
     }

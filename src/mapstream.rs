@@ -160,24 +160,25 @@ impl mapstream::MapStreamer for JsMapper {
                     Ok(promise) => match promise.await {
                         Ok(Some(message)) => {
                             if let Err(e) = tx.send(message.into()).await {
-                                eprintln!("Error sending mapstream message: {:?}", e);
-                                break;
+                                eprintln!("[ERROR] Failed to send mapstream message to grpc client: {:?}", e);
+                                panic!("Failed to send mapstream message to grpc client: {:?}", e);
                             }
                         }
                         Ok(None) => break,
                         Err(e) => {
-                            eprintln!("Error executing JS mapstream iterator: {:?}", e);
-                            break;
+                            eprintln!("[ERROR] Error executing iterator returned by user-defined mapstream function: {:?}", e);
+                            panic!("Error executing iterator returned by user-defined mapstream function: {:?}", e);
                         }
                     },
                     Err(e) => {
-                        eprintln!("Error calling JS mapstream iterator: {:?}", e);
-                        break;
+                        eprintln!("[ERROR] User-defined map-stream function retured an error: {:?}", e);
+                        panic!("User-defined map-stream function retured an error: {:?}", e);
                     }
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS mapstream function: {:?}", e);
+                eprintln!("[ERROR] Error executing user-defined mapstream function: {:?}", e);
+                panic!("Error executing user-defined mapstream function: {:?}", e);
             }
         }
     }
