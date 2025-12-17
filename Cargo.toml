@@ -40,8 +40,6 @@ chrono.workspace = true
 tokio.workspace = true
 async-trait.workspace = true
 tonic.workspace = true
-tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
-tracing = "0.1.43"
 
 [build-dependencies]
 napi-build = "2"
