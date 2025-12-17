@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
 use chrono::{DateTime, Utc};
 use napi::Status;
 use napi::bindgen_prelude::{Buffer, Promise};
@@ -5,10 +8,6 @@ use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
 use numaflow::shared::ServerExtras;
 use numaflow::sourcetransform;
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::oneshot;
-use tokio_util::sync::CancellationToken;
 
 #[derive(Clone, Default)]
 #[napi(namespace = "sourceTransform")]
@@ -240,7 +239,7 @@ pub struct SourceTransformAsyncServer {
             true,
         >,
     >,
-    server_shutdown: CancellationToken,
+    shutdown_tx: Mutex<Option<tokio::sync::oneshot::Sender<()>>>,
 }
 
 #[napi(namespace = "sourceTransform")]
@@ -260,7 +259,7 @@ impl SourceTransformAsyncServer {
     ) -> Self {
         Self {
             source_transform_fn,
-            server_shutdown: CancellationToken::new(),
+            shutdown_tx: Mutex::new(None),
         }
     }
 
@@ -270,16 +269,7 @@ impl SourceTransformAsyncServer {
         sock_file: Option<String>,
         info_file: Option<String>,
     ) -> napi::Result<()> {
-        let (tx, rx) = oneshot::channel();
-        let server_shutdown = self.server_shutdown.clone();
-        tokio::spawn(async move {
-            server_shutdown.cancelled().await;
-            let _ = tx.send(());
-        });
-        let js_mapper = SourceTransformer::new(
-            Arc::clone(&self.source_transform_fn),
-            self.server_shutdown.clone(),
-        );
+        let js_mapper = SourceTransformer::new(Arc::clone(&self.source_transform_fn));
 
         let mut server = sourcetransform::Server::new(js_mapper);
         if let Some(sock_file) = sock_file {
@@ -289,6 +279,8 @@ impl SourceTransformAsyncServer {
             server = server.with_server_info_file(info_file);
         }
 
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        self.shutdown_tx.lock().unwrap().replace(tx);
         if let Err(e) = server.start_with_shutdown(rx).await {
             println!("Error running SourceTransformAsyncServer: {e:?}");
         }
@@ -298,7 +290,10 @@ impl SourceTransformAsyncServer {
 
     #[napi]
     pub fn stop(&self) -> napi::Result<()> {
-        self.server_shutdown.cancel();
+        let tx = { self.shutdown_tx.lock().unwrap().take() };
+        if let Some(tx) = tx {
+            let _ = tx.send(());
+        }
         Ok(())
     }
 }
@@ -314,7 +309,6 @@ struct SourceTransformer {
             true,
         >,
     >,
-    cancellation_token: CancellationToken,
 }
 
 impl SourceTransformer {
@@ -329,11 +323,9 @@ impl SourceTransformer {
                 true,
             >,
         >,
-        cancellation_token: CancellationToken,
     ) -> Self {
         Self {
             source_transform_fn,
-            cancellation_token,
         }
     }
 }
@@ -349,17 +341,15 @@ impl sourcetransform::SourceTransformer for SourceTransformer {
                 Ok(messages) => messages.into_iter().map(|message| message.into()).collect(),
                 Err(e) => {
                     eprintln!(
-                        "Error awaiting Javascript promise returned by transform function: {:?}",
+                        "[ERROR] User-defined transform function returned an error: {:?}",
                         e
                     );
-                    self.cancellation_token.cancel();
-                    panic!("Error awaiting Javascript promise returned by transform function");
+                    panic!("User-defined transform function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling source transform function: {:?}", e);
-                self.cancellation_token.cancel();
-                panic!("Error calling source transform function");
+                eprintln!("[ERROR] Executing user-defined transform function: {:?}", e);
+                panic!("Error executing user-defined transform function: {:?}", e);
             }
         }
     }

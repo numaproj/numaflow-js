@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::sync::Mutex;
+
 use chrono::{DateTime, Utc};
 use napi::bindgen_prelude::{Buffer, Promise};
 use napi::threadsafe_function::ThreadsafeFunction;
@@ -5,9 +9,6 @@ use napi::{Error, Status};
 use napi_derive::napi;
 use numaflow::shared::ServerExtras;
 use numaflow::sink;
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::sync::Mutex;
 
 #[derive(Clone, Default)]
 #[napi(namespace = "sink")]
@@ -427,13 +428,16 @@ impl sink::Sinker for SinkImpl {
             Ok(promise) => match promise.await {
                 Ok(responses) => responses.into_iter().map(|r| r.clone().into()).collect(),
                 Err(e) => {
-                    eprintln!("Error executing JS sink function: {:?}", e);
-                    vec![]
+                    eprintln!(
+                        "[ERROR] User-defined sink function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined sink function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS sink function: {:?}", e);
-                vec![]
+                eprintln!("[ERROR] Executing user-defined sink function: {:?}", e);
+                panic!("Error executing user-defined sink function: {:?}", e);
             }
         }
     }

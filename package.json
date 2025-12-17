@@ -1,6 +1,6 @@
 {
   "name": "@numaproj/numaflow-js",
-  "version": "0.0.0-alpha.0",
+  "version": "0.0.0-alpha.4",
   "description": "Numaflow SDK for JavaScript/TypeScript",
   "main": "index.js",
   "types": "index.d.ts",
@@ -52,7 +52,7 @@
     "format:toml": "taplo format",
     "format:rs": "cargo fmt --all",
     "lint": "oxlint",
-    "prepublishOnly": "napi prepublish -t npm",
+    "prepublishOnly": "napi prepublish -t npm --no-gh-release",
     "test": "vitest run --dir tests/__test__",
     "version": "napi version"
   },

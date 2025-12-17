@@ -31,8 +31,9 @@ class StreamSorter {
             console.log(`Buffer size: ${this.sorted_buffer.length}`)
         }
 
-        console.log(`Handler finished. Total datums processed: ${datum_count}`)
-        console.log(`Remaining in buffer: ${this.sorted_buffer.length}`)
+        console.log(
+            `Handler finished. Total datums processed: ${datum_count}, remaining in buffer: ${this.sorted_buffer.length}`,
+        )
 
         if (this.sorted_buffer.length > 0) {
             console.log(`Flushing remaining buffer at end...`)
