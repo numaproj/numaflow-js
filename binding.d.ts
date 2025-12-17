@@ -335,6 +335,7 @@ export declare namespace sideInput {
         start(sockFile?: string | undefined | null, infoFile?: string | undefined | null): Promise<void>
         stop(): void
     }
+    export const DIR_PATH: string
 }
 
 export declare namespace sink {
