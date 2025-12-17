@@ -203,6 +203,9 @@ impl ReduceAsyncServer {
         ts_args_type = "reduceFn: (iterator: ReduceCallbackArgs) => Promise<Array<Message>>"
     )]
     pub fn new(reduce_fn: ReduceFn) -> napi::Result<Self> {
+        tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::INFO)
+            .init();
         Ok(Self {
             reduce_fn: Arc::new(reduce_fn),
             shutdown_tx: Mutex::new(None),

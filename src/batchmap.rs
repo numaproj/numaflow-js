@@ -195,6 +195,9 @@ impl BatchMapAsyncServer {
             >,
         >,
     ) -> Self {
+        tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::INFO)
+            .init();
         Self {
             batchmap_fn,
             shutdown_tx: Mutex::new(None),
