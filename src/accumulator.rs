@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Once};
 
 use chrono::{DateTime, Utc};
 use napi::bindgen_prelude::{Buffer, Promise};
@@ -204,13 +204,19 @@ impl accumulator::AccumulatorCreator for AccumulatorCreator {
 
 struct Accumulator {
     acc_fn: Arc<ThreadsafeFunction<DatumIterator, AccFn, DatumIterator, Status, false, true>>,
+    /// Used to ensure the channel send error is only logged once, since subsequent errors
+    /// are a consequence of the receiver terminating due to a prior error.
+    send_error_once: Once,
 }
 
 impl Accumulator {
     fn new(
         acc_fn: Arc<ThreadsafeFunction<DatumIterator, AccFn, DatumIterator, Status, false, true>>,
     ) -> Self {
-        Self { acc_fn }
+        Self {
+            acc_fn,
+            send_error_once: Once::new(),
+        }
     }
 }
 
@@ -227,9 +233,11 @@ impl accumulator::Accumulator for Accumulator {
                 match messages_fn.call_async(()).await {
                     Ok(promise) => match promise.await {
                         Ok(Some(message)) => {
-                            if let Err(e) = tx.send(message.into()).await {
-                                eprintln!("[ERROR] Sending accumulator message to numa: {:?}", e);
-                                panic!("Error sending accumulator message to numa: {:?}", e);
+                            if let Err(_e) = tx.send(message.into()).await {
+                                self.send_error_once.call_once(|| {
+                                    // printing SendError will only show "SendError { .. }"
+                                    eprintln!("[WARN] Failed to send accumulator message to numa. This means the numa has terminated. Please check the numa logs for more details");
+                                });
                             }
                         }
                         Ok(None) => break,

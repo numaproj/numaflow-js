@@ -1,15 +1,25 @@
 import { accumulator } from '../../index'
 
+var invocation_count = 0
+
 class StreamSorter {
     latest_wm: Date = new Date(-1)
     sorted_buffer: accumulator.Datum[] = []
     async *streamSorter(datums: AsyncIterableIterator<accumulator.Datum>): AsyncIterable<accumulator.Message> {
+        invocation_count += 1
+
+        if (invocation_count > 5) {
+            throw new Error('Simulated error')
+        }
+
         let datum_count = 0
         for await (let datum of datums) {
             datum_count += 1
-            console.log(
-                `Received datum ${datum_count}: event_time=${datum.eventTime}, watermark=${datum.watermark}, value=${datum.value}`,
-            )
+            if (datum_count % 50 === 0) {
+                console.log(
+                    `Invocation ${invocation_count} received datum ${datum_count}: event_time=${datum.eventTime}, watermark=${datum.watermark}, value=${datum.value}`,
+                )
+            }
 
             if (datum.watermark != null && datum.watermark.getTime() > this.latest_wm.getTime()) {
                 const old_wm = this.latest_wm
@@ -31,8 +41,9 @@ class StreamSorter {
             console.log(`Buffer size: ${this.sorted_buffer.length}`)
         }
 
-        console.log(`Handler finished. Total datums processed: ${datum_count}`)
-        console.log(`Remaining in buffer: ${this.sorted_buffer.length}`)
+        console.log(
+            `Invocation ${invocation_count} finished. Total datums processed: ${datum_count}. Remaining in buffer: ${this.sorted_buffer.length}`,
+        )
 
         if (this.sorted_buffer.length > 0) {
             console.log(`Flushing remaining buffer at end...`)
@@ -104,7 +115,7 @@ async function main() {
     process.on('SIGTERM', shutdown)
     process.on('SIGINT', shutdown)
 
-    console.log('Starting batchMap server')
+    console.log('Starting streamSorter server')
     //await server.start("/tmp/var/run/numaflow/accumulator.sock", "/tmp/var/run/numaflow/accumulator-info.info")
     await server.start()
 }
