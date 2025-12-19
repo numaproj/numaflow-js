@@ -29,7 +29,7 @@ npm install @numaproj/numaflow-js
 
 ## Examples
 
-The examples are available in the [examples](./examples) directory.
+The examples are available in the [examples](https://github.com/numaproj/numaflow-js/tree/main/examples) directory.
 The examples presented provide a basic overview of how to implement different types of data processing tasks using
 Numaflow-JS.
 Each example focuses implementing and building one specific component of Numaflow.

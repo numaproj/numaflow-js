@@ -11,6 +11,7 @@ This document provides guidelines and instructions for contributing to the proje
 - [Running Tests](#running-tests)
 - [Project Structure](#project-structure)
 - [Adding a New Feature](#adding-a-new-feature)
+- [Updating Documentation](#updating-documentation)
 
 ## Overview
 
@@ -234,3 +235,56 @@ When adding a new Numaflow component or feature:
 3. Update/Create TypeScript wrapper if required
 4. Add tests
 5. Update/Create an example if required
+
+## Updating Documentation
+
+The API documentation is generated using [TypeDoc](https://typedoc.org/) and hosted on GitHub Pages from the `docs-site` branch.
+
+### Generate Documentation Locally
+
+```shell
+pnpm docs:build
+```
+
+This generates the documentation in the `docs/` directory. You can preview it by opening `docs/index.html` in a browser. You may also view the docs locally by:
+```shell
+pnpm docs:serve
+```
+
+### Update the docs-site Branch
+
+After making changes to the documentation (updating JSDoc comments, README, etc.), follow these steps to update the live documentation site:
+
+```shell
+# Ensure you're on the main branch with latest changes
+git checkout main
+git pull origin main
+
+# Generate fresh documentation
+pnpm docs:build
+
+# Copy docs to a temporary location
+cp -r docs /tmp/numaflow-docs
+
+# Switch to the docs-site branch
+git checkout docs-site
+
+# Remove old documentation files
+git rm -rf .
+
+# Copy new documentation (including hidden files)
+cp -r /tmp/numaflow-docs/. .
+
+# Commit and push
+git add -A
+git commit -S -s -m "Update documentation"
+git push origin docs-site
+
+# Return to main branch
+git checkout main
+
+# Cleanup temporary files
+rm -rf /tmp/numaflow-docs
+```
+
+The documentation will be available at: https://numaproj.github.io/numaflow-js/

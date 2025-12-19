@@ -1,0 +1,398 @@
+/* @numaproj/numaflow-js Documentation Theme */
+/* Modern, clean design with Numaflow branding */
+
+:root {
+    /* Primary colors - Numaflow blue palette */
+    --light-color-background: #fafbfc;
+    --light-color-background-secondary: #ffffff;
+    --light-color-background-warning: #fff8e6;
+    --light-color-warning-text: #856404;
+    --light-color-icon-background: var(--light-color-background);
+    --light-color-accent: #0066cc;
+    --light-color-active-menu-item: #0066cc;
+    --light-color-text: #1a1a2e;
+    --light-color-text-aside: #5c5c7a;
+    --light-color-link: #0066cc;
+    --light-color-ts-keyword: #c678dd;
+    --light-color-ts-module: #e06c75;
+    --light-color-ts-namespace: #0066cc;
+    --light-color-ts-enum: #56b6c2;
+    --light-color-ts-enum-member: #56b6c2;
+    --light-color-ts-variable: #e5c07b;
+    --light-color-ts-function: #61afef;
+    --light-color-ts-class: #e06c75;
+    --light-color-ts-interface: #98c379;
+    --light-color-ts-constructor: #61afef;
+    --light-color-ts-property: #d19a66;
+    --light-color-ts-method: #61afef;
+    --light-color-ts-call-signature: #61afef;
+    --light-color-ts-index-signature: #d19a66;
+    --light-color-ts-constructor-signature: #61afef;
+    --light-color-ts-parameter: #6a3d9a;
+    --light-color-ts-type-parameter: #e5c07b;
+    --light-color-ts-accessor: #d19a66;
+    --light-color-ts-get-signature: #d19a66;
+    --light-color-ts-set-signature: #d19a66;
+    --light-color-ts-type-alias: #98c379;
+
+    /* Dark mode colors */
+    --dark-color-background: #0d1117;
+    --dark-color-background-secondary: #161b22;
+    --dark-color-background-warning: #3d2b00;
+    --dark-color-warning-text: #f0c674;
+    --dark-color-icon-background: var(--dark-color-background-secondary);
+    --dark-color-accent: #58a6ff;
+    --dark-color-active-menu-item: #58a6ff;
+    --dark-color-text: #e6edf3;
+    --dark-color-text-aside: #8b949e;
+    --dark-color-link: #58a6ff;
+    --dark-color-ts-keyword: #ff7b72;
+    --dark-color-ts-module: #f97583;
+    --dark-color-ts-namespace: #58a6ff;
+    --dark-color-ts-enum: #56d4dd;
+    --dark-color-ts-enum-member: #56d4dd;
+    --dark-color-ts-variable: #e3b341;
+    --dark-color-ts-function: #79c0ff;
+    --dark-color-ts-class: #f97583;
+    --dark-color-ts-interface: #7ee787;
+    --dark-color-ts-constructor: #79c0ff;
+    --dark-color-ts-property: #ffa657;
+    --dark-color-ts-method: #79c0ff;
+    --dark-color-ts-call-signature: #79c0ff;
+    --dark-color-ts-index-signature: #ffa657;
+    --dark-color-ts-constructor-signature: #79c0ff;
+    --dark-color-ts-parameter: #d4a5ff;
+    --dark-color-ts-type-parameter: #e3b341;
+    --dark-color-ts-accessor: #ffa657;
+    --dark-color-ts-get-signature: #ffa657;
+    --dark-color-ts-set-signature: #ffa657;
+    --dark-color-ts-type-alias: #7ee787;
+}
+
+/* Typography */
+body {
+    font-family:
+        'Inter',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        Roboto,
+        Oxygen,
+        Ubuntu,
+        Cantarell,
+        sans-serif;
+    line-height: 1.65;
+    letter-spacing: -0.01em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family:
+        'Inter',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        Roboto,
+        sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+/* Header styling */
+header.tsd-page-toolbar {
+    border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+    backdrop-filter: blur(8px);
+}
+
+.tsd-page-title h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #0066cc 0%, #58a6ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Navigation sidebar */
+.site-menu {
+    padding: 1rem;
+}
+
+.tsd-navigation a {
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+
+.tsd-navigation a:hover {
+    background: rgba(0, 102, 204, 0.1);
+}
+
+.tsd-navigation a.current {
+    background: rgba(0, 102, 204, 0.15);
+    font-weight: 600;
+}
+
+/* Main content */
+.col-content {
+    padding: 2rem;
+}
+
+/* Code blocks */
+pre,
+code {
+    font-family:
+        'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-size: 0.9em;
+    border-radius: 8px;
+}
+
+pre {
+    padding: 1.25rem;
+    overflow-x: auto;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+:root[data-theme='light'] pre {
+    background: #f6f8fa;
+}
+
+:root[data-theme='dark'] pre {
+    background: #1c2128;
+}
+
+code:not(pre code) {
+    padding: 0.2em 0.4em;
+    background: rgba(128, 128, 128, 0.1);
+    border-radius: 4px;
+}
+
+/* Member signatures */
+.tsd-signature {
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    border-left: 4px solid var(--color-accent);
+}
+
+:root[data-theme='light'] .tsd-signature {
+    background: #f0f4f8;
+}
+
+:root[data-theme='dark'] .tsd-signature {
+    background: #1c2128;
+}
+
+/* Panels and cards */
+.tsd-panel {
+    border-radius: 12px;
+    border: 1px solid rgba(128, 128, 128, 0.15);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme='light'] .tsd-panel {
+    background: #ffffff;
+}
+
+:root[data-theme='dark'] .tsd-panel {
+    background: #161b22;
+}
+
+/* Namespace/module headings */
+.tsd-page-title {
+    padding: 2rem 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid rgba(0, 102, 204, 0.2);
+}
+
+/* Member groups */
+section.tsd-panel-group {
+    margin: 2rem 0;
+}
+
+.tsd-panel-group > h2 {
+    font-size: 1.25rem;
+    color: var(--color-accent);
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--color-accent);
+    margin-bottom: 1rem;
+}
+
+/* Type badges */
+.tsd-kind-icon {
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+/* Index list */
+.tsd-index-list a {
+    padding: 0.5rem 0;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.15s ease;
+}
+
+.tsd-index-list a:hover {
+    color: var(--color-accent);
+}
+
+/* Comments/descriptions */
+.tsd-comment {
+    line-height: 1.75;
+}
+
+.tsd-comment p {
+    margin: 0.75rem 0;
+}
+
+/* Parameters table */
+.tsd-parameters {
+    margin: 1rem 0;
+}
+
+.tsd-parameters li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+}
+
+.tsd-parameters li:last-child {
+    border-bottom: none;
+}
+
+/* Returns section */
+.tsd-returns-title {
+    font-weight: 600;
+    color: var(--color-accent);
+    margin-top: 1.5rem;
+}
+
+/* Breadcrumbs */
+.tsd-breadcrumb {
+    font-size: 0.875rem;
+    padding: 0.5rem 0;
+}
+
+.tsd-breadcrumb a {
+    opacity: 0.8;
+    transition: opacity 0.15s ease;
+}
+
+.tsd-breadcrumb a:hover {
+    opacity: 1;
+}
+
+/* Search input */
+#tsd-search input {
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    transition: all 0.2s ease;
+}
+
+#tsd-search input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+    outline: none;
+}
+
+/* Footer */
+footer {
+    padding: 2rem;
+    text-align: center;
+    font-size: 0.875rem;
+    border-top: 1px solid rgba(128, 128, 128, 0.15);
+    margin-top: 4rem;
+}
+
+/* Links */
+a {
+    transition: color 0.15s ease;
+}
+
+a:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.4);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, 0.6);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .col-content {
+        padding: 1rem;
+    }
+
+    .tsd-page-title h1 {
+        font-size: 1.5rem;
+    }
+
+    pre {
+        padding: 1rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* Animation for active elements */
+.tsd-navigation a,
+.tsd-panel,
+button {
+    transition:
+        transform 0.1s ease,
+        box-shadow 0.15s ease;
+}
+
+/* Index page hero section styling */
+.tsd-panel.tsd-typography h1:first-child {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.tsd-panel.tsd-typography h2 {
+    margin-top: 2rem;
+    color: var(--color-accent);
+}
+
+/* API hierarchy styling */
+.tsd-hierarchy {
+    padding: 1rem;
+    background: rgba(128, 128, 128, 0.05);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+/* Tags styling */
+.tsd-tag {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
