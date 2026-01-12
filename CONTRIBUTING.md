@@ -247,6 +247,7 @@ pnpm docs:build
 ```
 
 This generates the documentation in the `docs/` directory. You can preview it by opening `docs/index.html` in a browser. You may also view the docs locally by:
+
 ```shell
 pnpm docs:serve
 ```
