@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
 use chrono::{DateTime, Utc};
 use napi::bindgen_prelude::{Buffer, Promise};
 use napi::threadsafe_function::ThreadsafeFunction;
@@ -5,8 +8,6 @@ use napi::{Error, Status};
 use napi_derive::napi;
 use numaflow::shared::ServerExtras;
 use numaflow::source;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::Sender;
 
 #[derive(Clone, Default)]
@@ -285,24 +286,25 @@ impl source::Sourcer for Sourcer {
                     Ok(promise) => match promise.await {
                         Ok(Some(message)) => {
                             if let Err(e) = transmitter.send(message.into()).await {
-                                eprintln!("Error sending source message: {:?}", e);
-                                break;
+                                eprintln!("[ERROR] Sending message to numa: {:?}", e);
+                                panic!("Sending message to numa: {:?}", e);
                             }
                         }
                         Ok(None) => break,
                         Err(e) => {
-                            eprintln!("Error awaiting for source message: {:?}", e);
-                            break;
+                            eprintln!("[ERROR] User-defined function returned an error: {:?}", e);
+                            panic!("User-defined function returned an error: {:?}", e);
                         }
                     },
                     Err(e) => {
-                        eprintln!("Error calling JS source iterator: {:?}", e);
-                        break;
+                        eprintln!("[ERROR] Executing user-defined map function: {:?}", e);
+                        panic!("Error executing user-defined map function: {:?}", e);
                     }
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS source function: {:?}", e);
+                eprintln!("[ERROR] Executing user-defined read function: {:?}", e);
+                panic!("Error executing user-defined read function: {:?}", e);
             }
         }
     }
@@ -316,11 +318,16 @@ impl source::Sourcer for Sourcer {
             Ok(promise) => match promise.await {
                 Ok(_) => {}
                 Err(e) => {
-                    eprintln!("Error awaiting for JS ack fn response: {:?}", e);
+                    eprintln!(
+                        "[ERROR] User-defined ack function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined ack function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS ack function: {:?}", e);
+                eprintln!("[ERROR] Executing user-defined ack function: {:?}", e);
+                panic!("Error executing user-defined ack function: {:?}", e);
             }
         }
     }
@@ -334,11 +341,16 @@ impl source::Sourcer for Sourcer {
             Ok(promise) => match promise.await {
                 Ok(_) => {}
                 Err(e) => {
-                    eprintln!("Error awaiting for JS nack fn response: {:?}", e);
+                    eprintln!(
+                        "[ERROR] User-defined nack function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined nack function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS nack function: {:?}", e);
+                eprintln!("[ERROR] Executing user-defined nack function: {:?}", e);
+                panic!("Error executing user-defined nack function: {:?}", e);
             }
         }
     }
@@ -349,13 +361,16 @@ impl source::Sourcer for Sourcer {
                 Ok(Some(pending)) => Some(pending as usize),
                 Ok(None) => None,
                 Err(e) => {
-                    eprintln!("Error awaiting for JS pending fn response: {:?}", e);
-                    None
+                    eprintln!(
+                        "[ERROR] User-defined pending function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined pending function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS pending function: {:?}", e);
-                None
+                eprintln!("[ERROR] Executing user-defined pending function: {:?}", e);
+                panic!("Error executing user-defined pending function: {:?}", e);
             }
         }
     }
@@ -366,13 +381,22 @@ impl source::Sourcer for Sourcer {
                 Ok(Some(partitions)) => Some(partitions),
                 Ok(None) => None,
                 Err(e) => {
-                    eprintln!("Error awaiting for JS partitions fn response: {:?}", e);
-                    None
+                    eprintln!(
+                        "[ERROR] User-defined partitions function returned an error: {:?}",
+                        e
+                    );
+                    panic!(
+                        "User-defined partitions function returned an error: {:?}",
+                        e
+                    );
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS partitions function: {:?}", e);
-                None
+                eprintln!(
+                    "[ERROR] Executing user-defined partitions function: {:?}",
+                    e
+                );
+                panic!("Error executing user-defined partitions function: {:?}", e);
             }
         }
     }

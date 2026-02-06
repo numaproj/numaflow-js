@@ -1,0 +1,74 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./index.ts"],
+  "out": "./docs",
+  "name": "@numaproj/numaflow-js",
+  "readme": "./README.md",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "externalPattern": ["**/binding.d.ts", "**/node_modules/**"],
+  "skipErrorChecking": true,
+  "treatWarningsAsErrors": false,
+  "searchInComments": true,
+  "navigationLinks": {
+    "GitHub": "https://github.com/numaproj/numaflow-js",
+    "Numaflow Docs": "https://numaflow.numaproj.io/"
+  },
+  "sidebarLinks": {},
+  "customCss": "./docs-theme.css",
+  "disableSources": false,
+  "plugin": [],
+  "externalSymbolLinkMappings": {
+    "global": {
+      "Buffer": "https://nodejs.org/api/buffer.html"
+    },
+    "typescript": {
+      "Promise": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise",
+      "Date": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date",
+      "Array": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+      "Record": "https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type",
+      "Partial": "https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype",
+      "Required": "https://www.typescriptlang.org/docs/handbook/utility-types.html#requiredtype",
+      "Readonly": "https://www.typescriptlang.org/docs/handbook/utility-types.html#readonlytype",
+      "Pick": "https://www.typescriptlang.org/docs/handbook/utility-types.html#picktype-keys",
+      "Omit": "https://www.typescriptlang.org/docs/handbook/utility-types.html#omittype-keys",
+      "AsyncIterable": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator",
+      "AsyncIterableIterator": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncIterator",
+      "IteratorResult": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator"
+    },
+    "@types/node": {
+      "Buffer": "https://nodejs.org/api/buffer.html",
+      "__global.Buffer": "https://nodejs.org/api/buffer.html"
+    }
+  },
+  "categorizeByGroup": true,
+  "sort": ["kind", "alphabetical"],
+  "kindSortOrder": [
+    "Reference",
+    "Project",
+    "Module",
+    "Namespace",
+    "Enum",
+    "EnumMember",
+    "Class",
+    "Interface",
+    "TypeAlias",
+    "Constructor",
+    "Property",
+    "Variable",
+    "Function",
+    "Accessor",
+    "Method",
+    "Parameter",
+    "TypeParameter",
+    "TypeLiteral",
+    "CallSignature",
+    "ConstructorSignature",
+    "IndexSignature",
+    "GetSignature",
+    "SetSignature"
+  ]
+}

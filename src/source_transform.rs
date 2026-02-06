@@ -1,3 +1,6 @@
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
 use chrono::{DateTime, Utc};
 use napi::Status;
 use napi::bindgen_prelude::{Buffer, Promise};
@@ -5,8 +8,6 @@ use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
 use numaflow::shared::ServerExtras;
 use numaflow::sourcetransform;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 
 #[derive(Clone, Default)]
 #[napi(namespace = "sourceTransform")]
@@ -339,13 +340,16 @@ impl sourcetransform::SourceTransformer for SourceTransformer {
             Ok(promise) => match promise.await {
                 Ok(messages) => messages.into_iter().map(|message| message.into()).collect(),
                 Err(e) => {
-                    eprintln!("Error executing JS source transform function: {:?}", e);
-                    vec![]
+                    eprintln!(
+                        "[ERROR] User-defined transform function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined transform function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS source transform function: {:?}", e);
-                vec![]
+                eprintln!("[ERROR] Executing user-defined transform function: {:?}", e);
+                panic!("Error executing user-defined transform function: {:?}", e);
             }
         }
     }

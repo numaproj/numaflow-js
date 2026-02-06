@@ -1,11 +1,12 @@
+use std::sync::Arc;
+use std::{collections::HashMap, sync::Mutex};
+
 use chrono::{DateTime, Utc};
 use napi::Result;
 use napi::{bindgen_prelude::*, threadsafe_function::ThreadsafeFunction};
 use napi_derive::napi;
 use numaflow::map;
 use numaflow::shared::ServerExtras;
-use std::sync::Arc;
-use std::{collections::HashMap, sync::Mutex};
 
 #[derive(Clone, Default)]
 #[napi(namespace = "map")]
@@ -276,23 +277,16 @@ impl map::Mapper for JsMapper {
             Ok(promise) => match promise.await {
                 Ok(messages) => messages.into_iter().map(|message| message.into()).collect(),
                 Err(e) => {
-                    eprintln!("Error executing JS map function: {:?}", e);
-                    vec![numaflow::map::Message {
-                        keys: None,
-                        value: vec![],
-                        tags: Some(vec![numaflow::shared::DROP.to_string()]),
-                        user_metadata: None,
-                    }]
+                    eprintln!(
+                        "[ERROR] User-defined map function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined map function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS map function: {:?}", e);
-                vec![numaflow::map::Message {
-                    keys: None,
-                    value: vec![],
-                    tags: Some(vec![numaflow::shared::DROP.to_string()]),
-                    user_metadata: None,
-                }]
+                eprintln!("[ERROR] Executing user-defined map function: {:?}", e);
+                panic!("Error executing user-defined map function: {:?}", e);
             }
         }
     }

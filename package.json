@@ -1,6 +1,6 @@
 {
   "name": "@numaproj/numaflow-js",
-  "version": "0.0.0-alpha.0",
+  "version": "0.0.1",
   "description": "Numaflow SDK for JavaScript/TypeScript",
   "main": "index.js",
   "types": "index.d.ts",
@@ -52,9 +52,12 @@
     "format:toml": "taplo format",
     "format:rs": "cargo fmt --all",
     "lint": "oxlint",
-    "prepublishOnly": "napi prepublish -t npm",
+    "prepublishOnly": "napi prepublish -t npm --no-gh-release",
     "test": "vitest run --dir tests/__test__",
-    "version": "napi version"
+    "version": "napi version",
+    "docs:build": "typedoc",
+    "docs:watch": "typedoc --watch",
+    "docs:serve": "pnpm docs:build && npx serve docs"
   },
   "devDependencies": {
     "@emnapi/core": "^1.7.1",
@@ -74,6 +77,7 @@
     "oxlint": "^1.29.0",
     "prettier": "^3.6.2",
     "tsx": "^4.20.6",
+    "typedoc": "0.28.15",
     "typescript": "^5.9.3",
     "vitest": "^4.0.10",
     "async-mutex": "^0.5.0"

@@ -301,13 +301,16 @@ impl reduce::Reducer for Reducer {
             Ok(promise) => match promise.await {
                 Ok(responses) => responses.into_iter().map(|m| m.into()).collect(),
                 Err(e) => {
-                    eprintln!("Error executing JS reduce function: {:?}", e);
-                    vec![]
+                    eprintln!(
+                        "[ERROR] User-defined reduce function returned an error: {:?}",
+                        e
+                    );
+                    panic!("User-defined reduce function returned an error: {:?}", e);
                 }
             },
             Err(e) => {
-                eprintln!("Error calling JS reduce function: {:?}", e);
-                vec![]
+                eprintln!("[ERROR] Executing user-defined reduce function: {:?}", e);
+                panic!("Error executing user-defined reduce function: {:?}", e);
             }
         }
     }
