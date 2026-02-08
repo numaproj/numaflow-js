@@ -4,7 +4,7 @@ metadata:
   name: simple-sideinput
 spec:
   sideInputs:
-    - name: myticker
+    - name: my-ticker
       container:
         image: quay.io/numaio/numaflow-js/simple-sideinput:stable
         imagePullPolicy: IfNotPresent
@@ -17,22 +17,22 @@ spec:
         generator:
           rpu: 30
           duration: 1s
-    - name: si-log
+    - name: si-mapper
       udf:
         container:
-          image: quay.io/numaio/numaflow-rs/udf-sideinput-example:stable
-          imagePullPolicy: Always
+          image: quay.io/numaio/numaflow-js/sideinput-mapper:stable
+          imagePullPolicy: IfNotPresent
       containerTemplate:
         env:
           - name: NUMAFLOW_DEBUG
             value: 'true'
       sideInputs:
-        - myticker
+        - my-ticker
     - name: out
       sink:
         log: {}
   edges:
     - from: in
-      to: si-log
-    - from: si-log
+      to: si-mapper
+    - from: si-mapper
       to: out

@@ -28,7 +28,10 @@ test('mapper integration test', async () => {
         // forward all the incoming user metadata
         for (const group of incomingUserMetadata) {
             datum.userMetadata?.getKeys(group).forEach((key) => {
-                userMetadata.addKv(group, key, datum.userMetadata?.getValue(group, key)!)
+                const value = datum.userMetadata?.getValue(group, key)
+                if (value !== undefined) {
+                    userMetadata.addKv(group, key, value)
+                }
             })
         }
 
